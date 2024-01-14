@@ -134,7 +134,8 @@ def getCategoriesFrame(categories, lastCategory):
 
 def getPayloadsFrame(payloads):
     subPayloads = splitStringToList(payloads)
-    payloadsTitle = [sg.Checkbox('选择全卫星系列', key='payload01', enable_events=True)]
+    payloadsTitle = [sg.Checkbox('选择全卫星系列', key='payload01', enable_events=True),
+                     sg.Checkbox('仅生成最后图表', key='payload02', default=True)]
     layout = [payloadsTitle]
     for i, subPayload in enumerate(subPayloads):
         checkbox = [sg.Checkbox(item if item[0] != '^' else item[1:], 
@@ -350,7 +351,7 @@ def splitRetiredRockets(retiredChecked):
     return cz, ncz
     
 ################################################################################################
-def handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets, retired, series, locations, categories, dictUpperStage):
+def handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets, retired, series, locations, categories, payloads, dictUpperStage):
 # def handleEvents(excelBook, sheetName, event, window, values, years, rockets, retired, series, locations, categories, dictUpperStage):
     if event == 'year01':
         toogleAllCheckbox(window, values, 'year-')
@@ -369,6 +370,8 @@ def handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets
         toogleAllCheckbox(window, values, 'location-')
     elif event == 'category01':
         toogleAllCheckbox(window, values, 'category-')
+    elif event == 'payload01':
+        toogleAllCheckbox(window, values, 'payload-')
     elif event == constants.BUTTON1_LABEL:
         window.minimize()
         cn_font = myPlot.init()
@@ -377,6 +380,7 @@ def handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets
         retiredChecked = getSelectedItems(values, retired, 'retired')
         seriesChecked = getSelectedItems(values, series, 'series')
         locationsChecked = getSelectedItems(values, locations, 'location')
+        payloadsChecked = getSelectedItems(values, payloads, 'payload')
         rocketPrintLast = values['rocket02']
         rocketRetired = values['rocket03']
         seriesPrintLast = values['series02']
@@ -386,6 +390,7 @@ def handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets
         seriesLunarNewYear = values['series06']
         seriesFirstLast = values['series07']
         locationPrintLast = values['location02']
+        payloadPrintLast = values['payload02']
 
         if yearsChecked:
             print(f'\nYear Checked: {yearsChecked}')
@@ -429,9 +434,14 @@ def handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets
                 plotLaunchByDate.plotGraphForLunarNewYear(cn_font, excelSheet1, dictUpperStage)
             if seriesFirstLast:
                 plotLaunchByDate.plotGraphForFirstLast(cn_font, excelSheet1, dictUpperStage)
+
         if locationsChecked:
             print(f'\nLocation Checked: {locationsChecked}')
             plotLaunchByDate.plot4(cn_font, excelSheet1, locationsChecked, dictUpperStage, locationPrintLast)
+
+        if payloadsChecked:
+            print(f'\nPayload Checked: {payloadsChecked}')
+            plotLaunchByDate.plot5(cn_font, excelSheet1, payloadsChecked, dictUpperStage, payloadPrintLast)
         myUtils.playSound()
 
     elif event == constants.BUTTON2_LABEL:
@@ -471,7 +481,7 @@ def main():
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
 
-        handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets, retired, series, locations, categories, dictUpperStage)
+        handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets, retired, series, locations, categories, payloads, dictUpperStage)
         window.Normal()
     
     window.close()

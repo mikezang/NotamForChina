@@ -38,6 +38,28 @@ def printNsf(launch_date) -> None:
 
 ################################################################################################
 def getNsfUrl(driver, page) -> dict:
+    urls = {}
+    table = driver.find_element(By.CLASS_NAME, "table_grid")
+    rows = table.find_elements(By.TAG_NAME, "tr")
+
+    for row in rows:
+        cols = row.find_elements(By.TAG_NAME, "td")
+
+        for col in cols:
+            className = col.get_attribute("class")
+            if 'stickybg' in className or 'lockedbg' in className:
+                continue
+
+            if "subject" in className:
+                ahref = row.find_element(By.TAG_NAME, "a")
+                href = ahref.get_attribute("href") + ';all'
+                href = sub(r'PHPSESSID\=[a-z0-9]+\&', '', href)
+                title = ahref.text
+                urls[href] = f'Page{page:02}: {title}'
+    return urls
+
+################################################################################################
+def getNsfUrlOld(driver, page) -> dict:
     invalidUrls = {}
     urls = {}
     table = driver.find_element(By.CLASS_NAME, "table_grid")
@@ -118,17 +140,17 @@ def getNsfUrlList(driver, p='1') -> dict:
 
     for page in range(startPage, lastPage + 1):
         href = constants.NSF_URL_CHINA + str(50 * (page - 1))
-        print(f"\nPage{page}: {href}")
+        print(f"Page{page}: {href}")
 
         if page > 1:
             driver.get(href)
 
         myUtils.elementClass(driver, 30, "pagesection")
-        nsfUrls, invalidNsfUrls = getNsfUrl(driver, page)
+        nsfUrls = getNsfUrl(driver, page)
         urls.update(nsfUrls)
-        invalidUrls.update(invalidNsfUrls)
+        # invalidUrls.update(invalidNsfUrls)
 
-    myUtils.updateDictToJsonFile(myUtils.sortDictByKey(invalidUrls), 'InvalidNsfTitle')
+    # myUtils.updateDictToJsonFile(myUtils.sortDictByKey(invalidUrls), 'InvalidNsfTitle')
     return urls
 
 ################################################################################################

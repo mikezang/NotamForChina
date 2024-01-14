@@ -509,6 +509,7 @@ def createKmlFile(notams, title1='', city1='') -> None:
                     lastCity, highestPoint, lowestPoint = getFirstLastPoint(lowestPoint, highestPoint, coords, lastCity, city)
                 if len(coordsList) == 1:
                     seaCoord['海上']= coordsList[0]
+                    lowestPoint = coordsList[0]
             else:
                 drawRoutes(kml, lastCity, highestPoint, lowestPoint, seaCoord)
                 title = convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
@@ -1147,7 +1148,20 @@ def updateTempFile(notams):
     except FileNotFoundError:
         saveTempFile(filename, newText)
 
+################################################################################################
+def writeNsfToFile(nsfDict):
+    # filename = f'./data/notam{getJapanTime("%Y%m%d-%H%M%S")}.txt'
+    filename = f'./data/nsfLinkList.html'
+    # newText = f"NOTAM发射预测{getJapanTime()}\n"
+    newText = f"<H2>NSF Link List</H2>"
+    # newText += "================================\n"
+    for i, (key, value) in enumerate(nsfDict.items()):
+        # items = value.split(';')
+        newText += f'<a target=_blank href={key}>{i + 1:03}: {value}</a><br>'
+    saveTempFile(filename, newText)
+
 def saveTempFile(filename, newText):
+    print(f'Save to {filename}!')
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(newText)
 
@@ -1275,7 +1289,6 @@ def isInvalidEndDateUtc(endDateUtc):
     return False
 
 ################################################################################################
-# TODO add new FIR to here
 def isChinaNotam(condition):
     section = openConfig()
     count = int(section.get('FirCount'))

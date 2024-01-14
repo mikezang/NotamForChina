@@ -158,7 +158,8 @@ def plotTitleLegendByRocket(cn_font, title, hasGreyLabel=False):
 def plotbyRocket(cn_font, df, title, path, startYear):
     fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) 
 
-    hasGreyLabel = plotLineGraphByRocket(cn_font, axLeft, df, constants.RETIRED_ROCKETS, startYear=startYear)
+    retiredRocketsDict = constants.RETIRED_ROCKETS
+    hasGreyLabel = plotLineGraphByRocket(cn_font, axLeft, df, retiredRocketsDict, startYear=startYear)
     axRight = axLeft.twinx()
 
     plotBarGraphByRocket(cn_font, axRight, df, startYear)
@@ -169,8 +170,9 @@ def plotbyRocket(cn_font, df, title, path, startYear):
 
 ################################################################################################
 def plotGraphByRocket(cn_font, excelSheet, title, startYear=None, endYear=None):
+    retiredRocketsDict = constants.RETIRED_ROCKETS
     df = myPlot.parseExcelSheetToDataFrame(excelSheet, columnYear='日期', columnNotNull='结果', startYear=startYear, endYear=endYear)
-    df1, df2 = countDataFrameByRocket(df, constants.RETIRED_ROCKETS)
+    df1, df2 = countDataFrameByRocket(df, retiredRocketsDict)
     title1 = myPlot.getPlotTitle(title.replace('发射统计', '发射数统计'), startYear, endYear)
     path1 = '' if startYear == None else '火箭年发射数统计/'
     plotbyRocket(cn_font, df1, title1, path1, startYear)

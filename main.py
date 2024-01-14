@@ -105,8 +105,8 @@ def main():
                 driver = myUtils.getFirefoxDriver()
                 print('Create all NSF launched urls from site.')
                 page = 'url'
-                nsf_list = nsf.getNsfUrlList(driver, page)
-                myUtils.updateDictToJsonFile(nsf_list, "nsf-urls")
+                nsfDict = nsf.getNsfUrlList(driver, page)
+                myUtils.writeNsfToFile(nsfDict)
             except Exception as e:
                 print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
         elif command == 'nsfcontents':

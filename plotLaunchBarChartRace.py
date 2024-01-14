@@ -31,8 +31,9 @@ def plotChartRaceAnimation(excelSheet, rocket, startYear=None, endYear=None, no=
             ret = f'{int(valOk)}/{int(valAll):.0f}＝成功率'
             ret += f'{percent:.0f}%' if int(percent) == percent else f'{percent:.2f}%'
 
-            if label in constants.RETIRED_ROCKETS:
-                retiredDate = constants.RETIRED_ROCKETS[label]
+            retiredRocketsDict = constants.RETIRED_ROCKETS
+            if label in retiredRocketsDict:
+                retiredDate = retiredRocketsDict[label]
                 if isAfterRetired:
                     ret += f'({retiredDate[:4]}年退役)' if iDate >= pd.Timestamp(retiredDate) else ''
                 else:
