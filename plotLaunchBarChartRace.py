@@ -30,8 +30,8 @@ def plotChartRaceAnimation(excelSheet, rocket, startYear=None, endYear=None, no=
             percent = 0 if valOk == 0 or valAll == 0 else valOk / valAll * 100
             ret = f'{int(valOk)}/{int(valAll):.0f}＝成功率'
             ret += f'{percent:.0f}%' if int(percent) == percent else f'{percent:.2f}%'
+            retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
 
-            retiredRocketsDict = constants.RETIRED_ROCKETS
             if label in retiredRocketsDict:
                 retiredDate = retiredRocketsDict[label]
                 if isAfterRetired:
@@ -136,17 +136,18 @@ def main():
     excelFile = "data/ChinaRocketLaunch.xlsx"
     sheetName = "发射纪录"
     excelBook = loadXLSX(excelFile, data_only=True, read_only=True)
+    excelSheet = excelBook[sheetName]
     myLogger.info(f'End reading data:')
 
     startYears = ['1970', '1980', '1990', '2000']
     startYears += ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019']
     startYears += ['2020', '2021', '2022', '2023']
-    startYears = ['2023']
-    plot1(excelBook, sheetName, startYears)
+    startYears = []
+    plot1(excelSheet, startYears)
 
     rockets = ['民营', '其他', '长征', '系列', '全部']
-    rockets = []
-    plot2(excelBook, sheetName, rockets)
+    rockets = ['民营']
+    plot2(excelSheet, rockets)
 
     myLogger.info(f'End: *******************************')
 

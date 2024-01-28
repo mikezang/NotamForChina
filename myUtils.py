@@ -426,8 +426,9 @@ def createShipTrackLinesKmlFile(newFile):
     mmsiKey = df['mmsi'].iloc[0]
     startDate = removeChars(df['时间'].iloc[0])[:12]
     endDate = removeChars(df['时间'].iloc[-1])[:12]
-    mmsi, shipName = readConfig(['LaunchShipMMSI', 'LaunchShipName'])
-    shipNameDict = dict(zip(mmsi.split(','), shipName.split(',')))
+    mmsi = readConfig(['LaunchShipMMSI'])
+    shipName = readConfig(['LaunchShipName'])
+    shipNameDict = dict(zip(mmsi, shipName))
     shipName = shipNameDict[mmsiKey] if mmsiKey in shipNameDict else f'MMSI{mmsiKey}'
     # title = f'{startDate}-{endDate}-{shipName}-航迹'
     title = f'{endDate[:4]}年{endDate[4:6]}月{endDate[6:8]}日{endDate[8:10]}时{endDate[10:12]}分{shipName}航迹'
@@ -774,6 +775,15 @@ def readConfigFirNames():
         firNames += section.get(f'FirName{i + 1}')
     firNames = firNames.replace(',', ' ').replace('~KOREA', '')
     return firNames
+
+################################################################################################
+def readConfigRetiredDict():
+    data = readConfig()
+    retiredData = data[4]
+    retiredRockets = retiredData[2]
+    retiredDates = retiredData[3]
+    retiredDict = dict(zip(retiredRockets.split(','), retiredDates.split(',')))
+    return retiredDict
 
 ################################################################################################
 def readConfig(keys:list=None, returnList=True) -> list:
@@ -1161,7 +1171,7 @@ def writeNsfToFile(nsfDict):
     saveTempFile(filename, newText)
 
 def saveTempFile(filename, newText):
-    print(f'Save to {filename}!')
+    print(f'Save to file "{filename}"')
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(newText)
 
@@ -1211,7 +1221,7 @@ def updateKmlFile(kml, title, filePath='', notams=None):
 
 ################################################################################################
 def saveKmlFile(kml, title, filePath=''):
-    print(f'Saved to file "{filePath}{title}.kml"')
+    print(f'Save to file "{filePath}{title}.kml"')
     kml.document.name = title
     kml.save(f'{filePath}{title}.kml') # this is for check content
     kml.save('doc.kml') # this is for zip to kmz file

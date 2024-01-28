@@ -18,9 +18,9 @@ import plotLaunchBarChartRace
 CHROME = r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
 
 ################################################################################################
-def splitStringToList(text):
+def splitStringToList(text, n=10):
     oldList = text.split(',') if isinstance(text, str) else text
-    subLists = [oldList[i:i+10] for i in range(0, len(oldList), 10)]
+    subLists = [oldList[i:i+n] for i in range(0, len(oldList), n)]
     return subLists
 
 ################################################################################################
@@ -112,13 +112,13 @@ def getLocationsFrame(locations, lastLocation):
     layout5 = [locationTitle]
     for i, subLocation in enumerate(subLocations):
         checkbox = []
-        for j, item in enumerate(subLocation[:5]):
+        for j, item in enumerate(subLocation[:6]):
             if j < len(subLocation) - 1:
                 checkbox.append(sg.Checkbox(item, key=f'location-{i * 10 + j + 1}', 
-                        size=(12, 1), default=True if item == lastLocation else False))
+                        size=(10, 1), default=True if item == lastLocation else False))
             else:
                 checkbox.append(sg.Checkbox(item, key=f'location-{i * 10 + j + 1}', 
-                        size=(10, 1), default=True if item == lastLocation else False))
+                        default=True if item == lastLocation else False))
         layout5.append(checkbox)      
     return sg.Frame('发射位置（统计条形图）', layout5)
 
@@ -127,23 +127,22 @@ def getCategoriesFrame(categories, lastCategory):
     categoriesTitle = [sg.Checkbox('选择全运载火箭分类', key='category01', enable_events=True)]
     layout2 = [categoriesTitle]
     for i, subCategory in enumerate(subCategories):
-        checkbox = [sg.Checkbox(item, key=f'category-{i * 10 + j + 1}', size=(12, 1), 
+        checkbox = [sg.Checkbox(item, key=f'category-{i * 10 + j + 1}', size=(10, 1), 
                     default=True if item in lastCategory else False) for j, item in enumerate(subCategory)]
         layout2.append(checkbox)      
     return sg.Frame('运载火箭分类（动态条形图）', layout2)
 
 def getPayloadsFrame(payloads):
-    subPayloads = splitStringToList(payloads)
+    subPayloads = splitStringToList(payloads, 11)
     payloadsTitle = [sg.Checkbox('选择全卫星系列', key='payload01', enable_events=True),
                      sg.Checkbox('仅生成最后图表', key='payload02', default=True)]
     layout = [payloadsTitle]
     for i, subPayload in enumerate(subPayloads):
         checkbox = [sg.Checkbox(item if item[0] != '^' else item[1:], 
                     text_color=sg.theme_element_text_color() if item[0] != '^' else 'orange', 
-                    key=f'payload-{i * 10 + j + 1}', size=(12, 1)) 
-                    for j, item in enumerate(subPayload)]
+                    key=f'payload-{i * 11 + j + 1}', size=(10, 1)) for j, item in enumerate(subPayload)]
         layout.append(checkbox)
-    return [sg.Frame('卫星系列（统计条形图，无色卫星名含有文字，桔色卫星名开头文字）', layout)]
+    return [sg.Frame('卫星系列（统计条形图，无色=卫星名含有文字，桔色=卫星名开头文字）', layout)]
 
 def getButton():
     button = [
@@ -198,10 +197,10 @@ def getResolution():
 
 ################################################################################################
 def make_dpi_aware():
-  import ctypes
-  import platform
-  if myUtils.isWindows() and int(platform.release()) >= 8:
-    ctypes.windll.shcore.SetProcessDpiAwareness(True)
+    import ctypes
+    import platform
+    if myUtils.isWindows() and int(platform.release()) >= 8:
+        ctypes.windll.shcore.SetProcessDpiAwareness(True)
 
 ################################################################################################
 def getLastSeries(lastRocket, series, privates, lastUpperStage):
@@ -351,8 +350,7 @@ def splitRetiredRockets(retiredChecked):
     return cz, ncz
     
 ################################################################################################
-def handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets, retired, series, locations, categories, payloads, dictUpperStage):
-# def handleEvents(excelBook, sheetName, event, window, values, years, rockets, retired, series, locations, categories, dictUpperStage):
+def handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets, retired, series, locations, categories, payloads, dictUpperStage, dfLastLaunch):
     if event == 'year01':
         toogleAllCheckbox(window, values, 'year-')
     elif event == 'rocket01':
@@ -426,7 +424,7 @@ def handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets
                     plotLaunchByDate.plot7(cn_font, excelSheet1, retired[0].split(','), retired[1].split(','), dictUpperStage, seriesPrintLast)
             else:
                 seriesChecked = removeSeriesText(seriesChecked)
-                plotLaunchByDate.plot2(cn_font, excelSheet1, seriesChecked, dictUpperStage, seriesPrintLast)
+                plotLaunchByDate.plot2(cn_font, excelSheet1, seriesChecked, dictUpperStage, seriesPrintLast, dfLastLaunch)
 
             if seriesMaiden:
                 plotLaunchByDate.plotGraphForMaiden(cn_font, excelSheet1, dictUpperStage)
@@ -481,7 +479,7 @@ def main():
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
 
-        handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets, retired, series, locations, categories, payloads, dictUpperStage)
+        handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets, retired, series, locations, categories, payloads, dictUpperStage, dfLastLaunch)
         window.Normal()
     
     window.close()

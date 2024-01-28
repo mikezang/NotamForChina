@@ -72,32 +72,48 @@ def getCTripList(driver):
         driver.get(constants.CTRIP_URL)
         # myUtils.checkVPN(driver)
 
+        # show list page
         WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "grp-10650014575-list-tab-产品"))).click()
-        # WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "more_info"))).click()
-        sleep(5)
-        driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
-        sleep(2)
-        # myUtils.elementClass(driver, 60, "no_more")
-        div1 = driver.find_elements(By.CLASS_NAME, "shop_list_item")
-        div2 = driver.find_elements(By.CLASS_NAME, 'shop_tour_content')
 
-        if not div1:
-            print(div1)
-            
-        for i, link in enumerate(div2):
-            title = link.find_element(By.TAG_NAME, 'h3').text
-            if '观礼' in title:
-                url = div1[i].get_attribute("data-pid")
-                if url not in urls:
-                    titles.append(title)
-                    urls.append(url)
+        # input '海口','文昌','西昌','酒泉',
+        for city in ['海口','文昌','西昌','酒泉']:
+            # click "change city" button
+            print(f'Searching {city}...')
+            myUtils.elementClick(driver, 30, "//div[@class='suppliers_search_destination_starting']")
 
-                    if '文昌' in title:
-                        locations.append('文昌')
-                    elif '西昌' in title:
-                        locations.append('西昌')
-                    elif '酒泉' in title or '东方航天城' in title:
-                        locations.append('酒泉')
+            myUtils.elementInput(driver, 30, "//input[@class='search_text']", city)
+            myUtils.elementClick(driver, 30, "//input[@class='search_text']")
+            sleep(2)
+        
+            # select input first city
+            liList = driver.find_elements(By.CLASS_NAME, "search_cn")
+            liList[0].click()
+
+            # show list page again
+            WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "grp-10650014575-list-tab-产品"))).click()
+
+            driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+            div1 = driver.find_elements(By.CLASS_NAME, "shop_list_item")
+            div2 = driver.find_elements(By.CLASS_NAME, 'shop_tour_content')
+
+            for pid, link in zip(div1, div2):
+                title = link.find_element(By.TAG_NAME, 'h3').text
+                if '观礼' not in title:
+                    continue
+
+                url = pid.get_attribute("data-pid")
+                if url in urls:
+                    continue
+
+                titles.append(title)
+                urls.append(url)
+
+                if '文昌' in title:
+                    locations.append('文昌')
+                elif '西昌' in title:
+                    locations.append('西昌')
+                elif '酒泉' in title or '东方航天城' in title:
+                    locations.append('酒泉')
 
     except Exception as e:
         print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')

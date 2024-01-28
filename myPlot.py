@@ -653,7 +653,7 @@ def readDataFromBook(excelBook, sheetName, headers, columnNotNull, columnRocket,
 def mergeData(dfPivot, dfPivotOk, columnYear):
     def custom_logic(row, index):
         result = {} 
-        retiredRocketsDict = constants.RETIRED_ROCKETS
+        retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
         for column, value in row.items():
             if column in retiredRocketsDict:
                 result[column] = f'{value * 1000 + dfPivotOk[column][index]}'    # 退役
@@ -775,10 +775,12 @@ def parseExcelSheetToDataFrame(excelSheet,
                                columnYear='日期', columnNotNull='结果', 
                                headers=None, noAbort=True, mom=False,
                                onlyFailed=False, isRace=False, isAfterRetired=None, 
-                               seriesDict=None, isMaiden=False, isFirstLast=False, isLunarNewYear=False):
+                               seriesDict=None, isMaiden=False, isFirstLast=False, isLunarNewYear=False, 
+                               plotMonth=None):
     df = readDataFromSheet(excelSheet, headers, columnNotNull, columnRocket, noAbort, onlyFailed)
     return parseToDataFrame(df, rocket, location, payload, startYear, endYear, columnRocket, columnLocation, columnPayload, 
-        columnYear, columnNotNull, headers, noAbort, mom, onlyFailed, isRace, isAfterRetired, seriesDict, isMaiden, isFirstLast, isLunarNewYear)
+        columnYear, columnNotNull, headers, noAbort, mom, onlyFailed, isRace, isAfterRetired, seriesDict, 
+        isMaiden, isFirstLast, isLunarNewYear, plotMonth)
 
 ################################################################################################
 def parseExcelBookToDataFrame(excelBook, sheetName, 
@@ -826,7 +828,6 @@ def parseFirstLast(df, columnYear):
 
 ################################################################################################
 def parseLunarNewYear(df, columnYear, columnRocket, columnLocation, columnNotNull):
-
     df = df[~df[columnYear].isnull()]
     lunarNewYearDates = myUtils.readConfig(['LunarNewYear'])
     lunarNewYearDates = [pd.Timestamp(x, unit='D') for x in lunarNewYearDates]
@@ -898,10 +899,10 @@ def parseRace(df, columnYear, columnRocket, columnNotNull, rocket, startYear, en
     # copy original df to use when plot
     dfAll = dfPivot.copy()
     dfOk = dfPivotOk.copy()
+    retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
 
     if isAfterRetired:
         dfResult = pd.DataFrame(index=dfPivot.index)
-        retiredRocketsDict = constants.RETIRED_ROCKETS
         for label, date_value in retiredRocketsDict.items():
             conditionColumn = (dfPivot.columns == label)
             if conditionColumn.any():
@@ -916,7 +917,7 @@ def parseRace(df, columnYear, columnRocket, columnNotNull, rocket, startYear, en
         if dfResult.empty:
             dfResult = dfPivot * 1000 + dfPivotOk / 1000    # convert to float
     elif isAfterRetired == False:
-        retiredRocketsDict = constants.RETIRED_ROCKETS
+        # retiredRocketsDict = myUtils.readConfigRetiredDict #constants.RETIRED_ROCKETS
         condition = dfPivot.columns.isin(retiredRocketsDict)
         dfTemp = np.where(condition, dfPivot + dfPivotOk / 1000, dfPivot * 1000 + dfPivotOk / 1000)
         dfResult = pd.DataFrame(dfTemp, columns=dfPivot.columns, index=dfPivot.index)
@@ -928,56 +929,27 @@ def parseRace(df, columnYear, columnRocket, columnNotNull, rocket, startYear, en
     dfList.append(dfAll)
     return dfList
 
+def parseMonthData(df, columnYear, plotMonth):
+    dfResult = df[df[columnYear].apply(lambda x: x.month) == plotMonth]
+    return dfResult
+
 ################################################################################################
 def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear=None, endYear=None, 
                                columnRocket='火箭', columnLocation='地点', columnPayload='载荷', 
                                columnYear='日期', columnNotNull='结果', 
                                headers=None, noAbort=True, mom=False,
                                onlyFailed=False, isRace=False, isAfterRetired=None, 
-                               seriesDict=None, isMaiden=False, isFirstLast=False, isLunarNewYear=False):
+                               seriesDict=None, isMaiden=False, isFirstLast=False, isLunarNewYear=False, 
+                               plotMonth=None):
     dfList = []
     
     # Extract rows by condition
-    if isFirstLast:
-        # dfResult = pd.DataFrame()
-        # df = df[~df[columnYear].isnull()]
-        # # df[columnYear] = pd.to_datetime(df[columnYear]).dt.date
-        # dfResult = df.groupby(df[columnYear].apply(lambda x: x.year)).apply(getDfFirstlast, columnYear).reset_index(drop=True)
-        # dfResult = dfResult.sort_values(columnYear).reset_index(drop=True)
-        # dfList.append(dfResult)
-        dfList.append(parseFirstLast(df, columnYear))
-
+    if plotMonth:
+        dfList = split50perPage(parseMonthData(df, columnYear, plotMonth))
+    elif isFirstLast:
+        dfList = split50perPage(parseFirstLast(df, columnYear))
     elif isLunarNewYear:
-        # df = df[~df[columnYear].isnull()]
-        # lunarNewYearDates = myUtils.readConfig(['LunarNewYear'])
-        # lunarNewYearDates = [pd.Timestamp(x, unit='D') for x in lunarNewYearDates]
-        # dfLunarNewYears = pd.DataFrame({
-        #     columnRocket: ['春节'] * len(lunarNewYearDates),
-        #     columnYear: lunarNewYearDates,
-        #     columnLocation: '中国',
-        #     columnNotNull: '成功',
-        #     '序号': '',
-        # })
-        # dfCopy = pd.concat([df, dfLunarNewYears]).sort_values(columnYear).reset_index()
-        # dfLunarNewYearDates = dfCopy[dfCopy[columnRocket] == '春节'][columnYear]
-        # dfResult = pd.DataFrame()
-        # for dfLunarNewYearDate in dfLunarNewYearDates:
-        #     year = dfLunarNewYearDate.year
-        #     january01 = pd.Timestamp(f'{year}-01-01', unit='D')
-        #     feburary28 = pd.Timestamp(f'{year}-02-28', unit='D')
-        #     limit = (dfCopy[columnYear] >= january01) & (dfCopy[columnYear] <= feburary28)
-        #     dfBefore = dfCopy[(dfCopy[columnYear] < dfLunarNewYearDate) & limit]
-        #     dfAfter = dfCopy[(dfCopy[columnYear] > dfLunarNewYearDate) & limit]
-
-        #     if not dfBefore.empty or not dfAfter.empty:
-        #         if not dfBefore.empty:
-        #             dfResult = pd.concat([dfResult, getFirstSameDateRows(dfBefore)])
-        #         dfThisYear = dfLunarNewYears[dfLunarNewYears[columnYear] == dfLunarNewYearDate]      
-        #         dfResult = pd.concat([dfResult, dfThisYear])
-        #         if not dfAfter.empty:
-        #             dfResult = pd.concat([dfResult, getLastSameDateRows(dfAfter)])
-        dfList.append(parseLunarNewYear(df, columnYear, columnRocket, columnLocation, columnNotNull))
-
+        dfList = split50perPage(parseLunarNewYear(df, columnYear, columnRocket, columnLocation, columnNotNull))
     elif isMaiden:
         dfAll = df.groupby(columnRocket).head(1)
         dfCZ = dfAll[dfAll[columnRocket].str.startswith('长征')]
@@ -987,75 +959,9 @@ def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear
         dfList.append(dfNCZ)
 
     elif isRace:
-        # df = countRace(df, columnRocket, rocket, startYear, endYear, seriesDict)
-        # df = df.copy()
-        # df.loc[:, 'count'] = 1
-        # df.loc[:, 'ok'] = 0
-        # df.loc[df[columnNotNull] == '成功', 'ok'] = 1
-
-        # # Pivot the DataFrame from long to wide format
-        # dfPivot = df.pivot_table(index=columnYear, columns=columnRocket, values='count', aggfunc='sum', fill_value=0)
-        # dfPivotOk = df.pivot_table(index=columnYear, columns=columnRocket, values='ok', aggfunc='sum', fill_value=0)
-
-        # # Reorder columns to match the original order
-        # column_order = df[columnRocket].unique()
-        # dfPivot = dfPivot[column_order]
-        # dfPivotOk = dfPivotOk[column_order]
-
-        # # Reset the index to include 'date' as a column
-        # dfPivot.reset_index(inplace=True)
-        # dfPivotOk.reset_index(inplace=True)
-
-        # # Perform cumulative summation for each category
-        # dfPivot.set_index(columnYear, inplace=True)
-        # dfPivot = dfPivot.cumsum()
-        # dfPivotOk.set_index(columnYear, inplace=True)
-        # dfPivotOk = dfPivotOk.cumsum()
-
-        # if startYear == None:
-        #     today = datetime.today()
-        #     dfPivot = duplicateLastRow(dfPivot, today)
-        #     dfPivotOk = duplicateLastRow(dfPivotOk, today)
-        # else:
-        #     dfPivot = insertFirstDayOfStartYear(dfPivot, startYear)
-        #     dfPivot = appendLastDayOfendYear(dfPivot, endYear - 1)
-        #     dfPivotOk = insertFirstDayOfStartYear(dfPivotOk, startYear)
-        #     dfPivotOk = appendLastDayOfendYear(dfPivotOk, endYear - 1)
-
-        # # copy original df to use when plot
-        # dfAll = dfPivot.copy()
-        # dfOk = dfPivotOk.copy()
-
-        # if isAfterRetired:
-        #     dfResult = pd.DataFrame(index=dfPivot.index)
-        #     retiredRocketsDict = constants.RETIRED_ROCKETS
-        #     for label, date_value in retiredRocketsDict.items():
-        #         conditionColumn = (dfPivot.columns == label)
-        #         if conditionColumn.any():
-        #             dfTemp_label = np.where(conditionColumn, dfPivot + dfPivotOk / 1000, dfPivot * 1000 + dfPivotOk / 1000)
-        #             conditionRow = (dfPivot.index >= date_value)
-        #             dfTemp_date = np.where(conditionRow[:, np.newaxis], dfTemp_label, dfPivot * 1000 + dfPivotOk / 1000)
-        #             df_temp_result = pd.DataFrame(dfTemp_date, columns=dfPivot.columns, index=dfPivot.index)
-        #             if dfResult.empty:
-        #                 dfResult = df_temp_result.copy()
-        #             else:
-        #                 dfResult[label] = df_temp_result[label]
-        #     if dfResult.empty:
-        #         dfResult = dfPivot * 1000 + dfPivotOk / 1000    # convert to float
-        # elif isAfterRetired == False:
-        #     retiredRocketsDict = constants.RETIRED_ROCKETS
-        #     condition = dfPivot.columns.isin(retiredRocketsDict)
-        #     dfTemp = np.where(condition, dfPivot + dfPivotOk / 1000, dfPivot * 1000 + dfPivotOk / 1000)
-        #     dfResult = pd.DataFrame(dfTemp, columns=dfPivot.columns, index=dfPivot.index)
-        # else:
-        #     dfResult = dfPivot * 1000 + dfPivotOk / 1000    # convert to float
-
-        # dfList.append(dfResult)
-        # dfList.append(dfOk)
-        # dfList.append(dfAll)
         dfList = parseRace(df, columnYear, columnRocket, columnNotNull, rocket, startYear, endYear, seriesDict, isAfterRetired)
 
-    elif startYear is not None:
+    elif startYear:
         if endYear is None:
             endYear = startYear
 
@@ -1109,7 +1015,7 @@ def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear
             df = countRocket(df, columnRocket, rocket)
             dfList = split50perPage(df)
 
-    elif location is not None:
+    elif location:
         if columnLocation is not None:
             if isinstance(location, list):
                 cond1 = df[columnLocation].isin(location)
@@ -1117,9 +1023,8 @@ def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear
                 cond1 = df[columnLocation] == location
             df = df[cond1]
             dfList = split50perPage(df)
-            # dfList = split50perPage(df, cond1)
 
-    elif payload is not None:
+    elif payload:
         if columnPayload is not None:
             if isinstance(payload, list):
                 cond1 = df[columnPayload].isin(payload)
@@ -1141,12 +1046,7 @@ def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear
 
             df = df[cond1]
             dfList = split50perPage(df)
-            # dfList = split50perPage(df, cond1)
-            # dfResult = df[d1]
-            # if len(dfResult) > 50:
-            #     dfList = dict(list(dfResult.groupby(np.arange(len(dfResult)) // 50)))
-            # else:
-            #     dfList.append(dfResult)
+
     else:
         cond1 = ~df[columnRocket].str.startswith('远征')
         dfSelected = df[cond1]        
