@@ -422,8 +422,8 @@ def getLocation(newFile):
 
 ################################################################################################
 def createShipTrackLinesKmlFile(newFile):
-    df = myPlot.readShipMoveData(newFile, '船舶轨迹', headersRow=1)
-    mmsiKey = df['mmsi'].iloc[0]
+    df = myPlot.readShipMoveData(newFile, '船舶轨迹', skipRows=1)
+    mmsiKey = str(df['mmsi'].iloc[0])
     startDate = removeChars(df['时间'].iloc[0])[:12]
     endDate = removeChars(df['时间'].iloc[-1])[:12]
     mmsi = readConfig(['LaunchShipMMSI'])

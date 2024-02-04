@@ -76,11 +76,17 @@ def getCTripList(driver):
         WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "grp-10650014575-list-tab-产品"))).click()
 
         # input '海口','文昌','西昌','酒泉',
-        for city in ['海口','文昌','西昌','酒泉']:
-            # click "change city" button
-            print(f'Searching {city}...')
-            myUtils.elementClick(driver, 30, "//div[@class='suppliers_search_destination_starting']")
+        print(f'Searching', end=' ', flush=True)
+        tripCity = myUtils.readConfig(['TripCity'])
 
+        for i, city in enumerate(tripCity): #['海口','文昌','西昌','酒泉']:
+            if i < len(tripCity) - 1:
+                print(f'{city}', end=',', flush=True)
+            else:
+                print(f'{city}\n')
+
+            # click "change city" button
+            myUtils.elementClick(driver, 30, "//div[@class='suppliers_search_destination_starting']")
             myUtils.elementInput(driver, 30, "//input[@class='search_text']", city)
             myUtils.elementClick(driver, 30, "//input[@class='search_text']")
             sleep(2)
@@ -252,8 +258,8 @@ def convertDate1(oldDate) -> str:
 
 ################################################################################################
 def printTrip(d) -> None:
-    print(f"\nTrip发射预测{myUtils.getJapanTime()}")
-    print("===============================")
+    print(f"\n携程旅行发射预测{myUtils.getJapanTime()}")
+    print("===================================")
     launch_date = myUtils.sortDictByKey(d)
     myUtils.printDict(launch_date)
 

@@ -188,9 +188,8 @@ def compareNotam(newFile, cn_font):
     oldFiles = myUtils.listFiles(folder, ".kml", filename)
 
     for oldFile in oldFiles:
-        # print(oldFile)
-        # if '2023年03月22日酒泉快舟一号甲' not in oldFile:
-        #     continue
+        if '\\old\\' in oldFile:
+            continue
         try:
             # Use geopandas to read old NOTAM kml file to shapely.geometry
             oldPolys = gpd.read_file(oldFile, driver='KML')

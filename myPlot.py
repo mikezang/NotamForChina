@@ -1,24 +1,15 @@
-# import cmath
-# import textwrap
 import random
 import numpy as np
 import pandas as pd
-# import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
-from re import findall #, finditer, match, search#, sub, IGNORECASE
-# import matplotlib.dates as mdates
-# import matplotlib.patches as mpatches
+from re import findall
 from math import log, sqrt
 import matplotlib.font_manager as fm
-# from cn2an import an2cn
-from os import walk#, path
 from datetime import datetime
 from openpyxl import load_workbook as loadXLSX
 import pyexcel as xls
-# from matplotlib.lines import Line2D
-# from matplotlib.ticker import ScalarFormatter
 from fiona.drvsupport import supported_drivers
 from shapely.geometry import Polygon, LineString #, Point
 import matplotlib.colors as mcolors
@@ -232,11 +223,6 @@ def plotXAxis(cn_font, ax, xLabel, xTicks, xTickLabels, minLim, maxLim, fontsize
     ax.set_xlabel(xLabel, fontproperties=cn_font, fontsize=fontsize)
 
     ax.set_xticklabels(insertLf(xTickLabels), fontproperties=cn_font, fontsize=fontsize)
-    # if xTickLabels[0][:5] != xTickLabels[-2][:5]:
-    #     ax.set_xticklabels(insertLf(xTickLabels), fontproperties=cn_font, fontsize=fontsize)
-    # else:
-    #     xTickLabels = [s[5:] for s in xTickLabels]
-    #     ax.set_xticklabels(insertLf(xTickLabels), fontproperties=cn_font, fontsize=fontsize)
     hasGreyLable = False
 
     if retired_rockets:
@@ -299,7 +285,8 @@ def plotPayloadInsideBar(cn_font, ax, yDataList, rocketList, payloadList, colorD
             y = c / 2 if c == 1 else c / 4 + i * c / 2
             y = y * 3.5 if rocket == '春节' else y
 
-            pattern = r'(天宫.*|梦天.*|问天.*|巡天.*)' if payload == '空间站' else f'{payload}.*'
+            # pattern = r'(天宫.*|梦天.*|问天.*|巡天.*|神舟.*|天舟.*)' if payload == '空间站' else f'{payload}.*'
+            pattern = r'(.*)' if payload == '空间站' else f'{payload}.*'
             label = ''
             labels = findall(pattern, payload1)
             if labels:
@@ -368,8 +355,6 @@ def plotRightYAxis(cn_font, ax, yLabel, yTicks, fontsize=14, log=False):
 
 ################################################################################################
 def plotYearOnTopOfBar(ax, xDataList, yDataList, fontsize=12):
-    # if len(xDataList) == 1 or xDataList[0].year != xDataList[-1].year:
-    # if len(xDataList) == 1:
     for i, (y, d) in enumerate(zip(yDataList, xDataList)):
         if i == 0 or d.year != xDataList[i - 1].year:
             ax.text(i+1, y+0.25, str(d.year)[0], ha="center", va="center", fontsize=fontsize)
@@ -379,8 +364,6 @@ def plotYearOnTopOfBar(ax, xDataList, yDataList, fontsize=12):
 
 ################################################################################################
 def plotVLineBetweenYearsMonths(ax, xDataList, dx=0.5, yMin=-0.24, yMax=0.8, mustPlot=False):
-    # fontHeight = plt.rcParams['font.size'] / 72
-    # yMax += fontHeight * 5
     if mustPlot:
         for xData in xDataList:
             for i, date in enumerate(xData):
@@ -456,8 +439,6 @@ def countRace(df, columnRocket, rocket, startYear, endYear, seriesDict):
 
 ################################################################################################
 def countDataFrameByDate(dfList):
-    # getting sub dataframe where 日期 is year and 结果 is not null
-    # df = df[(df['日期'].astype(str).str.startswith(str(year))) & (df['结果'].notnull())]
     dfCountList = []
     # dfCount = dfList[0].copy()
     count = len(dfList)
@@ -475,10 +456,6 @@ def countDataFrameByDate(dfList):
             dfCount[constants.EXCEL_COLUMN_PAYLOAD] = dfCount.groupby([constants.EXCEL_COLUMN_DATE])[constants.EXCEL_COLUMN_PAYLOAD].transform(lambda x: '/'.join(x))
             dfCount[constants.EXCEL_COLUMN_LOCATION] = dfCount.groupby([constants.EXCEL_COLUMN_DATE])[constants.EXCEL_COLUMN_LOCATION].transform(lambda x: '/'.join(x))
             dfCount[constants.EXCEL_COLUMN_RESULT] = dfCount.groupby([constants.EXCEL_COLUMN_DATE])[constants.EXCEL_COLUMN_RESULT].transform(lambda x: '/'.join(x))
-            # dfCount['火箭'] = dfCount.groupby(['日期'])['火箭'].transform(lambda x: '/'.join(x))
-            # dfCount['序号'] = dfCount.groupby(['日期'])['序号'].transform(lambda x: '/'.join(x))
-            # dfCount['地点'] = dfCount.groupby(['日期'])['地点'].transform(lambda x: '/'.join(x))
-            # dfCount['结果'] = dfCount.groupby(['日期'])['结果'].transform(lambda x: '/'.join(x))
         except:
             pass
         dfCount = dfCount.groupby('日期').first().reset_index()
@@ -505,92 +482,70 @@ def countRocket(df, columnRocket, rocket, seriesDict=None):
     if columnRocket is not None:
         if isinstance(rocket, list):
             cond1 = df[columnRocket].isin(rocket)
-        # elif rocket == '上面级':
-        #     # cond1 = df[columnRocket].str.startswith('长征')
-        #     # cond1 |= df[columnRocket].str.startswith('远征')
-        #     df.reset_index(drop=True, inplace=True)
-        #     cond1 = df[columnRocket].str.startswith('远征')
-        #     dfSelected = df[cond1]
-        #     indexSelected = dfSelected.index - 1
-        #     df = df.iloc[indexSelected]
-        #     cond1 = None
         elif rocket == '' or rocket == '全部':
             cond1 = df[columnRocket].str.startswith('长征')
             cond1 |= ~df[columnRocket].str.startswith('长征')
             cond1 &= ~df[columnRocket].str.startswith('远征')
         elif rocket == '长征':
             cond1 = df[columnRocket].str.startswith(rocket)
-# TODO use seriesDict to or 
-        elif rocket == '长征三号甲系列':
-            cond1 = df[columnRocket].str.startswith('长征三号甲')
-            cond1 |= df[columnRocket].str.startswith('长征三号乙')
-            cond1 |= df[columnRocket].str.startswith('长征三号丙')
-        elif rocket == '长征四号系列':
-            cond1 = df[columnRocket].str.startswith('长征四号')
-        elif rocket == '长征五号系列':
-            cond1 = df[columnRocket].str.startswith('长征五号')
-        elif rocket == '长征六号系列':
-            cond1 = df[columnRocket].str.startswith('长征六号')
-        elif rocket == '长征七号系列':
-            cond1 = df[columnRocket].str.startswith('长征七号')
-        elif rocket == '长征十一号系列':
-            cond1 = df[columnRocket].str.startswith('长征十一号')
         elif rocket == '其他':
             cond1 = ~df[columnRocket].str.startswith('长征')
             cond1 &= ~df[columnRocket].str.startswith('远征')
-#TODO use config.ini
-        elif rocket == '快舟系列':
-            cond1 = df[columnRocket].str.startswith('快舟')
-        elif rocket == '朱雀系列':
-            cond1 = df[columnRocket].str.startswith('朱雀')
-        elif rocket == '捷龙系列':
-            cond1 = df[columnRocket].str.startswith('捷龙')
-        elif rocket == '谷神星系列':
-            cond1 = df[columnRocket].str.startswith('谷神星')
-        elif rocket == '星河系列':
-            cond1 = df[columnRocket].str.startswith('谷神星')
-            cond1 |= df[columnRocket].str.startswith('智神星')
-        elif rocket == '力箭系列':
-            cond1 = df[columnRocket].str.startswith('力箭')
-        elif rocket == '天龙系列':
-            cond1 = df[columnRocket].str.startswith('天龙')
-        elif rocket == '引力系列':
-            cond1 = df[columnRocket].str.startswith('引力')
         elif rocket == '民营':
             privates = myUtils.readConfig(['PrivatesPrefix'])
             cond1 = False
             for private in privates:
                 cond1 |= df[columnRocket].str.startswith(private)
+# TODO use config.ini
+# TODO use seriesDict to or 
+        elif rocket == '长征三号甲系列':
+            cond1 = df[columnRocket].str.startswith('长征三号甲')
+            cond1 |= df[columnRocket].str.startswith('长征三号乙')
+            cond1 |= df[columnRocket].str.startswith('长征三号丙')
+        elif rocket == '星河系列':
+            cond1 = df[columnRocket].str.startswith('谷神星')
+            cond1 |= df[columnRocket].str.startswith('智神星')
+        elif rocket[-2:] == '系列':
+            cond1 = df[columnRocket].str.startswith(rocket[:-2])
+        # elif rocket == '长征四号系列':
+        #     cond1 = df[columnRocket].str.startswith('长征四号')
+        # elif rocket == '长征五号系列':
+        #     cond1 = df[columnRocket].str.startswith('长征五号')
+        # elif rocket == '长征六号系列':
+        #     cond1 = df[columnRocket].str.startswith('长征六号')
+        # elif rocket == '长征七号系列':
+        #     cond1 = df[columnRocket].str.startswith('长征七号')
+        # elif rocket == '长征十一号系列':
+        #     cond1 = df[columnRocket].str.startswith('长征十一号')
+        # elif rocket == '快舟系列':
+        #     cond1 = df[columnRocket].str.startswith('快舟')
+        # elif rocket == '朱雀系列':
+        #     cond1 = df[columnRocket].str.startswith('朱雀')
+        # elif rocket == '捷龙系列':
+        #     cond1 = df[columnRocket].str.startswith('捷龙')
+        # elif rocket == '谷神星系列':
+        #     cond1 = df[columnRocket].str.startswith('谷神星')
+        # elif rocket == '力箭系列':
+        #     cond1 = df[columnRocket].str.startswith('力箭')
+        # elif rocket == '天龙系列':
+        #     cond1 = df[columnRocket].str.startswith('天龙')
+        # elif rocket == '引力系列':
+        #     cond1 = df[columnRocket].str.startswith('引力')
         else:
             cond1 = df[columnRocket] == rocket
     return df[cond1] if cond1 is not None else df
 
 ################################################################################################
 # headersRow starts from 0
-def readShipMoveData(excelFile, sheetName=None, headersRow=None, headers=None):
+def readShipMoveData(excelFile, sheetName=None, skipRows=None, headers=None):
     if excelFile[-4:] == '.xls':
         oldExcelFile = excelFile
         excelFile = excelFile.replace('.xls', '.xlsx')
         xls.save_book_as(file_name=oldExcelFile, dest_file_name=excelFile)
-
-    excelBook = loadXLSX(excelFile, data_only=True, read_only=True)
-
-    if sheetName is None:
-        sheetName = excelBook.get_sheet_names()[0]
-    worksheet = excelBook[sheetName]
-    
-    df = pd.DataFrame(worksheet.values) # Convert the worksheet to a DataFrame
-
-    if headers is not None:
-        df.columns = headers # Modify Hedaers
-    elif headersRow is not None:
-        df.columns = df.iloc[headersRow].replace('\n', '') # Set the column names to the values in the headers row
-
-    for row in range(headersRow + 1):
-        df = df.drop(index=row) # Drop the rows above headers, since it's already used as the column names
-
+    df = pd.read_excel(excelFile, sheetName, skiprows=skipRows, dtype={'速度': float}) # Convert the worksheet to a DataFrame
     df.replace('-', np.nan, inplace=True) # Replace '-' with NaN
     df.replace([None, np.nan], '', inplace=True) # Replace None with empty string
+    df = df[df['速度'] > 1.0]
     return df
 
 ################################################################################################
@@ -993,7 +948,8 @@ def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear
                 year = startYMD[:4]
                 lastYear = str(int(year) - 1)
                 lastStartYMD = f'{lastYear}{startYMD[4:]}'
-                lastEndYMD = f'{lastYear}{endYMD[4:]}'
+                mmdd = endYMD[4:] if endYMD[4:] != '0229' else '0228'
+                lastEndYMD = f'{lastYear}{mmdd}'
                 d1 = df[columnYear] >= pd.to_datetime(f'{lastStartYMD}')
                 d2 = df[columnYear] < pd.to_datetime(f'{lastEndYMD}')
                 dfList.append(df[d1 & d2])
@@ -1034,6 +990,8 @@ def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear
                     cond1 |= df[columnPayload].str.startswith('梦天')
                     cond1 |= df[columnPayload].str.startswith('问天')
                     cond1 |= df[columnPayload].str.startswith('巡天')
+                    cond1 |= df[columnPayload].str.startswith('神舟')
+                    cond1 |= df[columnPayload].str.startswith('天舟')
                 else:
                     startswith = False
                     if payload[:1] == '^':

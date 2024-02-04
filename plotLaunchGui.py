@@ -1,6 +1,6 @@
 from sys import path
 from timeit import timeit
-from datetime import timedelta #, datetime
+from datetime import timedelta
 from openpyxl import load_workbook as loadXLSX
 import PySimpleGUI as sg
 

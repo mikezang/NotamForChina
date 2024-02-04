@@ -51,14 +51,12 @@ def parseNotam(text):
 ################################################################################################
 def getNotamDetailNew(driver, command, searchLocaltions):
     notam = {}
-    isFirstNotam = True
     
     try:
         driver.get(constants.NEW_NOTAM_URL)
         myUtils.checkVPN(driver)
         radio = ''
 
-        # if isFirstNotam:
         sleep(1)
         button = driver.find_element(By.CSS_SELECTOR, constants.NEW_CSS_SELECTOR_BUTTON_DISCLAIMER)
         if button:
