@@ -140,7 +140,7 @@ def getNsfUrlList(driver, p='1') -> dict:
 
     for page in range(startPage, lastPage + 1):
         href = constants.NSF_URL_CHINA + str(50 * (page - 1))
-        print(f"Page{page}: {href}")
+        print(f"Page{page:02}: {href}")
 
         if page > 1:
             driver.get(href)
@@ -256,7 +256,6 @@ def getNsfDetail(driver, i, title, baseUrl) -> dict:
     notamDict = removeDuplicateNotams(notamDict)
     return notamDict
 
-# TODO parse algorithm
 # how to find all latitude and longitude
 # current algorithem:
 # 1. find numbers r'[^R]([A-Z]\d{4}/\d{2}|1345/16)[^0]'
@@ -268,7 +267,6 @@ def getNsfDetail(driver, i, title, baseUrl) -> dict:
 # 3. find others latitude and longitude
 # 4. find MSA dates, latitude and longitude
 #
-# TODO algorithm:
 # 1. find numbers
 #  1.1 startDate/endDate/location/coodinates bteween numbers[i] and numbers[i+1]
 #  1.2 find location by coordinates
@@ -777,4 +775,3 @@ def printTitlePages(title, lastPage, i) -> None:
 # D°M.M' ⇒ D°M'S":  D + M + round(.M * 60)
 # D.D° ⇒ D°M.M':    int(D) = D°, (D - Int(D)) * 60 = M.M'
 # D.D° ⇒ D°M'S":    Int(D) = D°, Int((D - Int(D)) * 60) = M', (((D - Int(D)) * 60) - Int((D - Int(D)) * 60)) * 60 = S"
-# TODO special parse

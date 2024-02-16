@@ -392,19 +392,18 @@ def handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets
 
         if yearsChecked:
             print(f'\nYear Checked: {yearsChecked}')
-            lastYear = yearsChecked[-1]
-            thisYear = myUtils.getThisYear()
             yearsChecked = splitYearsChecked(yearsChecked)
+            plotLaunchByLocation.plot2(cn_font, excelSheet1)
             for years in yearsChecked:
                 if len(years) == 2:
                     plotLaunchByDate.plot1(cn_font, excelSheet1, years[0], years[1], dictUpperStage)
                 else:
                     plotLaunchByDate.plot1(cn_font, excelSheet1, years[0], upperStage=dictUpperStage)
 
-                for year in years:
-                    plotLaunchByRocket.plot1(cn_font, excelSheet1, year)
                 plotLaunchByYearMonth.plot1(cn_font, excelSheet1, years)
                 plotLaunchByLocation.plot1(cn_font, excelSheet2, years)
+                for year in years:
+                    plotLaunchByRocket.plot1(cn_font, excelSheet1, year)
 
         if rocketsChecked or retiredChecked:
             if rocketsChecked:
@@ -436,6 +435,7 @@ def handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets
         if locationsChecked:
             print(f'\nLocation Checked: {locationsChecked}')
             plotLaunchByDate.plot4(cn_font, excelSheet1, locationsChecked, dictUpperStage, locationPrintLast)
+            plotLaunchByLocation.plot2(cn_font, excelSheet1)
 
         if payloadsChecked:
             print(f'\nPayload Checked: {payloadsChecked}')

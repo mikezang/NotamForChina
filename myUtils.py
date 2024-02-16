@@ -1137,6 +1137,7 @@ def listFiles(folder, extension, excludeFile=None):
 def updateTempFile(notams):
     # filename = f'./data/notam{getJapanTime("%Y%m%d-%H%M%S")}.txt'
     filename = f'./data/notam{getJapanTimeFilename()}.txt'
+    createFolder(filename)
     # newText = f"NOTAM发射预测{getJapanTime()}\n"
     newText = f"NOTAM发射预测\n"
     newText += "================================\n"
@@ -1204,6 +1205,7 @@ def playSound(filename=None):
 ################################################################################################
 def updateKmlFile(kml, title, filePath='', notams=None):
     try:
+        createFolder(filePath)
         with open(f'{filePath}{title}.kml', encoding='utf-8') as f:
             kmlOld = f.read()
             kml.document.name = title

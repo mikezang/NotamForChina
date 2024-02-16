@@ -98,7 +98,10 @@ def getCTripList(driver):
             # show list page again
             WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "grp-10650014575-list-tab-产品"))).click()
 
+            sleep(2)
             driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+            sleep(2)
+
             div1 = driver.find_elements(By.CLASS_NAME, "shop_list_item")
             div2 = driver.find_elements(By.CLASS_NAME, 'shop_tour_content')
 

@@ -385,7 +385,7 @@ def plotVLineBetweenYearsMonths(ax, xDataList, dx=0.5, yMin=-0.24, yMax=0.8, mus
 def getLogList(y):
     yList1 = [0.5, 1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 40, 50, 60, 80, 100, 150, 200, 250, 300, 400, 500]
     # yList1 = np.array([0.5, 1, 2, 3, 4, 5, 6, 8, 10, 20, 30, 40, 50, 60, 80, 100, 150, 200, 250, 300, 400, 500])
-    yList2 = [600, 700, 800, 900, 1000]
+    yList2 = [700, 800, 900, 1000]
     # yList2 = np.array([600, 700, 800, 900, 1000])
     
     if y >= 500:
@@ -731,11 +731,11 @@ def parseExcelSheetToDataFrame(excelSheet,
                                headers=None, noAbort=True, mom=False,
                                onlyFailed=False, isRace=False, isAfterRetired=None, 
                                seriesDict=None, isMaiden=False, isFirstLast=False, isLunarNewYear=False, 
-                               plotMonth=None):
+                               plotMonth=None, plotLocation=False):
     df = readDataFromSheet(excelSheet, headers, columnNotNull, columnRocket, noAbort, onlyFailed)
     return parseToDataFrame(df, rocket, location, payload, startYear, endYear, columnRocket, columnLocation, columnPayload, 
         columnYear, columnNotNull, headers, noAbort, mom, onlyFailed, isRace, isAfterRetired, seriesDict, 
-        isMaiden, isFirstLast, isLunarNewYear, plotMonth)
+        isMaiden, isFirstLast, isLunarNewYear, plotMonth, plotLocation)
 
 ################################################################################################
 def parseExcelBookToDataFrame(excelBook, sheetName, 
@@ -792,6 +792,7 @@ def parseLunarNewYear(df, columnYear, columnRocket, columnLocation, columnNotNul
         columnLocation: '中国',
         columnNotNull: '成功',
         '序号': '',
+        '载荷': '',
     })
     dfCopy = pd.concat([df, dfLunarNewYears]).sort_values(columnYear).reset_index()
     dfLunarNewYearDates = dfCopy[dfCopy[columnRocket] == '春节'][columnYear]
@@ -888,6 +889,31 @@ def parseMonthData(df, columnYear, plotMonth):
     dfResult = df[df[columnYear].apply(lambda x: x.month) == plotMonth]
     return dfResult
 
+def parseLocationData(df, columnRocket, columnLocation, columnNotNull):
+    df = df[~df[columnRocket].str.startswith('远征')]
+    dfAll = df.groupby(columnLocation).size().reset_index(name='全部发射数')
+    dfAllOk = df[df[columnNotNull].str.startswith('成功')].groupby(columnLocation).size().reset_index(name='全部成功数')
+    dfCZ = df[df[columnRocket].str.startswith('长征')].groupby(columnLocation).size().reset_index(name='长征发射数')
+    dfCZOk = df[df[columnRocket].str.startswith('长征') & df[columnNotNull].str.startswith('成功')].groupby(columnLocation).size().reset_index(name='长征成功数')
+    dfNCZ = df[~df[columnRocket].str.startswith('长征')].groupby(columnLocation).size().reset_index(name='其他发射数')
+    dfNCZOk = df[~df[columnRocket].str.startswith('长征') & df[columnNotNull].str.startswith('成功')].groupby(columnLocation).size().reset_index(name='其他成功数')
+    dfResult = pd.merge(dfAll, dfAllOk, on=columnLocation, how='left')
+    dfResult = pd.merge(dfResult, dfCZ, on=columnLocation, how='left')
+    dfResult = pd.merge(dfResult, dfCZOk, on=columnLocation, how='left')
+    dfResult = pd.merge(dfResult, dfNCZ, on=columnLocation, how='left')
+    dfResult = pd.merge(dfResult, dfNCZOk, on=columnLocation, how='left')
+    dfResult.fillna(0, inplace=True)
+    dfResult['其他发射数'] = dfResult['其他发射数'].astype(int)
+    dfResult['其他成功数'] = dfResult['其他成功数'].astype(int)
+    dfSort = dfResult.sort_values(by='全部发射数', ascending=False)
+    dfSum = dfSort.sum().to_frame().T
+    dfSum[columnLocation] = '合计'
+    dfLast = pd.concat([dfSort, dfSum], ignore_index=True)
+    dfLast['全部成功率'] = dfLast['全部成功数'] / dfLast['全部发射数'] 
+    dfLast['长征成功率'] = dfLast['长征成功数'] / dfLast['长征发射数'] 
+    dfLast['其他成功率'] = [ok / all if all != 0 else 0 for ok, all in zip(dfLast['其他成功数'], dfLast['其他发射数'])]
+    return dfLast
+
 ################################################################################################
 def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear=None, endYear=None, 
                                columnRocket='火箭', columnLocation='地点', columnPayload='载荷', 
@@ -895,11 +921,13 @@ def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear
                                headers=None, noAbort=True, mom=False,
                                onlyFailed=False, isRace=False, isAfterRetired=None, 
                                seriesDict=None, isMaiden=False, isFirstLast=False, isLunarNewYear=False, 
-                               plotMonth=None):
+                               plotMonth=None, plotLocation=False):
     dfList = []
     
     # Extract rows by condition
-    if plotMonth:
+    if plotLocation:
+        dfList = parseLocationData(df, columnRocket, columnLocation, columnNotNull)
+    elif plotMonth:
         dfList = split50perPage(parseMonthData(df, columnYear, plotMonth))
     elif isFirstLast:
         dfList = split50perPage(parseFirstLast(df, columnYear))

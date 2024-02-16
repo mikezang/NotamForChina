@@ -71,6 +71,33 @@ def countByYearMonthNew(dfFiltered, byYear):
     return dfMerge
 
 ################################################################################################
+def countByMonth(dfListFiltered):
+    dfListLast = []
+    for dfFiltered in dfListFiltered:
+        dfMonth = dfFiltered['日期'].dt.strftime('%m')
+
+        isOk = dfFiltered['结果'] == '成功'
+        isCz = dfFiltered['火箭'].str.startswith('长征')
+        isNcz = ~dfFiltered['火箭'].str.startswith('长征')
+
+        # Count by year
+        dfTotalYear = dfFiltered.groupby(dfMonth).size().reset_index(name='发射数')
+        dfOkYear = dfFiltered[isOk].groupby(dfMonth).size().reset_index(name='成功数')
+        dfCzTotalYear = dfFiltered[isCz].groupby(dfMonth).size().reset_index(name='长征发射数')
+        dfCzOkYear = dfFiltered[isOk & isCz].groupby(dfMonth).size().reset_index(name='长征成功数')
+        dfNczTotalYear = dfFiltered[isNcz].groupby(dfMonth).size().reset_index(name='其他发射数')
+        dfNczOkYear = dfFiltered[isOk & isNcz].groupby(dfMonth).size().reset_index(name='其他成功数')
+
+        # merge on 日期 to get all columns above together
+        dfMergeTotal = pd.merge(dfTotalYear, dfCzTotalYear, on='日期', how='left')
+        dfMergeTotal = pd.merge(dfMergeTotal, dfNczTotalYear, on='日期', how='left')
+        dfMergeOk = pd.merge(dfOkYear, dfCzOkYear, on='日期', how='left')
+        dfMergeOk = pd.merge(dfMergeOk, dfNczOkYear, on='日期', how='left')
+        dfMerge = pd.merge(dfMergeTotal, dfMergeOk, on='日期', how='left')
+        dfListLast.append(dfMerge)
+    return dfListLast
+
+################################################################################################
 def countByYearMonth(dfListFiltered, byYear):
     dfListLast = []
     for dfFiltered in dfListFiltered:
@@ -153,6 +180,83 @@ def sum(dfListResult, columns):
         #             '累计成功率': okSum / totalSum, '累计长征成功率': czOkSum / czTotalSum, '累计其他成功率': nczOkSum / nczTotalSum}
 
         dfLast = pd.concat([dfResult, pd.DataFrame(rowTotal, index=[0])], ignore_index=True)
+        dfListLast.append(dfLast)
+    return dfListLast
+
+################################################################################################
+def countDataFrameByMonth(dfList, byLocation=False):
+    dfListCopy = dfList.copy()
+    dfListMerge = countByMonth(dfListCopy)
+
+    # fill NaN values and convert to integer
+    columns = ['长征发射数', '其他发射数', '成功数', '长征成功数', '其他成功数']
+    fillZero(dfListMerge, columns)
+    dfListInserted = dfListMerge.copy()
+
+    # Copy DataFrame
+    dfListResult = dfListInserted.copy()
+
+    # Calculate 失败数
+    columnsSubtrahend1 = ['发射数', '长征发射数', '其他发射数']
+    columnsSubtrahend2 = ['成功数', '长征成功数', '其他成功数']
+    dfListResult = calcFaliure(dfListResult, columnsSubtrahend1, columnsSubtrahend2)
+
+    # calculate the cumulative sum of rows
+    columns = ['发射数', '长征发射数', '其他发射数', '成功数', '长征成功数', '其他成功数', '失败数', '长征失败数', '其他失败数']
+    dfListResult = cumul(dfListResult, columns)
+
+    # Calculate 成功率
+    columnsDividend = ['成功数', '长征成功数', '其他成功数', '累计成功数', '累计长征成功数', '累计其他成功数']
+    columnsDivisor = ['发射数', '长征发射数', '其他发射数', '累计发射数', '累计长征发射数', '累计其他发射数']
+    dfListResult = calcRate(dfListResult, columnsDividend, columnsDivisor)
+
+    # Concate total row as below
+    # 总计: 发射数, 成功数, 失败数, 长征发射数, 长征成功数, 长征失败数, 其他发射数, 其他成功数, 其他失败数, 成功率. 长征成功率, 其他成功率
+    columns = ['发射数', '长征发射数', '其他发射数', '成功数', '长征成功数', '其他成功数', 
+               '失败数', '长征失败数', '其他失败数',
+               '累计发射数', '累计长征发射数', '累计其他发射数', '累计成功数', '累计长征成功数', '累计其他成功数', 
+               '累计失败数', '累计长征失败数', '累计其他失败数'
+    ]
+
+    dfListLast = []
+    for df in dfListResult:
+        # dfLast = sumDafatFrame(dfResult, columns)
+        totalSum = df['发射数'].sum()
+        czTotalSum = df['长征发射数'].sum()
+        nczTotalSum = df['其他发射数'].sum()
+        okSum = df['成功数'].sum()
+        czOkSum = df['长征成功数'].sum()
+        nczOkSum = df['其他成功数'].sum()
+        ngSum = df['失败数'].sum()
+        czNgSum = df['长征失败数'].sum()
+        nczNgSum = df['其他失败数'].sum()
+
+        # 累计
+        totalSums = df['累计发射数'].sum()
+        czTotalSums = df['累计长征发射数'].sum()
+        nczTotalSums = df['累计其他发射数'].sum()
+        okSums = df['累计成功数'].sum()
+        czOkSums = df['累计长征成功数'].sum()
+        nczOkSums = df['累计其他成功数'].sum()
+        ngSums = df['累计失败数'].sum()
+        czNgSums = df['累计长征失败数'].sum()
+        nczNgSums = df['累计其他失败数'].sum()
+
+        rowTotal = {'日期': '总计', 
+                    '发射数': totalSum, '长征发射数': czTotalSum, '其他发射数': nczTotalSum,
+                    '成功数': okSum, '长征成功数': czOkSum, '其他成功数': nczOkSum,
+                    '失败数': ngSum, '长征失败数': czNgSum, '其他失败数': nczNgSum,
+                    '累计发射数': totalSums, '累计长征发射数': czTotalSums, '累计其他发射数': nczTotalSums,
+                    '累计成功数': okSums, '累计长征成功数': czOkSums, '累计其他成功数': nczOkSums,
+                    '累计失败数': ngSums, '累计长征失败数': czNgSums, '累计其他失败数': nczNgSums,
+                    '成功率': okSum / totalSum if totalSum > 0 else 0, 
+                    '长征成功率': czOkSum / czTotalSum if czTotalSum > 0 else 0, 
+                    '其他成功率': nczOkSum / nczTotalSum if nczTotalSum > 0 else 0,
+                    '累计成功率': okSum / totalSums if totalSums > 0 else 0, 
+                    '累计长征成功率': czOkSum / czTotalSums if czTotalSums > 0 else 0, 
+                    '累计其他成功率': nczOkSum / nczTotalSums if nczTotalSums > 0 else 0}
+
+        dfLast = pd.concat([df, pd.DataFrame(rowTotal, index=[0])], ignore_index=True)
         dfListLast.append(dfLast)
     return dfListLast
 
@@ -240,6 +344,47 @@ def countDataFrameByYearMonth(dfList, byYear=True, byLocation=False):
     return dfListLast
 
 ################################################################################################
+def plotLineGraphByMonth(cn_font, ax, dfList, rocketType=''):
+    yearList, okRateList, okRatesList = [], [], []
+    for df in dfList:
+        yearList.append(list(df['日期'].astype(str)))
+        okRateList.append(list(df[f'{rocketType}成功率']))
+        okRatesList.append(list(df[f'累计{rocketType}成功率']))
+ 
+    xTickList = list(range(1, len(yearList[0]) + 1))
+    leftYLabel = f'{rocketType}成功率'
+
+    xLabel = '发射月'
+    xTickLabels = [f'{an2cn(str(int(d)))}月' if d.isdigit() else d for d in yearList[0]]
+    
+    colors = [['bo-', 'mx-'], ['go-', 'rx-']]
+    for i, (okRate, okRates) in enumerate(zip(okRateList, okRatesList)):
+        ax.plot(xTickList, okRate, colors[i][0], zorder=3)
+        # ax.plot(xTickList[:-1], okRates[:-1], colors[i][1], zorder=3)
+
+        for j, (xTick, ok, oks) in enumerate(zip(xTickList, okRate, okRates)):
+            if ok > 0:
+                # if xTick == xTickList[-2]:
+                point = (xTick, ok)
+                y = 5 if ok > okRate[j - 1] else -15
+                color = 'black' if j < len(xTickList)-1 else 'white'
+                ax.annotate(f"{ok * 100:.2f}%", xy=point, xytext=(-15, y), color=color, textcoords='offset points')
+            # if oks > 0 and oks < 1:
+            #     if xTick == xTickList[-2]:
+            #         point = (xTick, oks)
+            #         y = 5 if oks > okRates[j - 1] else -15
+            #         ax.annotate(f"{oks * 100:.2f}%", xy=point, xytext=(-15, y), textcoords='offset points')
+
+    # Set y axis
+    myPlot.plotLeftYAxis(cn_font, ax, leftYLabel, -0.05, 1.10, True)
+
+    # Set x Axis
+    myPlot.plotXAxis(cn_font, ax, xLabel, xTickList, xTickLabels, 0, len(xTickList) + 1)
+
+    ax.set_zorder(4) # Set left axis to top
+    ax.patch.set_visible(False) # set the patch of the left axes to be invisible
+
+################################################################################################
 def plotLineGraphByYearMonth(cn_font, ax, dfList, startYear, rocketType='', byYear=True, mom=False):
     yearList, okRateList, okRatesList = [], [], []
     for df in dfList:
@@ -286,6 +431,30 @@ def plotLineGraphByYearMonth(cn_font, ax, dfList, startYear, rocketType='', byYe
     ax.patch.set_visible(False) # set the patch of the left axes to be invisible
 
 ################################################################################################
+def plotBarGraphByMonth(cn_font, ax, dfList, rocketType=''):
+    nameList, totalList, okList, ngList = [], [], [], []
+    for df in dfList:
+        nameList.append(list(df['日期']))
+        totalList.append(list(df[f'{rocketType}发射数']))
+        okList.append(list(df[f'{rocketType}成功数']))
+        ngList.append(list(df[f'{rocketType}失败数']))
+
+    xTickList = list(range(1, len(nameList[0]) + 1))
+    rightYLabel = f'{rocketType}发射数'
+
+    for i, (xTick, ok, ng) in enumerate(zip(xTickList, okList[0], ngList[0])):
+        bar1 = ax.bar(xTick, ok, color='green', label=ok, zorder=1)
+        bar2 = ax.bar(xTick, ng, color='red', label=ng, zorder=1, bottom=ok)
+        ax.bar_label(bar2, fontsize=12, label_type='edge')
+        fontsize = 14
+        myPlot.plotTextOnCenterOfBar(ax, bar1.patches[0], okList[0][i], ngList[0][i], fontsize)
+
+        yTicks = myPlot.getLogList(max(totalList[0]))
+
+    # Set y axis
+    myPlot.plotRightYAxis(cn_font, ax, rightYLabel, yTicks, fontsize=14, log=True)
+
+################################################################################################
 def plotBarGraphByYearMonth(cn_font, ax, dfList, startYear, rocketType='', byYear=True, mom=False):
     nameList, totalList, okList, ngList = [], [], [], []
     for df in dfList:
@@ -328,6 +497,18 @@ def plotBarGraphByYearMonth(cn_font, ax, dfList, startYear, rocketType='', byYea
     # Plot verticle line
     if not byYear:
         myPlot.plotVLineBetweenYearsMonths(ax, nameList, yMin=-0.05, yMax=1, mustPlot=True)
+
+################################################################################################
+def plotTitleLegendByMonth(cn_font, title, rocketType=''):
+    handles = [
+        Line2D([0], [0], linestyle='solid', color='blue', marker='o', label=f'{rocketType}成功率'),
+        # Line2D([0], [0], linestyle='solid', color='magenta', marker='x', label=f'{rocketType}累计成功率'),
+        Line2D([0], [0], linestyle='none', mfc='green', mec='green', marker='s', label=f'{rocketType}成功数'),
+        Line2D([0], [0], linestyle='none', mfc='red', mec='red', marker='s', label=f'{rocketType}失败数'),
+    ]
+
+    plt.legend(handles=handles, loc='upper center', ncol=3, prop=cn_font)
+    plt.title(title, fontproperties=cn_font, fontsize=18)
 
 ################################################################################################
 def plotTitleLegendByYearMonth(cn_font, title, hasGreyLabel=False, rocketType='', mom=False):
@@ -437,6 +618,25 @@ def plotTitleLegendByYearMonthNew(cn_font, title, hasGreyLabel=False, rocketType
     plt.title(title, fontproperties=cn_font, fontsize=18)
 
 ################################################################################################
+def plotGraphByMonth(cn_font, excelSheet, title):
+    dfList = myPlot.parseExcelSheetToDataFrame(excelSheet, columnYear='日期', columnNotNull='结果')
+    dfList = countDataFrameByMonth(dfList)
+    rocketList = ['', '长征', '其他']
+
+    for rocket in rocketList:
+        fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
+        newTitle = myPlot.getPlotTitle(f'中国{rocket}{title}')
+        if '长征' not in newTitle and '其他' not in newTitle:
+            newTitle = newTitle.replace('中国', '中国全部')
+        plotLineGraphByMonth(cn_font, axLeft, dfList, rocket)
+        axRight = axLeft.twinx()
+        plotBarGraphByMonth(cn_font, axRight, dfList, rocket)
+        plotTitleLegendByMonth(cn_font, newTitle, rocket)
+
+        myPlot.show()
+        myPlot.saveFig(fig, f'./images/{newTitle}.png') 
+
+################################################################################################
 def plotGraphByYearMonth(cn_font, excelSheet, title, startYear=None, endYear=None, byYear=True, mom=False):
     dfList = myPlot.parseExcelSheetToDataFrame(excelSheet, columnYear='日期', columnNotNull='结果', 
                                                startYear=startYear, endYear=endYear, mom=mom)
@@ -479,10 +679,11 @@ def plotGraphByYearMonth(cn_font, excelSheet, title, startYear=None, endYear=Non
 
 ################################################################################################
 def plot1(cn_font, excelSheet, years):
-    title1 = f'运载火箭发射年统计'
+    title1 = '运载火箭发射年统计'
     title2 = '运载火箭发射月统计'
 
     plotGraphByYearMonth(cn_font, excelSheet, title1)
+    plotGraphByMonth(cn_font, excelSheet, title2)
 
     for year in years:
         plotGraphByYearMonth(cn_font, excelSheet, title2, year)
@@ -505,7 +706,9 @@ def main():
     years += ['2009', '2008', '2007', '2006', '2005', '2004', '2003', '2002', '2001', '2000']
     years += ['1999', '1998', '1997', '1996', '1995', '1994', '1993', '1992', '1991', '1990']
     years = ['2023']
-    plot1(cn_font, excelSheet, years)
+    # plot1(cn_font, excelSheet, years)
+    title2 = '运载火箭发射月统计'
+    plotGraphByMonth(cn_font, excelSheet, title2)
 
 ################################################################################################
 def showRunTime(func):

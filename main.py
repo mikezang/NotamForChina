@@ -103,7 +103,7 @@ def main():
         if command == 'nsfurls':
             try:
                 driver = myUtils.getFirefoxDriver()
-                print('Create all NSF launched urls from site.')
+                print('Create all NSF launched urls from site...')
                 page = 'url'
                 nsfDict = nsf.getNsfUrlList(driver, page)
                 myUtils.writeNsfToFile(nsfDict)
@@ -112,7 +112,7 @@ def main():
         elif command == 'nsfcontents':
             try:
                 driver = myUtils.getFirefoxDriver()
-                print('Create all NSF launched contents from file.')
+                print('Create all NSF launched contents from file...')
                 nsfUrlList = myUtils.loadDictFromJsonFile('nsf-urls')
                 titleForCheck = p1
                 nsf.parseNsfContents(driver, nsfUrlList, titleForCheck)

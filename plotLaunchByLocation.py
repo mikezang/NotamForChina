@@ -150,6 +150,64 @@ def plotBarByMonthLocations(cn_font, ax, df, startYear, endYear=None):
 
     return czSumList, nczSumList
 
+################################################################################################
+def plotBarByLocations(cn_font, ax, df):
+    # Set y axis
+    yTicks = myPlot.getLogList(max(df['全部发射数']) + 1)
+    ax.set(yscale='log')
+    ax.set_yticks(yTicks)
+    ax.set_ylabel('发射数', fontproperties=cn_font, loc='top')
+    ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%d'))
+    ax.set_ylim(0.5, yTicks[-1])
+    myPlot.hideYTicks(ax, yTicks)
+
+    axRight = ax.twinx()
+    axRight.set(yscale='log')
+    axRight.set_yticks(yTicks)
+    axRight.set_ylabel('发射数', fontproperties=cn_font, loc='top')
+    axRight.yaxis.set_major_formatter(mtick.FormatStrFormatter('%d'))
+    axRight.set_ylim(ax.get_ylim())
+    myPlot.hideYTicks(axRight, yTicks)
+
+    dfAll, dfAllOk, dfAllNg = df['全部发射数'], df['全部成功数'], df['全部发射数'] - df['全部成功数']
+    dfCZ, dfCZOk, czCZNg = df['长征发射数'], df['长征成功数'], df['长征发射数'] - df['长征成功数']
+    dfNCZ, dfNCZOk, czNCZNg = df['其他发射数'], df['其他成功数'], df['其他发射数'] - df['其他成功数']
+    dfAllRate, dfCZRate, dfNCZRate = df['全部成功率'], df['长征成功率'], df['其他成功率']
+
+    barWidth = 0.3
+    xTickLabels = list(df['地点'])
+    xTicks1 = [i + 0.7 for i in range(0, len(xTickLabels))]
+    bar1 = ax.bar(xTicks1, dfNCZOk, color='blue', edgecolor='k', width=barWidth)
+    myPlot.plotTextOnCenterOfBars(ax, bar1, list(dfNCZOk))
+
+    bottom1 = dfNCZOk
+    bar2 = ax.bar(xTicks1, czNCZNg, color='red', edgecolor='k', width=barWidth, bottom=bottom1)
+    myPlot.plotTextOnTopOfBars(ax, bar2, list(dfNCZ))
+
+    xTicks2 = [i for i in range(1, len(xTickLabels) + 1)]
+    bar1 = ax.bar(xTicks2, dfCZOk, color='green', edgecolor='k', width=barWidth)
+    myPlot.plotTextOnCenterOfBars(ax, bar1, list(dfCZOk))
+
+    bottom1 = dfCZOk
+    bar2 = ax.bar(xTicks2, czCZNg, color='red', edgecolor='k', width=barWidth, bottom=bottom1)
+    myPlot.plotTextOnTopOfBars(ax, bar2, list(dfCZ))
+
+    xTicks3 = [i + 0.3 for i in range(1, len(xTickLabels) + 1)]
+    bar1 = ax.bar(xTicks3, dfAllOk, color='orange', edgecolor='k', width=barWidth)
+    myPlot.plotTextOnCenterOfBars(ax, bar1, list(dfAllOk))
+
+    bottom1 = dfAllOk
+    bar2 = ax.bar(xTicks3, dfAllNg, color='red', edgecolor='k', width=barWidth, bottom=bottom1)
+    myPlot.plotTextOnTopOfBars(ax, bar2, list(dfAll))
+
+    # # Set x axis
+    ax.set_xlabel('发射地', fontproperties=cn_font)
+    ax.set_xticks(xTicks2)
+    ax.set_xticklabels(xTickLabels, fontproperties=cn_font, fontsize=14)
+
+    for pos in xTicks3[:-1]:
+        ax.axvline(pos + 0.2, color='black', linestyle='--')
+
 def plotTitleLegendByMonthLocations(cn_font, title, czSumList, nczSumList):
     colorJQ = myUtils.getColorFromKml(constants.COLOR_JIUQUAN)
     colorTY = myUtils.getColorFromKml(constants.COLOR_TAIYUAN)
@@ -175,6 +233,16 @@ def plotTitleLegendByMonthLocations(cn_font, title, czSumList, nczSumList):
     plt.legend(handles=handles, loc='upper center', ncol=6, prop=cn_font)
     plt.title(title, fontproperties=cn_font, fontsize=18)
 
+def plotTitleLegendByLocations(cn_font, title):
+    handles = [
+        Line2D([0], [0], linestyle='none', mfc='blue', mec='blue', marker='s', label=f'其他'),
+        Line2D([0], [0], linestyle='none', mfc='green', mec='green', marker='s', label=f'长征'),
+        Line2D([0], [0], linestyle='none', mfc='orange', mec='orange', marker='s', label=f'全部'),
+        Line2D([0], [0], linestyle='none', mfc='red', mec='red', marker='s', label=f'失败'),
+    ]
+    plt.legend(handles=handles, loc='upper center', ncol=6, prop=cn_font)
+    plt.title(title, fontproperties=cn_font, fontsize=18)
+
 def plotGraphByMonthLocations(cn_font, excelSheet, title, startYear, endYear=None):
     headers = ['发射年月', 
                '酒泉长征发射数', '太原长征发射数', '海上长征发射数', '西昌长征发射数', '文昌长征发射数', '合计长征发射数',
@@ -184,26 +252,40 @@ def plotGraphByMonthLocations(cn_font, excelSheet, title, startYear, endYear=Non
     fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) # Create a figure with a single row and two columns
     czSumList, nczSumList = plotBarByMonthLocations(cn_font, axLeft, df, startYear) # Plot bar graph on right axis
     plotTitleLegendByMonthLocations(cn_font, title, czSumList, nczSumList) # plot legend
-
     myPlot.show()
     myPlot.saveFig(fig, f'./images/年度别发射地统计/{title}.png')
+
+def plotGraphByLocations(cn_font, excelSheet, title):
+    df = myPlot.parseExcelSheetToDataFrame(excelSheet, rocket='', plotLocation=True)
+    fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) # Create a figure with a single row and two columns
+    plotBarByLocations(cn_font, axLeft, df) # Plot bar graph on right axis
+    plotTitleLegendByLocations(cn_font, title) # plot legend
+    myPlot.show()
+    myPlot.saveFig(fig, f'./images/{title}.png')
 
 def plot1(cn_font, excelSheet, startYears):
     for startYear in startYears:
         title = f'{startYear}中国运载火箭发射地统计'
         plotGraphByMonthLocations(cn_font, excelSheet, title, int(startYear))
 
+def plot2(cn_font, excelSheet):
+    title = '中国全部运载火箭发射地统计'
+    # TODO plot all amounts by location
+    plotGraphByLocations(cn_font, excelSheet, title)
+
 def main():
-    # Initial
     cn_font = myPlot.init()
     excelFile = "./data/ChinaRocketLaunch.xlsx"
-    sheetName = "发射地月間統計"
     excelBook = loadXLSX(excelFile, data_only=True, read_only=True)
-    startYears = ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019']
-    startYears += ['2020', '2021', '2022', '2023']
-    startYears = ['2024']
-    excelSheet = excelBook[sheetName]
-    plot1(cn_font, excelSheet, startYears)
+    # startYears = ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019']
+    # startYears += ['2020', '2021', '2022', '2023']
+    # startYears = ['2024']
+    # sheetName1 = "发射地月間統計"
+    # excelSheet1 = excelBook[sheetName1]
+    # plot1(cn_font, excelSheet1, startYears)
+    sheetName2 = "发射纪录"
+    excelSheet2 = excelBook[sheetName2]
+    plot2(cn_font, excelSheet2)
 
 ################################################################################################
 def showRunTime(func):
