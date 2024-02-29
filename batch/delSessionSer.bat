@@ -1,0 +1,1 @@
+del C:\development\workspace\yamato\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\work\Catalina\localhost\neo\session.ser

@@ -1,0 +1,1 @@
+ffmpeg -i %1.avi -c:a copy %1.mp4

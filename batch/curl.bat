@@ -1,0 +1,1 @@
+curl.exe -x proxy-tky.i.smfl.co.jp:80 $1 

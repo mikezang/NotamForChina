@@ -1,0 +1,1 @@
+ffmpeg -i %1.m3u8 -movflags faststart -c copy -bsf:a aac_adtstoasc %2.mp4

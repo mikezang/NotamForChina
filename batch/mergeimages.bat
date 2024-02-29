@@ -1,0 +1,206 @@
+call jpg2mp4 images\中国运载火箭发射统计 10 videos\中国运载火箭发射统计
+call :duration videos\中国运载火箭发射统计.mp4
+set x=%errorlevel%
+echo 01. total length: %x%, video length: %errorlevel%, 
+
+call jpg2mp4 images\中国运载火箭发射年统计 10 videos\中国运载火箭发射年统计
+call :duration videos\中国运载火箭发射年统计.mp4
+set /a x=%x%+%errorlevel%
+echo 02. total length: %x%, video length: %errorlevel%, 
+echo.
+
+call jpg2mp4 images\中国长征运载火箭发射年统计 10 videos\中国长征运载火箭发射年统计
+call :duration videos\中国长征运载火箭发射年统计.mp4
+set /a x=%x%+%errorlevel%
+echo 03. total length: %x%, video length: %errorlevel%, 
+
+call jpg2mp4 images\中国其他运载火箭发射年统计 10 videos\中国其他运载火箭发射年统计
+call :duration videos\中国其他运载火箭发射年统计.mp4
+set /a x=%x%+%errorlevel%
+echo 04. total length: %x%, video length: %errorlevel%, 
+echo.
+
+call jpg2mp4 images\2023中国运载火箭发射统计 10 videos\2023中国运载火箭发射统计
+call :duration videos\2023中国运载火箭发射统计.mp4
+set /a x=%x%+%errorlevel%
+echo 05. total length: %x%, video length: %errorlevel%, 
+
+call jpg2mp4 images\2023中国运载火箭发射日统计 10 videos\2023中国运载火箭发射日统计
+call :duration videos\2023中国运载火箭发射日统计.mp4
+set /a x=%x%+%errorlevel%
+echo 06. total length: %x%, video length: %errorlevel%, 
+echo.
+
+call jpg2mp4 images\2023中国运载火箭发射地月统计 10 videos\2023中国运载火箭发射地月统计
+call :duration videos\2023中国运载火箭发射地月统计.mp4
+set /a x=%x%+%errorlevel%
+echo 07. total length: %x%, video length: %errorlevel%, 
+
+call jpg2mp4 images\2023中国运载火箭发射月统计 10 videos\2023中国运载火箭发射月统计
+call :duration videos\2023中国运载火箭发射月统计.mp4
+set /a x=%x%+%errorlevel%
+echo 08. total length: %x%, video length: %errorlevel%, 
+echo.
+
+call jpg2mp4 images\2023中国运载火箭发射月统计（去年同期比） 10 videos\2023中国运载火箭发射月统计（去年同期比）
+call :duration videos\2023中国运载火箭发射月统计（去年同期比）.mp4
+set /a x=%x%+%errorlevel%
+echo 09. total length: %x%, video length: %errorlevel%, 
+
+call jpg2mp4 images\2023中国长征运载火箭发射月统计（去年同期比） 10 videos\2023中国长征运载火箭发射月统计（去年同期比）
+call :duration videos\2023中国长征运载火箭发射月统计（去年同期比）.mp4
+set /a x=%x%+%errorlevel%
+echo 10. total length: %x%, video length: %errorlevel%, 
+echo.
+
+call jpg2mp4 images\2023中国其他运载火箭发射月统计（去年同期比） 10 videos\2023中国其他运载火箭发射月统计（去年同期比）
+call :duration videos\2023中国其他运载火箭发射月统计（去年同期比）.mp4
+set /a x=%x%+%errorlevel%
+echo 11. total length: %x%, video length: %errorlevel%, 
+
+call jpg2mp4 images\中国酒泉运载火箭发射日统计05 10 videos\中国酒泉运载火箭发射日统计05
+call :duration videos\中国酒泉运载火箭发射日统计05.mp4
+set /a x=%x%+%errorlevel%
+echo 12. total length: %x%, video length: %errorlevel%, 
+echo.
+
+call jpg2mp4 images\中国谷神星一号运载火箭发射日统计 10 videos\中国谷神星一号运载火箭发射日统计
+call :duration videos\中国谷神星一号运载火箭发射日统计.mp4
+set /a x=%x%+%errorlevel%
+echo 13. total length: %x%, video length: %errorlevel%, 
+
+call jpg2mp4 images\中国谷神星系列运载火箭发射日统计 10 videos\中国谷神星系列运载火箭发射日统计
+call :duration videos\中国谷神星系列运载火箭发射日统计.mp4
+set /a x=%x%+%errorlevel%
+echo 14. total length: %x%, video length: %errorlevel%, 
+echo.
+
+call jpg2mp4 images\中国民营运载火箭发射日统计 10 videos\中国民营运载火箭发射日统计
+call :duration videos\中国民营运载火箭发射日统计.mp4
+set /a x=%x%+%errorlevel%
+echo 15. total length: %x%, video length: %errorlevel%, 
+
+call jpg2mp4 images\中国其他运载火箭发射日统计02 10 videos\中国其他运载火箭发射日统计02
+call :duration videos\中国其他运载火箭发射日统计02.mp4
+set /a x=%x%+%errorlevel%
+echo 16. total length: %x%, video length: %errorlevel%, 
+echo.
+
+echo Create videolist.txt
+echo file 'videos/1970～1979全部.mp4'                     > videolist.txt
+echo file 'videos/1970～1979全部-last-10s-countdown.mp4' >> videolist.txt
+echo file 'videos/1980～1989全部.mp4'                    >> videolist.txt
+echo file 'videos/1980～1989全部-last-10s-countdown.mp4' >> videolist.txt
+echo file 'videos/1990～1999全部.mp4'                    >> videolist.txt
+echo file 'videos/1990～1999全部-last-10s-countdown.mp4' >> videolist.txt
+echo file 'videos/2000～2009全部.mp4'                    >> videolist.txt
+echo file 'videos/2000～2009全部-last-10s-countdown.mp4' >> videolist.txt
+echo file 'videos/2010全部.mp4'                          >> videolist.txt
+echo file 'videos/2010全部-last-10s-countdown.mp4'       >> videolist.txt
+echo file 'videos/2011全部.mp4'                          >> videolist.txt
+echo file 'videos/2011全部-last-10s-countdown.mp4'       >> videolist.txt
+echo file 'videos/2012全部.mp4'                          >> videolist.txt
+echo file 'videos/2012全部-last-10s-countdown.mp4'       >> videolist.txt
+echo file 'videos/2013全部.mp4'                          >> videolist.txt
+echo file 'videos/2013全部-last-10s-countdown.mp4'       >> videolist.txt
+echo file 'videos/2014全部.mp4'                          >> videolist.txt
+echo file 'videos/2014全部-last-10s-countdown.mp4'       >> videolist.txt
+echo file 'videos/2015全部.mp4'                          >> videolist.txt
+echo file 'videos/2015全部-last-10s-countdown.mp4'       >> videolist.txt
+echo file 'videos/2016全部.mp4'                          >> videolist.txt
+echo file 'videos/2016全部-last-10s-countdown.mp4'       >> videolist.txt
+echo file 'videos/2017全部.mp4'                          >> videolist.txt
+echo file 'videos/2017全部-last-10s-countdown.mp4'       >> videolist.txt
+echo file 'videos/2018全部.mp4'                          >> videolist.txt
+echo file 'videos/2018全部-last-10s-countdown.mp4'       >> videolist.txt
+echo file 'videos/2019全部.mp4'                          >> videolist.txt
+echo file 'videos/2019全部-last-10s-countdown.mp4'       >> videolist.txt
+echo file 'videos/2020全部.mp4'                          >> videolist.txt
+echo file 'videos/2020全部-last-10s-countdown.mp4'       >> videolist.txt
+echo file 'videos/2021全部.mp4'                          >> videolist.txt
+echo file 'videos/2021全部-last-10s-countdown.mp4'       >> videolist.txt
+echo file 'videos/2022全部.mp4'                          >> videolist.txt
+echo file 'videos/2022全部-last-10s-countdown.mp4'       >> videolist.txt
+echo file 'videos/2023全部.mp4'                          >> videolist.txt
+echo file 'videos/2023全部-last-10s-countdown.mp4'       >> videolist.txt
+echo.
+
+echo Create videos\merge-years.mp4 (concat above videos to videos\merge-years.mp4)
+call concat videolist videos\merge-years.mp4
+echo.
+
+echo Create videos\merge-years-music.mp4 (music\歌唱祖国-6m.mp3 to videos\merge-years.mp4)
+call addmp32mp4 music\歌唱祖国-6m videos\merge-years
+echo.
+
+echo Remove all temporary files
+del videos\1970～1979全部-last-10s.mp4
+del videos\1980～1989全部-last-10s.mp4
+del videos\1990～1999全部-last-10s.mp4
+del videos\2000～2009全部-last-10s.mp4
+del videos\2010全部-last-10s.mp4
+del videos\2011全部-last-10s.mp4
+del videos\2012全部-last-10s.mp4
+del videos\2013全部-last-10s.mp4
+del videos\2014全部-last-10s.mp4
+del videos\2015全部-last-10s.mp4
+del videos\2016全部-last-10s.mp4
+del videos\2017全部-last-10s.mp4
+del videos\2018全部-last-10s.mp4
+del videos\2019全部-last-10s.mp4
+del videos\2020全部-last-10s.mp4
+del videos\2021全部-last-10s.mp4
+del videos\2022全部-last-10s.mp4
+del videos\2023全部-last-10s.mp4
+del videos\1970～1979全部-last-10s-countdown.mp4
+del videos\1980～1989全部-last-10s-countdown.mp4
+del videos\1990～1999全部-last-10s-countdown.mp4
+del videos\2000～2009全部-last-10s-countdown.mp4
+del videos\2010全部-last-10s-countdown.mp4
+del videos\2011全部-last-10s-countdown.mp4
+del videos\2012全部-last-10s-countdown.mp4
+del videos\2013全部-last-10s-countdown.mp4
+del videos\2014全部-last-10s-countdown.mp4
+del videos\2015全部-last-10s-countdown.mp4
+del videos\2016全部-last-10s-countdown.mp4
+del videos\2017全部-last-10s-countdown.mp4
+del videos\2018全部-last-10s-countdown.mp4
+del videos\2019全部-last-10s-countdown.mp4
+del videos\2020全部-last-10s-countdown.mp4
+del videos\2021全部-last-10s-countdown.mp4
+del videos\2022全部-last-10s-countdown.mp4
+del videos\2023全部-last-10s-countdown.mp4
+del videos\merge-years.mp4
+
+goto :eof
+
+rem # addmp32mp4 71-ラスト・ソング 
+rem # addmp32mp4 99-一恵 
+rem # addmp32mp4 91-さよならの向う側 
+rem # addmp32mp4 80-DANCIN’INTHERAIN 
+rem # addmp32mp4 95-Thisismytrial~私の試練 
+rem # addmp32mp4 94-テレパシーナ 
+rem # addmp32mp4 72-曼珠沙華 
+rem # addmp32mp4 47-歌い継がれてゆく歌のように 
+rem # addmp32mp4 83-娘たち 
+rem # addmp32mp4 44-オレンジ・ブロッサム・ブルース 
+rem # addmp32mp4 82-しなやかに歌って
+rem # addmp32mp4 62-ただよいの中で 
+rem # addmp32mp4 98-CrazyLove 
+rem # addmp32mp4 56-青い羊歯(しだ)~アジアンタム 
+rem # addmp32mp4 41-パールカラーにゆれて 
+
+:duration
+set x1=%~1
+for /F "delims=" %%I in ('ffprobe.exe -v error -show_entries format^=duration -of default^=noprint_wrappers^=1:nokey^=1 %x1% 2^>^&1') do set "duration=%%I"
+rem echo Duration is(s): %duration%
+exit /b %duration%
+
+:getInteger
+set a=%~1
+if [%a:~3,1%] == [.] (
+   set b=%a:~0,3%
+) else (
+   set b=%a:~0,2%
+)
+exit /b %b%

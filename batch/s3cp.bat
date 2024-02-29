@@ -1,0 +1,1 @@
+aws s3 cp s3://gaia-prod-static-bucket/videos/%1/%2/ ./ --no-verify-ssl --profile prod --recursive

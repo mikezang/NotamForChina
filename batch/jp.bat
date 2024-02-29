@@ -1,0 +1,1 @@
+cmd /f:on /k "chcp 932"
