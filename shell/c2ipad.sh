@@ -1,0 +1,1 @@
+scp /volumes/HD250GB/xxx/$1 mobile@192.168.1.15:~/Applicat*/1EB*/Lib*/Priva*/Qvod*/Me*/
