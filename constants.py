@@ -336,8 +336,11 @@ PATTERN_NOTAM_NUMBER_NEW = r'([A-Z]\d{4}/\d{2})'
 #MSA_PATTERN_LATITUDE_LONGITUDE = r'(\d{2}\-\d{2}[.-]\d{2}[NS])(\d{3}\-\d{2}[.-]\d{2}[EW])'
 MSA_PATTERN_LATITUDE_LONGITUDE = r'(\d{2}[°-]\d{2}[′.-]\d{1,3}"?[NS])/?(\d{2,3}[°-]\d{2}[′.-]\d{1,3}"?[EW])'
 MSA_PATTERN_LATITUDE_LONGITUDE1 = r'(\d{2}[°-]\d{2}[′.-]\d{1,3}″?[NS]/?\d{2,3}[°-]\d{2}[′.-]\d{1,3}"?[EW])'
-MSA_PATTERN_DATE = r'FROM(\d{1,2})(\d{0,4})[UTC]{0,3}([A-Z]{0,4})(\d{0,2})TO(\d{1,2})(\d{0,4})[UTC]{0,3}([A-Z]{0,4})(\d{0,2})'
+MSA_PATTERN_DATE = r'FROM(\d{0,2})(\d{0,4})[UTC]{0,3}([A-Z]{0,4})\.?(\d{0,2})TO(\d{0,2})(\d{0,4})[UTC]{0,3}([A-Z]{0,4})\.?(\d{0,2})'
 MSA_PATTERN_NUMBER = r'[A-Z][A-Z]\d{1,3}\/\d{2}'
+
+MSA_PATTERN_DATE_CHINA1 = r'(\d{1,2})月(\d{1,4})日(\d{1,4})时至(\d{1,4})时'
+MSA_PATTERN_DATE_CHINA2 = r'(\d{1,2})月(\d{1,4})日(\d{1,4})时至(\d{1,2})月(\d{1,4})日(\d{1,4})时'
 
 HYDROPAC_PATTERN = 'MSACHINA|HAZARDOUS|ROCKETLAUNCHING|ROCKETLAUNCHSCHEDULED' #r'HYDROPAC(\d{4}/\d{2})'
 HYDROPAC_PATTERN_DATES = r'(\d{1,2})(\d{4})Z([A-Z]{0,3})TO(\d{1,2})(\d{4})Z?([A-Z]{3})'

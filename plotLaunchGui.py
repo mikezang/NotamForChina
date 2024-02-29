@@ -87,9 +87,9 @@ def getSeriesFrame(series, lastSeries, lastResult):
         sg.Checkbox('仅生成最后图表', key='series02', default=True),
         sg.Checkbox('退役火箭系列', key='series03', enable_events=True),
         sg.Checkbox('发射失败系列', key='series04', default=not lastResult, enable_events=True),
-        sg.Checkbox('首飞发射', key='series05', enable_events=True),
-        sg.Checkbox('春节前后发射', key='series06', enable_events=True),
-        sg.Checkbox('年初年末发射', key='series07', enable_events=True),
+        sg.Checkbox('首飞发射', key='series05', enable_events=False),
+        sg.Checkbox('春节前后发射', key='series06', enable_events=False),
+        sg.Checkbox('年初年末发射', key='series07', enable_events=False),
     ]
     row = [seriesTitle]
     for i, subSeries in enumerate(seriesAll):
@@ -350,7 +350,7 @@ def splitRetiredRockets(retiredChecked):
     return cz, ncz
     
 ################################################################################################
-def handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets, retired, series, locations, categories, payloads, dictUpperStage, dfLastLaunch):
+def handleEvents(excelSheet1, event, window, values, years, rockets, retired, series, locations, categories, payloads, dictUpperStage, dfLastLaunch):
     if event == 'year01':
         toogleAllCheckbox(window, values, 'year-')
     elif event == 'rocket01':
@@ -401,9 +401,9 @@ def handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets
                     plotLaunchByDate.plot1(cn_font, excelSheet1, years[0], upperStage=dictUpperStage)
 
                 plotLaunchByYearMonth.plot1(cn_font, excelSheet1, years)
-                plotLaunchByLocation.plot1(cn_font, excelSheet2, years)
                 for year in years:
                     plotLaunchByRocket.plot1(cn_font, excelSheet1, year)
+                    plotLaunchByLocation.plot2(cn_font, excelSheet1, year)
 
         if rocketsChecked or retiredChecked:
             if rocketsChecked:
@@ -460,7 +460,7 @@ def main():
     excelFile, sheetNames, years, rockets, retired, series, privates, locations, categories, payloads = myUtils.readConfig()
     excelBook = loadXLSX(excelFile, data_only=True, read_only=True)
     excelSheet1 = excelBook[sheetNames[0]]
-    excelSheet2 = excelBook[sheetNames[1]]
+    # excelSheet2 = excelBook[sheetNames[1]]
     # excelBook.close()
 
     # TODO read 退役，民营数据 from excel file not from config.ini
@@ -479,7 +479,7 @@ def main():
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
 
-        handleEvents(excelSheet1, excelSheet2, event, window, values, years, rockets, retired, series, locations, categories, payloads, dictUpperStage, dfLastLaunch)
+        handleEvents(excelSheet1, event, window, values, years, rockets, retired, series, locations, categories, payloads, dictUpperStage, dfLastLaunch)
         window.Normal()
     
     window.close()

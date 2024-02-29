@@ -3,8 +3,12 @@
 """
 # pylint: disable=W0603,W0622,W0703,C0103,C0116,C0301,E1101
 
+import json
 import logging
+import os
+import shutil
 import socket
+import subprocess
 import pytz
 import inspect
 import zipfile
@@ -17,6 +21,7 @@ from time import sleep
 from re import compile, findall, finditer, match, search#, sub, IGNORECASE
 from pathlib import Path
 from numpy import zeros
+from pprint import pprint
 from simplekml import Kml
 from json import dump, load
 from sys import argv, platform, exc_info
@@ -34,6 +39,7 @@ from selenium.webdriver.firefox import service as fs
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
+import ffmpeg
 
 import constants
 import myPlot
@@ -43,6 +49,66 @@ import nsf
 isFirstTime = True
 NSF_PATH = './notams/maps/nsf/'
 KML_PATH = './temp/'
+
+################################################################################################
+def readDictFromFile(filename):
+    with open(filename) as f: 
+        data = f.read()
+        return json.loads(data) 
+    
+################################################################################################
+def saveDictToFile(filename, dataDict):
+    with open(filename, 'w') as f:
+        f.write(json.dumps(dataDict))
+        print(f'Save dict to "{os.path.abspath(filename)}"')
+
+################################################################################################
+def elementAttributes(driver, element):
+    script  = 'var items = {}; '
+    script += 'for (index = 0; index < arguments[0].attributes.length; ++index) { '
+    script += '  items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value'
+    script += '}; '
+    script += 'return items;'
+    return driver.execute_script(script, element)
+    # driver.execute_script('var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;', element)
+
+################################################################################################
+def isVideoWithPNGHeader(videoFile):
+    probe = ffmpeg.probe(videoFile)
+    # print(f'{videoFile}:')
+    ret = False
+    for stream in probe['streams']:
+        codec_name = stream['codec_name']
+        if codec_name == 'png':
+            ret = True
+            break
+            # index = stream['index']
+            # codec_type = stream['codec_type']
+            # print(f'\tstream:{index} - {codec_type} - {codec_name}')
+            # pprint(stream)
+            # print()
+            # moveAllFiles(videoFile)
+    return ret
+
+################################################################################################
+def removePngHeader(videoFileList):
+        # curDir = os.getcwd()
+        # os.chdir(curDir)
+        newDir = 'new/'
+        os.makedirs(newDir, exist_ok=True)
+        count =len(videoFileList)
+        for videoFile in videoFileList:
+            ifStr = f'if={videoFile}'
+            ofStr = f'of={newDir}{videoFile}'
+            ibs = 'ibs=8'
+            skip = 'skip=1'
+            o = subprocess.check_output(['dd', ifStr, ofStr, ibs, skip], stderr=subprocess.STDOUT)
+            no = videoFile.replace('.ts', '')
+            percent = int(no) * 100 // count
+            number = f'{no}/{count}{percent:02}%)'
+            print(f'{number}: {o}')
+            os.remove(videoFile)
+        os.chdir(newDir)
 
 ################################################################################################
 def removeFile(folderWithWildcard):
@@ -570,18 +636,20 @@ def getYYYYMMDD(year):
 ################################################################################################
 def getMsaDates(content) -> tuple:
     startDates, endDates = [], []
-    startEndDates = finditer(constants.MSA_PATTERN_DATE, content)
+    startEndDates1 = finditer(constants.MSA_PATTERN_DATE_CHINA1, content)
+    startEndDates2 = finditer(constants.MSA_PATTERN_DATE_CHINA2, content)
+    startEndDates = startEndDates1 if startEndDates1 else startEndDates2
     for m in startEndDates:
-        startDay = m.group(1)
-        startTime = convertTime(m.group(2))
-        startMonth = m.group(3)
-        startYear = getJapanDate()[:4] if m.group(4) == '' else getYYYYMMDD(m.group(4))
-        endDay = m.group(5)
-        endTime = convertTime(m.group(6))
-        endMonth = convertMonthToNumber(m.group(7))
-        endYear = getJapanDate()[:4] if m.group(8) == '' else getYYYYMMDD(m.group(8))
-        startMonth = endMonth if startMonth == '' else convertMonthToNumber(startMonth)
-        endTime = endTime if endTime != '00:00' else '23:59'
+        startMonth = m.group(1)
+        startDay = m.group(2)
+        startTime = convertTime(m.group(3))
+        startYear = getJapanDate()[:4] #if m.group(4) == '' else getYYYYMMDD(m.group(4))
+        endDay = startDay
+        endTime = convertTime(m.group(4))
+        endMonth = startMonth
+        endYear = startYear
+        # startMonth = endMonth if startMonth == '' else convertMonthToNumber(startMonth)
+        # endTime = endTime if endTime != '00:00' else '23:59'
         startDate = f'{startYear}/{startMonth}/{startDay.zfill(2)} {startTime}'
         endDate = f'{endYear}/{endMonth}/{endDay.zfill(2)} {endTime}'
         startDates.append(startDate)
@@ -960,9 +1028,10 @@ def checkVPN(driver) -> None:
             passProxy(driver)
 
 ################################################################################################
-def getFirefoxDriver(log=False) -> webdriver:
+def getFirefoxDriver(headless=1, log=False) -> webdriver:
     options = FirefoxOptions()
-    if constants.HEADLESS == 1:
+    # if constants.HEADLESS == 1:
+    if headless == 1:
         options.headless = True
         options.add_argument('--headless')
         # options.log.level = "trace"
@@ -987,9 +1056,11 @@ def getColorFromKml(color):
     return f'#{color[6:8]}{color[4:6]}{color[2:4]}'
 
 ################################################################################################
-def printDict(d):
+def printDict(d, withQuotation=False, hasNo=True):
     for i, (key, value) in enumerate(d.items()):
-        print(f'{i + 1:02} {key}:{value}')
+        no = f'{i + 1:02} ' if hasNo else ''
+        item = f'{no}"{key}": "{value}"' if withQuotation else f'{no}{key}: {value}'
+        print(item)
 
 ################################################################################################
 def printList(l):
@@ -1109,12 +1180,36 @@ def exceptPrint():
     print(exc_type, fname, exc_tb.tb_lineno)
 
 ################################################################################################
+def scrollBottom(driver):
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+
+################################################################################################
+def findElementsByClass(driver, className):
+    return driver.find_elements(By.CLASS_NAME, className)
+
+################################################################################################
+def findElementsByXpath(driver, xPath):
+    return driver.find_elements(By.XPATH, xPath)
+
+################################################################################################
+def findElementsByTag(driver, tagName):
+    return driver.find_elements(By.TAG_NAME, tagName)
+
+################################################################################################
+def elementID(driver, time, id):
+    return WebDriverWait(driver, time).until(EC.presence_of_element_located((By.ID, id)))
+
+################################################################################################
 def elementClass(driver, time, className):
     return WebDriverWait(driver, time).until(EC.presence_of_element_located((By.CLASS_NAME, className)))
 
 ################################################################################################
 def elementXPath(driver, time, xPath):
     return WebDriverWait(driver, time).until(EC.presence_of_element_located((By.XPATH, xPath)))
+
+################################################################################################
+def elementInvisibleXPath(driver, time, xPath):
+    return WebDriverWait(driver, time).until(EC.invisibility_of_element((By.XPATH, xPath)))
 
 ################################################################################################
 def elementClick(driver, time, xPath):
@@ -1125,12 +1220,15 @@ def elementInput(driver, time, xPath, value):
     elementXPath(driver, time, xPath).send_keys(value)
 
 ################################################################################################
-def listFiles(folder, extension, excludeFile=None):
-    for root, dirs, files in walk(folder):
+def listFiles(folder, extension, excludeFile=None, onlyFilename=False, includeSubFolder=True):
+    absPath = os.path.abspath(folder)
+    for root, dirs, files in walk(absPath):
+        if not includeSubFolder and root != absPath:
+            continue
         for file in files:
-            if file.endswith(extension):  # Filter files with .kml extension
+            if file.endswith(extension):
                 if file != excludeFile:
-                    filepath = path.join(root, file)
+                    filepath = file if onlyFilename else path.join(root, file) 
                     yield filepath
 
 ################################################################################################
@@ -1155,9 +1253,9 @@ def updateTempFile(notams):
             if oldText == newText:
                 isNew = False
         if isNew:
-            saveTempFile(filename, newText)
+            saveTextFile(filename, newText)
     except FileNotFoundError:
-        saveTempFile(filename, newText)
+        saveTextFile(filename, newText)
 
 ################################################################################################
 def writeNsfToFile(nsfDict):
@@ -1169,9 +1267,9 @@ def writeNsfToFile(nsfDict):
     for i, (key, value) in enumerate(nsfDict.items()):
         # items = value.split(';')
         newText += f'<a target=_blank href={key}>{i + 1:03}: {value}</a><br>'
-    saveTempFile(filename, newText)
+    saveTextFile(filename, newText)
 
-def saveTempFile(filename, newText):
+def saveTextFile(filename, newText):
     print(f'Save to file "{filename}"')
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(newText)
@@ -1398,7 +1496,6 @@ def convertToLocalDate(utcDate, tz):
     return utcDate.astimezone(pytz.timezone(tz))
 
 ################################################################################################
-# TODO how to extract lan/lon exactly
 def convertPatterns(s, p) -> str:
     if p == constants.PATTERN1:
         s = convertPattern1(s)
