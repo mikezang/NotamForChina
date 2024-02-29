@@ -889,8 +889,10 @@ def parseMonthData(df, columnYear, plotMonth):
     dfResult = df[df[columnYear].apply(lambda x: x.month) == plotMonth]
     return dfResult
 
-def parseLocationData(df, columnRocket, columnLocation, columnNotNull):
+def parseLocationData(df, columnRocket, columnLocation, columnNotNull, columnYear, startYear=None):
     df = df[~df[columnRocket].str.startswith('远征')]
+    if startYear:
+        df = df[df[columnYear].apply(lambda x: x.year) == int(startYear)]
     dfAll = df.groupby(columnLocation).size().reset_index(name='全部发射数')
     dfAllOk = df[df[columnNotNull].str.startswith('成功')].groupby(columnLocation).size().reset_index(name='全部成功数')
     dfCZ = df[df[columnRocket].str.startswith('长征')].groupby(columnLocation).size().reset_index(name='长征发射数')
@@ -903,14 +905,16 @@ def parseLocationData(df, columnRocket, columnLocation, columnNotNull):
     dfResult = pd.merge(dfResult, dfNCZ, on=columnLocation, how='left')
     dfResult = pd.merge(dfResult, dfNCZOk, on=columnLocation, how='left')
     dfResult.fillna(0, inplace=True)
+    dfResult['长征发射数'] = dfResult['长征发射数'].astype(int)
+    dfResult['长征成功数'] = dfResult['长征成功数'].astype(int)
     dfResult['其他发射数'] = dfResult['其他发射数'].astype(int)
     dfResult['其他成功数'] = dfResult['其他成功数'].astype(int)
     dfSort = dfResult.sort_values(by='全部发射数', ascending=False)
     dfSum = dfSort.sum().to_frame().T
     dfSum[columnLocation] = '合计'
     dfLast = pd.concat([dfSort, dfSum], ignore_index=True)
-    dfLast['全部成功率'] = dfLast['全部成功数'] / dfLast['全部发射数'] 
-    dfLast['长征成功率'] = dfLast['长征成功数'] / dfLast['长征发射数'] 
+    dfLast['全部成功率'] = [ok / all if all != 0 else 0 for ok, all in zip(dfLast['全部成功数'], dfLast['全部发射数'])] 
+    dfLast['长征成功率'] = [ok / all if all != 0 else 0 for ok, all in zip(dfLast['长征成功数'], dfLast['长征发射数'])]
     dfLast['其他成功率'] = [ok / all if all != 0 else 0 for ok, all in zip(dfLast['其他成功数'], dfLast['其他发射数'])]
     return dfLast
 
@@ -926,7 +930,7 @@ def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear
     
     # Extract rows by condition
     if plotLocation:
-        dfList = parseLocationData(df, columnRocket, columnLocation, columnNotNull)
+        dfList = parseLocationData(df, columnRocket, columnLocation, columnNotNull, columnYear, startYear)
     elif plotMonth:
         dfList = split50perPage(parseMonthData(df, columnYear, plotMonth))
     elif isFirstLast:

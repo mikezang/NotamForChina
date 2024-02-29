@@ -73,7 +73,8 @@ def getCTripList(driver):
         # myUtils.checkVPN(driver)
 
         # show list page
-        WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "grp-10650014575-list-tab-产品"))).click()
+        myUtils.elementID(driver, 60, "grp-10650014575-list-tab-产品").click()
+        # WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "grp-10650014575-list-tab-产品"))).click()
 
         # input '海口','文昌','西昌','酒泉',
         print(f'Searching', end=' ', flush=True)
