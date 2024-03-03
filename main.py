@@ -3,11 +3,17 @@
 """
 # pylint: disable=W0622,W0703,C0103,C0116,C0301
 
+import os
 from sys import exit, path
 import inspect
 from timeit import timeit
 from datetime import timedelta
+import traceback
+import warnings
 from selenium.common.exceptions import NoSuchElementException
+
+# Suppress specific warning
+warnings.filterwarnings("ignore", message="invalid value encountered in exp2")
 
 path.append("")
 
@@ -36,8 +42,8 @@ def main():
                 notam_data =  myUtils.sortDictByValue(notam_data)
                 notam.printNotam(notam_data)
                 myUtils.createKmlFile(notam_data)
-        except Exception as e:
-            print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+        except:
+            print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
     # elif command == 'Free Text':
     #     try:
     #         driver = myUtils.getFirefoxDriver()
@@ -59,8 +65,8 @@ def main():
             if notamDict:
                 notam.printNotam(notamDict)
                 myUtils.createKmlFile(notamDict)
-        except Exception as e:
-            print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+        except:
+            print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
     # elif command == 'all':
     #     try:
     #         driver = myUtils.getFirefoxDriver()
@@ -84,21 +90,21 @@ def main():
             if trip_data:
                 print('\n./temp/LaunchTravels.html created!')
 
-        except Exception as e:
-            print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+        except:
+            print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
     elif command == 'eniutrip':
         try:
             driver = myUtils.getFirefoxDriver()
             trip_data = trip.getENiuTrip(driver)
             trip.printTrip(trip_data)
-        except Exception as e:
-            print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+        except:
+            print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
     elif 'fir' == command:
         try:
             print('Create all FIR Boundaries from file.')
             myUtils.createFirBoundaryKmlFile('FIR IN THE ASIA-PACIFIC', constants.FIR_BOUNDARY)
-        except Exception as e:
-            print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+        except:
+            print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
     elif 'nsf' in command:
         if command == 'nsfurls':
             try:
@@ -107,8 +113,8 @@ def main():
                 page = 'url'
                 nsfDict = nsf.getNsfUrlList(driver, page)
                 myUtils.writeNsfToFile(nsfDict)
-            except Exception as e:
-                print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+            except:
+                print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         elif command == 'nsfcontents':
             try:
                 driver = myUtils.getFirefoxDriver()
@@ -116,16 +122,16 @@ def main():
                 nsfUrlList = myUtils.loadDictFromJsonFile('nsf-urls')
                 titleForCheck = p1
                 nsf.parseNsfContents(driver, nsfUrlList, titleForCheck)
-            except Exception as e:
-                print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+            except:
+                print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         elif command == 'nsfmaps':
             try:
                 print('Create all NSF launched maps from file.')
                 nsfLaunchList = myUtils.loadDictFromJsonFile('nsf')
                 titleForCheck = p1
                 nsf.drawNsfNotam(nsfLaunchList, titleForCheck)
-            except Exception as e:
-                print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+            except:
+                print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         else:
             try:
                 if command == 'nsfnotams':
@@ -147,9 +153,8 @@ def main():
                     nsf.printNsf(nsf_data)
 
                 myUtils.updateNsfNotamJsonFile(nsf_data, 'nsf')
-            except Exception as e:
-                myUtils.exceptPrint()
-                print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+            except:
+                print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
     elif command == 'compare':
         oldFile = p1
         newFile = p2

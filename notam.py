@@ -4,19 +4,17 @@
 """
 # pylint: disable=E1101,W0703,C0103,C0116,C0301
 
+import os
 from time import sleep
 import inspect
-# from re import findall, match, finditer#, search
 from datetime import datetime, timedelta
+import traceback
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-# from selenium.common.exceptions import NoSuchElementException, TimeoutException
-# from selenium.common.exceptions import ElementClickInterceptedException, ElementNotInteractableException
+from timeit import timeit
 
-
-# from myClasses import GeoPoint
 import myUtils
 import constants
 import nsf
@@ -101,20 +99,9 @@ def getNotamDetailNew(driver, command, searchLocaltions):
                                                 endDate = nsf.convertDate(endDate)
                                                 area = nsf.formatLatitudeLongitude(area)
                                                 notam = getNoatmDict(notam, number, startDate, endDate, location, area)
-                # notam.update(getNotamDetail(driver, searchText))
                 myUtils.isTempFileSaved = False
-
-    # except ElementClickInterceptedException as e:
-    #     print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-    #     pass
-    # except ElementNotInteractableException as e:
-    #     print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-    #     pass
-    # except NoSuchElementException as e:
-    #     print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-    #     pass
-    except Exception as e:
-        print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+    except :
+        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
     return notam
 
@@ -296,3 +283,33 @@ def convertDate(oldDate):
             return datetime.strptime(oldDate, '%Y年%m月%d日')
     else:
         return datetime.strptime(oldDate, '%m/%d/%Y %H%M').strftime("%Y/%m/%d %H:%M")
+    
+def main():
+    driver = myUtils.getFirefoxDriver()
+    command = 'Location'
+    try:
+        firLocations = myUtils.readConfigFirNames()
+        notam_data = getNotamDetailNew(driver, command, firLocations)
+        # notam_data = notam.getNotamDetailNew(driver, command, constants.FIR_LOCATIONS)
+
+        if notam_data:
+            # notamDict = myUtils.readNotamDictDetailFromTextFile('./data/notams.txt')
+            # if notamDict:
+            #     notam_data.update(notamDict)
+            notam_data =  myUtils.sortDictByValue(notam_data)
+            printNotam(notam_data)
+            myUtils.createKmlFile(notam_data)
+    except:
+        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+
+    if driver:
+        driver.quit()
+
+################################################################################################
+def showRunTime(func):
+    result = timeit(func, number=1, globals=globals())
+    print(f'\nFinished in {timedelta(seconds=result)}')
+
+################################################################################################
+if __name__ == "__main__":
+    showRunTime("main()")

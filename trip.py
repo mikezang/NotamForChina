@@ -5,10 +5,12 @@
 """
 # pylint: disable=W0703,C0103,C0116,C0301
 
+import os
 from time import sleep
 from re import findall
 import inspect
 from datetime import date, datetime, timedelta
+import traceback
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
@@ -125,8 +127,8 @@ def getCTripList(driver):
                 elif '酒泉' in title or '东方航天城' in title:
                     locations.append('酒泉')
 
-    except Exception as e:
-        print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+    except:
+        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
 
     return urls, titles, locations
@@ -144,12 +146,9 @@ def getCTripDetail(driver, urls, titles):
             day_diff = 0
             real_url = constants.BASE_CTRIP_URL + url
 
+            myUtils.setTimeout(driver, 30)
             driver.get(real_url)
             sleep(2)
-            # span = "//span[@class='_1wqbaebu _1wqbaeb9 _1wqbaeb29']"
-            # myUtils.elementXPath(driver, 30, span)
-            # titles = driver.find_element(By.XPATH, span)
-            # title_text = title
             print(f'Title{j + 1:02}: {title_text}')
             print(f' Link{j + 1:02}: {real_url}\n')
 
@@ -163,17 +162,9 @@ def getCTripDetail(driver, urls, titles):
                 last_day = 0
 
                 html = driver.page_source
-                # matches = findall(r'(?<!\d)(\d{2}-\d{2})(?!\d)', html)
                 matches = findall(r'星期.*?(\d{2}-\d{2})', html)
                 for match in matches:
                     month_int, day_int = map(int, match.split("-"))
-
-                # span = "//span[@class='_1wqbaebw _1wqbaeb6 _1wqbaeb6i']"
-                # myUtils.elementXPath(driver, 10, span)
-                # dateStrings = driver.find_elements(By.XPATH, span)
-                # for dateString in dateStrings:
-                #     month_int, day_int = map(int, dateString.text.split("-"))
-
                     day_int += day_diff
 
                     if last_day + 1 != day_int:
@@ -191,8 +182,8 @@ def getCTripDetail(driver, urls, titles):
                         launch_temp = {}
                         break
                 launch_date = myUtils.combineValuesForSameDictKey(launch_date, launch_temp)
-        except Exception as e:
-            print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+        except:
+            print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
             pass
     return launch_date
 
@@ -227,8 +218,8 @@ def getENiuTripList(driver):
 
     except NoSuchElementException:
         print("No ENiuTrip Data!")
-    except Exception as e:
-        # print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+    except Exception:
+        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
     return urls
 
@@ -247,8 +238,8 @@ def getENiuTripDetail(driver, urls):
 
             for item in items:
                 launch_date[convertDate1(item)] = city
-    except Exception as e:
-        print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
+    except:
+        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
     return launch_date
 
 ################################################################################################

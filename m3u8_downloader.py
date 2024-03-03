@@ -10,19 +10,14 @@ from requests.models import Response
 import subprocess
 from datetime import datetime
 from functools import partial
-# from multiprocessing.dummy import Pool
 from multiprocessing import get_context
-# from multiprocessing import set_start_method
-# from multiprocessing import get_context
-from sys import exit, path
+from sys import path
 
 path.append("")
 
 import myUtils
 
 MAX_POOLS = 10
-CTV = 'c-tv'
-CNYS = 'cnys'
 
 header = {
     'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4_3) "
@@ -33,7 +28,7 @@ header = {
 class Video_Decoder(object):
     def __init__(self, x_key: dict, m3u8_http_base: str = ""):
         self.method = x_key["METHOD"] if "METHOD" in x_key.keys() else ""
-        self.uri = decode_key_uri(m3u8_http_base+x_key["URI"]) if "URI" in x_key.keys() else ""
+        self.uri = decode_key_uri(m3u8_http_base, x_key["URI"]) if "URI" in x_key.keys() else ""
         self.iv = x_key["IV"].lstrip("0x") if "IV" in x_key.keys() else ""
         if self.method != '':
             print(f"URI: '{self.uri}'")
@@ -59,8 +54,9 @@ class Video_Decoder(object):
         else:
             pass
 
-def decode_key_uri(URI: str):
-    uri_req = requests.get(URI, headers=header)
+def decode_key_uri(base:str, URI: str):
+    uri = URI if URI.startswith('https://') else base + URI
+    uri_req = requests.get(uri, headers=header)
     uri_str = "".join(["{:02x}".format(c) for c in uri_req.content])
     return uri_str
 
@@ -100,9 +96,13 @@ def download_ts_file(seq_and_ts_url: tuple[int, str], store_dir: str, attempts: 
 
 def downloadM3u8File(m3u8_link):
     m3u8_http_base = ""
+    m3u8_content = ""
     if m3u8_link.startswith("http"):
-        m3u8_content = requests.get(m3u8_link, headers=header).content.decode("utf-8")
-        m3u8_http_base = m3u8_link.rstrip(m3u8_link.split("/")[-1])
+        try:
+            m3u8_content = requests.get(m3u8_link, headers=header).content.decode("utf-8")
+            m3u8_http_base = m3u8_link.rstrip(m3u8_link.split("/")[-1])
+        except:
+            print(f'Timeout for access {m3u8_link}')
     else:
         # read m3u8 file content
         m3u8_content = ""
@@ -138,7 +138,7 @@ def getExtM3u8Link(m3u8_content, m3u8_http_base):
     for word in urls:
         if word not in m3u8_http_base:
             link += word + '/'
-    return os.path.join(m3u8_http_base, link.split('?')[0])
+    return os.path.join(m3u8_http_base, link[:-1].split('?')[0])
 
 def download(m3u8_link, output):
     startTime = datetime.now()
@@ -158,10 +158,15 @@ def download(m3u8_link, output):
         # Reading the m3u8 file again
         m3u8_http_base, m3u8_content = downloadM3u8File(m3u8_link)
 
+    if not m3u8_content:
+        print(f'No content in {m3u8_link}!')
+        return
+ 
     # Parsing the content in m3u8
+    print("Prasing decode key ...")
     ts_url_list, x_key_dict = parseM3u8Content(m3u8_content, m3u8_http_base)
     if len(ts_url_list) == 0:
-        print(f'No files in {m3u8_link}')
+        print(f'No file urls in {m3u8_link}')
         print(f'The content is "{m3u8_content}" in {m3u8_link}')
         return
     
@@ -173,32 +178,53 @@ def download(m3u8_link, output):
     os.makedirs(ts_folder, exist_ok=True)
     os.chdir(ts_folder)
 
-    # Using multithreading to parallel downloading
-    # use get_context("spawn").Pool() to avoid stuck
-    with get_context("spawn").Pool(MAX_POOLS) as pool:
-        gen = pool.imap_unordered(partial(download_ts_file, store_dir='.'), enumerate(ts_url_list))
-        for _ in tqdm.tqdm(gen, total=len(ts_url_list)):
-            pass
-        pool.close()
-        pool.join()
-        time.sleep(1)
-        print("Streaming files downloading completed.")
+    # Loop until download all ts files
+    print("There are", len(ts_url_list), "files to download ...")
+    total = len(ts_url_list)
+    while True:
+        try:
+            # Using multithreading to parallel downloading
+            # and get_context("spawn").Pool() to avoid stuck
+            with get_context("spawn").Pool(MAX_POOLS) as pool:
+                gen = pool.imap_unordered(partial(download_ts_file, store_dir='.'), enumerate(ts_url_list))
+                for result in tqdm.tqdm(gen, total=total, desc='Downloading *.ts files'):
+                    if result:
+                        print(f'tqdm result: {result}')
+                    pass
+                pool.close()
+                pool.join()
+                time.sleep(1)
+                print("Streaming files downloading completed.")
+                break
+        except KeyboardInterrupt:
+            print('Ctrl+c entered.')
+            downloaded_ts = sorted(glob.glob("*.ts"))
+            if len(download_ts_file) < total:
+                pass
+            else:
+                break
 
-    # Start to merge all *.ts files
     downloaded_ts = sorted(glob.glob("*.ts"))
     
-    # exit if no files downloaded
+    # quit if no files downloaded
     if len(downloaded_ts) == 0:
         print('Exit as No files downlaoded!')
         return
     
     # Decoding videos
-    for ts_fname in tqdm.tqdm(downloaded_ts, desc="Decoding the *.ts files"):
-        video_decoder(ts_fname)
+    for ts_fname in tqdm.tqdm(downloaded_ts, desc="Decoding *.ts files"):
+        msg =video_decoder(ts_fname)
+        if msg:
+            print(msg)
+            return
 
     # check video type
-    skipHeader = True if myUtils.isVideoWithPNGHeader(downloaded_ts[0]) else False
+    skipHeader, msg = myUtils.isVideoWithPNGHeader(downloaded_ts[0])
+    if msg:
+        print(msg)
+        return
 
+    # Start to merge all *.ts files
     if len(downloaded_ts) > 200:
         mergeLargeMp4(downloaded_ts, skipHeader, merged_mp4)
     else:

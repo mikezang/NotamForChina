@@ -74,21 +74,25 @@ def elementAttributes(driver, element):
 
 ################################################################################################
 def isVideoWithPNGHeader(videoFile):
-    probe = ffmpeg.probe(videoFile)
-    # print(f'{videoFile}:')
+    msg = ""
     ret = False
-    for stream in probe['streams']:
-        codec_name = stream['codec_name']
-        if codec_name == 'png':
-            ret = True
-            break
-            # index = stream['index']
-            # codec_type = stream['codec_type']
-            # print(f'\tstream:{index} - {codec_type} - {codec_name}')
-            # pprint(stream)
-            # print()
-            # moveAllFiles(videoFile)
-    return ret
+    try:
+        # print(f'{videoFile}:')
+        probe = ffmpeg.probe(videoFile)
+        for stream in probe['streams']:
+            codec_name = stream['codec_name']
+            if codec_name == 'png':
+                ret = True
+                break
+                # index = stream['index']
+                # codec_type = stream['codec_type']
+                # print(f'\tstream:{index} - {codec_type} - {codec_name}')
+                # pprint(stream)
+                # print()
+                # moveAllFiles(videoFile)
+    except:
+        msg = f'Invalid video file: {videoFile}!¥nDownload failed!'
+    return ret, msg
 
 ################################################################################################
 def removePngHeader(videoFileList):
@@ -1029,19 +1033,29 @@ def checkVPN(driver) -> None:
 
 ################################################################################################
 def getFirefoxDriver(headless=1, log=False) -> webdriver:
+    # profile = webdriver.FirefoxProfile()
+    # profile.set_preference('permissions.default.stylesheet', 2)
+    # profile.set_preference('permissions.default.image', 2)
+    # profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')
+
     options = FirefoxOptions()
-    # if constants.HEADLESS == 1:
+    options.set_preference("permissions.default.stylesheet", 2)
+    options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", 'false')
     if headless == 1:
         options.headless = True
         options.add_argument('--headless')
-        # options.log.level = "trace"
+        options.add_argument('--blink-settings=imagesEnabled=false')
+        options.set_preference("permissions.default.image", 2)
     if log is False:
         service = fs.Service(log_path=path.devnull)
         driver = webdriver.Firefox(options=options, service=service)
-        # driver = webdriver.Firefox(options=options)
     else:
+        # options.log.level = "trace"
         driver = webdriver.Firefox(options=options)
     return driver
+
+def setTimeout(driver, t):
+    driver.set_page_load_timeout(t)
 
 ################################################################################################
 # def getChromeDriver():
@@ -1188,12 +1202,18 @@ def findElementsByClass(driver, className):
     return driver.find_elements(By.CLASS_NAME, className)
 
 ################################################################################################
-def findElementsByXpath(driver, xPath):
+def findElementsByXPath(driver, xPath):
     return driver.find_elements(By.XPATH, xPath)
 
 ################################################################################################
 def findElementsByTag(driver, tagName):
     return driver.find_elements(By.TAG_NAME, tagName)
+
+################################################################################################
+def elementXPathFocus(driver, xpath, preventScroll):
+  JavaScriptFocusToElement = "arguments[0].focus({'preventScroll': arguments[1]})"
+  element = driver.find_element(By.XPATH, xpath)
+  driver.execute_script(JavaScriptFocusToElement, element, preventScroll)
 
 ################################################################################################
 def elementID(driver, time, id):
