@@ -464,8 +464,10 @@ def downloadVideoFiles(urls, mergedFolder, filename):
                 filename = f'{key}.mp4'
             if filename in existsFiles:
                 print(f'{filename} exists, skip downloading!')
+                filename = ''
                 continue
             downloadFile(url, mergedFolder, filename, count)
+            filename = ''
     except:
         myUtils.pritnExceptionTrace()
         # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
