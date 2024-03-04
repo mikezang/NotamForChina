@@ -163,14 +163,12 @@ def download(m3u8_link, output):
         return
  
     # Parsing the content in m3u8
-    print("Prasing decode key ...")
     ts_url_list, x_key_dict = parseM3u8Content(m3u8_content, m3u8_http_base)
     if len(ts_url_list) == 0:
         print(f'No file urls in {m3u8_link}')
         print(f'The content is "{m3u8_content}" in {m3u8_link}')
         return
     
-    print("There are", len(ts_url_list), "files to download ...")
     video_decoder = Video_Decoder(x_key=x_key_dict, m3u8_http_base=m3u8_http_base)
 
     # Setting Paths
