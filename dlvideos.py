@@ -8,9 +8,8 @@ from datetime import timedelta
 from timeit import timeit
 from time import sleep
 from sys import argv
-import traceback
 from selenium.webdriver.common.by import By
-import pyautogui
+# import pyautogui
 import warnings
 
 # Suppress specific warning
@@ -121,7 +120,8 @@ def parseVideoIdCNYS(driver, videoName):
                 # nId = dataId.get_attribute("data-mid")
                 videoDict[f'CNYS-{videoId}'] = f'{area}-{year}-{category}-{title}-{actor}-{desc}'
         except:
-            print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+            myUtils.pritnExceptionTrace()
+            # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
             pass
         page += 1
         videoUrl = CNYS_SEARCH_PAGE_URL.format(page, videoName)
@@ -173,7 +173,8 @@ def parseVideoIdWJYS(driver, videoName):
                 desc = item5[0].text
                 videoDict[f'WJYS-{int(videoId):06}'] = f'{area}-{year}-{category}-{title}-{actor}-{desc}'
         except:
-            print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+            myUtils.pritnExceptionTrace()
+            # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
             pass
         page += 1
         videoUrl = WJYS_SEARCH_PAGE_URL.format(page, videoName)
@@ -205,8 +206,9 @@ def parseVideoIdCTV(driver, videoName):
                     area = elements[2][:-2].replace(' ', '').replace(',', '/')
                     year = elements[3]
                     videoDict[f'C-TV-{videoId}'] = f'{area}-{year}-{category}-{title}-{actor}'
-                except Exception as e:
-                    print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+                except:
+                    myUtils.pritnExceptionTrace()
+                    # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
                     pass
 
             for videoId, value in videoDict.items():
@@ -227,20 +229,19 @@ def parseVideoIdCTV(driver, videoName):
 def parseVideoId(site:str, videoNames):
     videoDict = {}
     site = site.upper()
-    headless = 0 if site == WJYS or site == 'ALL' else 1
 
     for videoName in videoNames.split(','):
         if site == CNYS:
-            driver = myUtils.getFirefoxDriver(headless)
+            driver = myUtils.getFirefoxDriver()
             videoDict.update(parseVideoIdCNYS(driver, videoName))
-        elif site == WJYS:
-            driver = myUtils.getFirefoxDriver(headless)
-            videoDict.update(parseVideoIdWJYS(driver, videoName))
         elif site == CTV:
-            driver = myUtils.getFirefoxDriver(headless)
+            driver = myUtils.getFirefoxDriver()
             videoDict.update(parseVideoIdCTV(driver, videoName))
+        elif site == WJYS:
+            driver = myUtils.getFirefoxDriver(0)
+            videoDict.update(parseVideoIdWJYS(driver, videoName))
         else:
-            driver = myUtils.getFirefoxDriver(1)
+            driver = myUtils.getFirefoxDriver()
             videoDict.update(parseVideoIdCNYS(driver, videoName))
             sleep(0.5)
 
@@ -248,7 +249,7 @@ def parseVideoId(site:str, videoNames):
             sleep(0.5)
 
             driver.quit()
-            driver = myUtils.getFirefoxDriver(0)
+            driver = myUtils.getFirefoxDriver(0, False)
             videoDict.update(parseVideoIdWJYS(driver, videoName))
         sleep(0.5)
 
@@ -287,7 +288,7 @@ def getUrlsFromJavaScript(driver):
     url, url_next, player_aaaa = '', '', None
     try:
         player_aaaa = driver.execute_script('return player_aaaa')
-    except Exception as e:
+    except:
         pass
 
     if player_aaaa:
@@ -344,7 +345,8 @@ def parseUrlListCNYS(base, videoId):
 
             page += 2
     except:
-        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+        myUtils.pritnExceptionTrace()
+        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
 
     driver.quit()
@@ -390,7 +392,8 @@ def parseUrlListCTV(base, videoId):
 
             page += 2
     except:
-        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+        myUtils.pritnExceptionTrace()
+        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
 
     driver.quit()
@@ -402,7 +405,7 @@ def parseUrlListWJYS(base, videoId):
     sId = 1
     page = 1
     urls = {}
-    driver = myUtils.getFirefoxDriver(headless=0)
+    driver = myUtils.getFirefoxDriver(0, False)
     print(f'Parsing {videoId} url list on {WJYS_BASE_URL}...')
 
     try:
@@ -435,8 +438,9 @@ def parseUrlListWJYS(base, videoId):
             print(f'{id}: {url_next}')
 
             page += 2
-    except Exception as e:
-        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+    except:
+        myUtils.pritnExceptionTrace()
+        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
     driver.quit()
 
@@ -462,8 +466,9 @@ def downloadVideoFiles(urls, mergedFolder, filename):
                 print(f'{filename} exists, skip downloading!')
                 continue
             downloadFile(url, mergedFolder, filename, count)
-    except Exception as e:
-        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+    except:
+        myUtils.pritnExceptionTrace()
+        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
 
 ################################################################################################

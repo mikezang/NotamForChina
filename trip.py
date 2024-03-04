@@ -8,9 +8,7 @@
 import os
 from time import sleep
 from re import findall
-import inspect
 from datetime import date, datetime, timedelta
-import traceback
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
@@ -100,8 +98,8 @@ def getCTripList(driver):
 
             # show list page again
             WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "grp-10650014575-list-tab-产品"))).click()
-
             sleep(2)
+
             driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
             sleep(2)
 
@@ -128,7 +126,8 @@ def getCTripList(driver):
                     locations.append('酒泉')
 
     except:
-        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+        myUtils.pritnExceptionTrace()
+        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
 
     return urls, titles, locations
@@ -145,12 +144,17 @@ def getCTripDetail(driver, urls, titles):
             this_city = ""
             day_diff = 0
             real_url = constants.BASE_CTRIP_URL + url
-
-            myUtils.setTimeout(driver, 30)
-            driver.get(real_url)
-            sleep(2)
             print(f'Title{j + 1:02}: {title_text}')
-            print(f' Link{j + 1:02}: {real_url}\n')
+            print(f' Link{j + 1:02}: {real_url}', end='', flush=True)
+
+            myUtils.setTimeout(driver, 20)
+            try:
+                driver.get(real_url)
+                print('\n')
+                sleep(2)
+            except:
+                print(' (Timeout)\n')
+                pass
 
             launch_temp = {}
             if title_text != "":
@@ -183,7 +187,8 @@ def getCTripDetail(driver, urls, titles):
                         break
                 launch_date = myUtils.combineValuesForSameDictKey(launch_date, launch_temp)
         except:
-            print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+            myUtils.pritnExceptionTrace()
+            # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
             pass
     return launch_date
 
@@ -218,8 +223,9 @@ def getENiuTripList(driver):
 
     except NoSuchElementException:
         print("No ENiuTrip Data!")
-    except Exception:
-        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+    except:
+        myUtils.pritnExceptionTrace()
+        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
     return urls
 
@@ -239,7 +245,8 @@ def getENiuTripDetail(driver, urls):
             for item in items:
                 launch_date[convertDate1(item)] = city
     except:
-        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+        myUtils.pritnExceptionTrace()
+        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
     return launch_date
 
 ################################################################################################

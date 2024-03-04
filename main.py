@@ -84,7 +84,7 @@ def main():
     #         pass
     elif command == 'ctrip':
         try:
-            driver = myUtils.getFirefoxDriver()
+            driver = myUtils.getFirefoxDriver(disableImage=False)
             trip_data = trip.getCTrip(driver)
             trip.printTrip(trip_data)
             if trip_data:

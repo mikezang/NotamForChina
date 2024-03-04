@@ -40,6 +40,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 import ffmpeg
+import traceback
+
 
 import constants
 import myPlot
@@ -1032,18 +1034,14 @@ def checkVPN(driver) -> None:
             passProxy(driver)
 
 ################################################################################################
-def getFirefoxDriver(headless=1, log=False) -> webdriver:
-    # profile = webdriver.FirefoxProfile()
-    # profile.set_preference('permissions.default.stylesheet', 2)
-    # profile.set_preference('permissions.default.image', 2)
-    # profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')
-
+def getFirefoxDriver(headless=1, disableImage=True, log=False) -> webdriver:
     options = FirefoxOptions()
-    options.set_preference("permissions.default.stylesheet", 2)
-    options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", 'false')
+    # options.set_preference("permissions.default.stylesheet", 2)
+    # options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", 'false')
     if headless == 1:
         options.headless = True
         options.add_argument('--headless')
+    if disableImage:
         options.add_argument('--blink-settings=imagesEnabled=false')
         options.set_preference("permissions.default.image", 2)
     if log is False:
@@ -1054,6 +1052,11 @@ def getFirefoxDriver(headless=1, log=False) -> webdriver:
         driver = webdriver.Firefox(options=options)
     return driver
 
+################################################################################################
+def pritnExceptionTrace():
+    print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+
+################################################################################################
 def setTimeout(driver, t):
     driver.set_page_load_timeout(t)
 
