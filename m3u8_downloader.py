@@ -48,6 +48,9 @@ class Video_Decoder(object):
         subprocess.run(["rm", "-f", video_fname])
         subprocess.run(["mv", "out" + video_fname, video_fname])
 
+    def isEncode(self):
+        return self.method == "AES-128"
+    
     def __call__(self, video_fname: str):
         if self.method == "AES-128":
             self.decode_aes_128(video_fname)
@@ -192,7 +195,7 @@ def download(m3u8_link, output):
                 pool.close()
                 pool.join()
                 time.sleep(1)
-                print("Streaming files downloading completed.")
+                # print("Streaming files downloading completed.")
                 break
         except KeyboardInterrupt:
             print('Ctrl+c entered.')
@@ -210,11 +213,12 @@ def download(m3u8_link, output):
         return
     
     # Decoding videos
-    for ts_fname in tqdm.tqdm(downloaded_ts, desc="Decoding *.ts files"):
-        msg =video_decoder(ts_fname)
-        if msg:
-            print(msg)
-            return
+    if video_decoder.isEncode():
+        for ts_fname in tqdm.tqdm(downloaded_ts, desc="Decoding *.ts files"):
+            msg = video_decoder(ts_fname)
+            if msg:
+                print(msg)
+                return
 
     # check video type
     skipHeader, msg = myUtils.isVideoWithPNGHeader(downloaded_ts[0])
