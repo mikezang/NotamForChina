@@ -50,7 +50,7 @@ class Video_Decoder(object):
 
     def isEncode(self):
         return self.method == "AES-128"
-    
+ 
     def __call__(self, video_fname: str):
         if self.method == "AES-128":
             self.decode_aes_128(video_fname)
@@ -195,7 +195,7 @@ def download(m3u8_link, output):
                 pool.close()
                 pool.join()
                 time.sleep(1)
-                # print("Streaming files downloading completed.")
+                print("Streaming files downloading completed.")
                 break
         except KeyboardInterrupt:
             print('Ctrl+c entered.')
@@ -253,7 +253,7 @@ def mergeSmallMp4(ordered_ts_names, skipHeader, merged_mp4):
     for ts_filename in ordered_ts_names:
         files_str += ts_filename+'|'
     files_str.rstrip('|')
-    opts = ['ffmpeg']
+    opts = ['ffmpeg', '-loglevel', 'fatal']
     if skipHeader:
         opts.extend(['-f', 'mpegts'])
     opts.extend(['-i', files_str, '-c', 'copy', '-bsf:a', 'aac_adtstoasc', merged_mp4])
@@ -276,7 +276,7 @@ def mergeLargeMp4(ordered_ts_names, skipHeader, merged_mp4):
 
         # files_str += 'part_{}.mp4'.format(_i) + '|'
         mp4_fnames.append('part_{}.mp4'.format(_i))
-        opts = ['ffmpeg']
+        opts = ['ffmpeg', '-loglevel', 'fatal']
         if skipHeader:
             opts.extend(['-f', 'mpegts'])
         opts.extend(['-i', sub_files_str, '-c', 'copy'])
@@ -285,7 +285,7 @@ def mergeLargeMp4(ordered_ts_names, skipHeader, merged_mp4):
     with open("mylist.txt", 'w') as f:
         for mp4_fname in mp4_fnames:
             f.write(f"file {mp4_fname}\n")
-    subprocess.run(['ffmpeg', '-f', 'concat', '-i', 'mylist.txt', '-codec', 'copy', merged_mp4])
+    subprocess.run(['ffmpeg', '-loglevel', 'fatal', '-f', 'concat', '-i', 'mylist.txt', '-codec', 'copy', merged_mp4])
 
 def main(args):
     m3u8_link = args.m3u8

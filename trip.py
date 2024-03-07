@@ -5,7 +5,7 @@
 """
 # pylint: disable=W0703,C0103,C0116,C0301
 
-import os
+# import os
 from time import sleep
 from re import findall
 from datetime import date, datetime, timedelta
@@ -95,6 +95,7 @@ def getCTripList(driver):
             # select input first city
             liList = driver.find_elements(By.CLASS_NAME, "search_cn")
             liList[0].click()
+            sleep(2)
 
             # show list page again
             WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "grp-10650014575-list-tab-产品"))).click()
@@ -127,7 +128,6 @@ def getCTripList(driver):
 
     except:
         myUtils.pritnExceptionTrace()
-        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
 
     return urls, titles, locations
@@ -188,7 +188,6 @@ def getCTripDetail(driver, urls, titles):
                 launch_date = myUtils.combineValuesForSameDictKey(launch_date, launch_temp)
         except:
             myUtils.pritnExceptionTrace()
-            # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
             pass
     return launch_date
 
@@ -225,7 +224,6 @@ def getENiuTripList(driver):
         print("No ENiuTrip Data!")
     except:
         myUtils.pritnExceptionTrace()
-        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
     return urls
 
@@ -246,7 +244,6 @@ def getENiuTripDetail(driver, urls):
                 launch_date[convertDate1(item)] = city
     except:
         myUtils.pritnExceptionTrace()
-        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
     return launch_date
 
 ################################################################################################
