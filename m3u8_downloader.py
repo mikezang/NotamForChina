@@ -85,7 +85,7 @@ def download_ts_file(seq_and_ts_url: tuple[int, str], store_dir: str, attempts: 
     for _ in range(attempts):
         try:
             ts_res = requests.get(ts_url, headers=header)
-            if ts_res.status_code == 200:
+            if ts_res.status_code in [200, 403]:
                 break
         except Exception:
             pass
@@ -232,7 +232,6 @@ def download(m3u8_link, output):
     else:
         mergeSmallMp4(downloaded_ts, skipHeader, merged_mp4)
 
-    print(f"{merged_mp4} file merging completed.")
     print(f"{merged_mp4} stored in {mergedDIR}")
 
     # move mp4 to target folder
@@ -244,8 +243,8 @@ def download(m3u8_link, output):
     # Remove all split *.ts and temp folder
     shutil.rmtree(ts_folder)
     endTime = datetime.now()
-    print("Finish:", endTime)
-    print("Time spent:", endTime - startTime)
+    print(f"Finish: {endTime}")
+    print(f"Time spent: {endTime - startTime}\n")
     # end
 
 def mergeSmallMp4(ordered_ts_names, skipHeader, merged_mp4):
@@ -253,6 +252,8 @@ def mergeSmallMp4(ordered_ts_names, skipHeader, merged_mp4):
     for ts_filename in ordered_ts_names:
         files_str += ts_filename+'|'
     files_str.rstrip('|')
+    print(f'Merge {ordered_ts_names[0]} - {ordered_ts_names[-1]} to {merged_mp4}...')
+
     opts = ['ffmpeg', '-loglevel', 'fatal']
     if skipHeader:
         opts.extend(['-f', 'mpegts'])
@@ -274,14 +275,20 @@ def mergeLargeMp4(ordered_ts_names, skipHeader, merged_mp4):
             sub_files_str += ordered_ts_names[ts_idx + _i * 200] + '|'
         sub_files_str.rstrip('|')
 
-        # files_str += 'part_{}.mp4'.format(_i) + '|'
         mp4_fnames.append('part_{}.mp4'.format(_i))
+        msg = f'Merge {200 * _i:04}.ts - '
+        msg += f'{200 * _i + 199:04}.ts ' if _i < part_num - 1 else f'{200 * _i + _idx_list[-1]:04}.ts '
+        msg += f'to {mp4_fnames[_i]}...'
+        print(msg)
+
         opts = ['ffmpeg', '-loglevel', 'fatal']
         if skipHeader:
             opts.extend(['-f', 'mpegts'])
         opts.extend(['-i', sub_files_str, '-c', 'copy'])
         opts.extend(['-bsf:a', 'aac_adtstoasc', '-y', 'part_{}.mp4'.format(_i)])
         subprocess.run(opts)
+
+    print(f'Merge {mp4_fnames} to {merged_mp4}...')
     with open("mylist.txt", 'w') as f:
         for mp4_fname in mp4_fnames:
             f.write(f"file {mp4_fname}\n")

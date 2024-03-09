@@ -40,7 +40,7 @@ CNYS_ACTOR_URL = CNYS_BASE_URL + 'vodsearch-actor-{}.html'
 
 CNYS_VIDEO_URL = CNYS_BASE_URL + 'vodplay-{}-sid-{}-nid-{}.html'
 CTV_VIDEO_URL = CTV_BASE_URL + 'dyplay/{}-1-1/'
-WJYS_VIDEO_URL = WJYS_BASE_URL + 'vodplay/{}-1-1.html'
+WJYS_VIDEO_URL = WJYS_BASE_URL + 'vodplay/{}-{}-{}.html'
 
 CNYS_DETAIL_URL = CNYS_BASE_URL + 'voddetai-{}.html'
 CTV_DETAIL_URL = CTV_BASE_URL + 'dy/{}/'
@@ -121,7 +121,6 @@ def parseVideoIdCNYS(driver, videoName):
                 videoDict[f'CNYS-{videoId}'] = f'{area}-{year}-{category}-{title}-{actor}-{desc}'
         except:
             myUtils.pritnExceptionTrace()
-            # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
             pass
         page += 1
         videoUrl = CNYS_SEARCH_PAGE_URL.format(page, videoName)
@@ -174,7 +173,6 @@ def parseVideoIdWJYS(driver, videoName):
                 videoDict[f'WJYS-{int(videoId):06}'] = f'{area}-{year}-{category}-{title}-{actor}-{desc}'
         except:
             myUtils.pritnExceptionTrace()
-            # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
             pass
         page += 1
         videoUrl = WJYS_SEARCH_PAGE_URL.format(page, videoName)
@@ -208,7 +206,6 @@ def parseVideoIdCTV(driver, videoName):
                     videoDict[f'C-TV-{videoId}'] = f'{area}-{year}-{category}-{title}-{actor}'
                 except:
                     myUtils.pritnExceptionTrace()
-                    # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
                     pass
 
             for videoId, value in videoDict.items():
@@ -317,6 +314,9 @@ def parseUrlListCNYS(base, videoId):
 
             if not year:
                 element1 = myUtils.findElementsByXPath(driver, '//div[@class="player-details flex wrap"]')
+                if not element1:
+                    break
+
                 element2 = myUtils.findElementsByTag(element1[0], 'a')
                 year = element2[0].text if element2 else '????'
 
@@ -346,7 +346,6 @@ def parseUrlListCNYS(base, videoId):
             page += 2
     except:
         myUtils.pritnExceptionTrace()
-        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
 
     driver.quit()
@@ -393,26 +392,26 @@ def parseUrlListCTV(base, videoId):
             page += 2
     except:
         myUtils.pritnExceptionTrace()
-        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
 
     driver.quit()
     return videoName, year, urls, sId
 
 ################################################################################################
-def parseUrlListWJYS(base, videoId):
+def parseUrlListWJYS(base, videoId, sId):
     videoName, year = '', ''
-    sId = 1
     page = 1
     urls = {}
     driver = myUtils.getFirefoxDriver(0, False)
     print(f'Parsing {videoId} url list on {WJYS_BASE_URL}...')
 
     try:
-        while True:
-            link = base.format(videoId)
-            driver.get(link)
+        tabIndex = 0
+        link = base.format(videoId, sId, page)
+        driver.get(link)
+        tabs = myUtils.findElementsByXPath(driver, '//a[@class="module-tab-item tab-item"]')
 
+        while True:
             if not videoName:
                 element = myUtils.findElementsByXPath(driver, '//h1[@class="page-title"]')
                 videoName = element[0].text if element else ''
@@ -422,28 +421,35 @@ def parseUrlListWJYS(base, videoId):
                 element2 = myUtils.findElementsByXPath(element1[0], './/a[@class="tag-link"]')
                 year = element2[1].text if element2 else '????'
 
+            # TODO loop to multiple tabls for not vip url
             url, url_next = getUrlsFromJavaScript(driver)
             if not url:
                 break
 
-            id = f'{page:02}'
-            urls[id] = url
-            print(f'{id}: {url}')
+            if not 'vip.' in url:
+                id = f'{page:02}'
+                urls[id] = url
+                print(f'{id}: {url}')
 
-            if not url_next:
-                break
+                if not url_next:
+                    break
 
-            id = f'{page+1:02}'
-            urls[id] = url_next
-            print(f'{id}: {url_next}')
+                id = f'{page+1:02}'
+                urls[id] = url_next
+                print(f'{id}: {url_next}')
 
-            page += 2
+                page += 2
+                link = base.format(videoId, sId, page)
+                driver.get(link)
+            else:
+                link = tabs[tabIndex].get_property('href')
+                driver.get(link)
+                tabIndex += 1
     except:
         myUtils.pritnExceptionTrace()
         # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
     driver.quit()
-
     return videoName, year, urls, sId
 
 def downloadFile(url, mergedFolder, filename, count):
@@ -470,14 +476,13 @@ def downloadVideoFiles(urls, mergedFolder, filename):
             filename = ''
     except:
         myUtils.pritnExceptionTrace()
-        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         pass
 
 ################################################################################################
 def checkArgv():
     site, videoName, videoId, sId, folder, filename = '', '', '', '', '', ''
     count = len(argv)
-    if  count <= 1 or count == 4:
+    if  count <= 1:
         print('1. Search videoIds')
         print(f'Usage: python {argv[0]} site videoName\n')
         print('2 .Download video url list')
@@ -496,6 +501,11 @@ def checkArgv():
         else:
             site = argv[1].upper()
             videoName = argv[2]
+    elif count == 4:
+        if argv[2].isdigit():
+            site = argv[1].upper()
+            videoId = argv[2]
+            sId = argv[3]
     elif count >= 5:
         site, videoId, sId, folder = argv[1].upper(), argv[2], argv[3], argv[4]
         if folder.endswith('.mp4'):
@@ -508,13 +518,13 @@ def showRunTime(func):
     print(f'\nFinished in {timedelta(seconds=result)}')
 
 ################################################################################################
-def parseUrlList(site:str, videoId):
+def parseUrlList(site:str, videoId, sId):
     if site.upper() == CNYS:
         videoName, year, urls, sId = parseUrlListCNYS(CNYS_VIDEO_URL, videoId)
     elif site.upper() == CTV:
         videoName, year, urls, sId = parseUrlListCTV(CTV_VIDEO_URL, videoId)
     elif site.upper() == WJYS:
-        videoName, year, urls, sId = parseUrlListWJYS(WJYS_VIDEO_URL, videoId)
+        videoName, year, urls, sId = parseUrlListWJYS(WJYS_VIDEO_URL, videoId, sId)
     return videoName, year, urls, sId
 
 ################################################################################################
@@ -537,7 +547,7 @@ def main():
         if filePaths:
             urls = myUtils.readDictFromFile(filePaths[0])
         if not urls:
-            videoName, year, urls, sId = parseUrlList(site, videoId)
+            videoName, year, urls, sId = parseUrlList(site, videoId, sId)
 
             if urls:
                 myUtils.saveDictToFile(f'data/{site.upper()}-{year}-{videoName}-{videoId}-{sId}.txt', urls)
