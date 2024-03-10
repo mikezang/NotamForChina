@@ -452,11 +452,6 @@ def parseUrlListWJYS(base, videoId, sId):
     driver.quit()
     return videoName, year, urls, sId
 
-def downloadFile(url, mergedFolder, filename, count):
-    msg = filename if count == 1 else f'{filename[:-4]}/{count:02}'
-    print(f'Downloading {msg}...')
-    m3u8_downloader.download(url, f'{mergedFolder}/{filename}')
-
 ################################################################################################
 def downloadVideoFiles(urls, mergedFolder, filename):
     try:
@@ -465,14 +460,15 @@ def downloadVideoFiles(urls, mergedFolder, filename):
         for key, url in urls.items():
             if 'vip.' in url:
                 print(f'Inaccessible url {url}')
-                continue
-            if not filename:
-                filename = f'{key}.mp4'
-            if filename in existsFiles:
-                print(f'{filename} exists, skip downloading!')
-                filename = ''
-                continue
-            downloadFile(url, mergedFolder, filename, count)
+            else:
+                if not filename:
+                    filename = f'{key}.mp4'
+                if filename in existsFiles:
+                    print(f'{filename} exists, skip downloading!')
+                else:
+                    msg = filename if count == 1 else f'{filename[:-4]}/{count:02}={int(filename[:-4]) * 100 // count}%'
+                    print(f'Downloading {msg}...')
+                    m3u8_downloader.download(url, f'{mergedFolder}/{filename}')
             filename = ''
     except:
         myUtils.pritnExceptionTrace()
@@ -480,7 +476,7 @@ def downloadVideoFiles(urls, mergedFolder, filename):
 
 ################################################################################################
 def checkArgv():
-    site, videoName, videoId, sId, folder, filename = '', '', '', '', '', ''
+    site, videoName, videoId, sId, folder, filename = '', '', '', '2', '', ''
     count = len(argv)
     if  count <= 1:
         print('1. Search videoIds')

@@ -2,31 +2,39 @@
     Thie is NOTAM module to parse luanch data from NOTAM site
     https://notams.aim.faa.gov/notamSearch/
 """
-# pylint: disable=E1101,W0703,C0103,C0116,C0301
-
-import os
+from email.mime.text import MIMEText
+import smtplib
 from time import sleep
-import inspect
 from datetime import datetime, timedelta
-import traceback
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from timeit import timeit
 
 import myUtils
 import constants
 import nsf
 
-
 ###############################################################################################
-def printNotam(launch_date):
+def printNotam(dictData):
     print(f"\nNOTAM发射预测{myUtils.getJapanTime()}")
     print("================================")
-    myUtils.printNotamDict(launch_date)
+    myUtils.printNotamDict(dictData)
     print("================================")
     print(f"NOTAM发射预测{myUtils.getJapanTime()}\n")
+
+####################################################################
+def sendEmail(subject, body, toEmail='zhengrong.zang@gmail.com'):
+    if myUtils.isMacOS() or myUtils.isLinux():
+        sender = 'mikezang2008@gmail.com'
+        password = 'New@20230831'
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = sender
+        msg['To'] = toEmail
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
+       smtp_server.login(sender, password)
+       smtp_server.sendmail(sender, toEmail, msg.as_string())
+    print("Message sent!")
+
 
 ################################################################################################
 def parseMsa(text):
@@ -48,11 +56,13 @@ def parseNotam(text):
 
 ################################################################################################
 def getNotamDetailNew(driver, command, searchLocaltions):
+    print(f"{myUtils.getJapanTime()}")
+    print(f"Searching {command}: {searchLocaltions}")
     notam = {}
     
     try:
         driver.get(constants.NEW_NOTAM_URL)
-        myUtils.checkVPN(driver)
+        # myUtils.checkVPN(driver)
         radio = ''
 
         sleep(1)
@@ -63,8 +73,6 @@ def getNotamDetailNew(driver, command, searchLocaltions):
 
             if radio:
                 radio.click()
-                print(f"Searching {command}: {searchLocaltions}\n")
-
                 myUtils.elementInput(driver, 30, constants.NEW_XPATH_TEXTAREA, searchLocaltions)
                 myUtils.elementClick(driver, 30, constants.NEW_XPATH_SEARCH_BUTTON)
                 sleep(3)
@@ -74,7 +82,6 @@ def getNotamDetailNew(driver, command, searchLocaltions):
                 sleep(1)
 
                 form = driver.find_element(By.XPATH, "//form[@name='NotamRetrievalForm']")
-
                 if form:
                     driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
                     table1 = form.find_element(By.TAG_NAME, "table")
@@ -92,7 +99,6 @@ def getNotamDetailNew(driver, command, searchLocaltions):
                                     for td2 in tds:
                                         if myUtils.isChinaNotam(td2.text):
                                             location, number, startDate, endDate, area = parseNotam(td2.text)
-                                            # print(number, startDate, endDate, loc, nsf.formatLatitudeLongitude(area))
 
                                             if area != '':
                                                 startDate = nsf.convertDate(startDate)
@@ -101,158 +107,9 @@ def getNotamDetailNew(driver, command, searchLocaltions):
                                                 notam = getNoatmDict(notam, number, startDate, endDate, location, area)
                 myUtils.isTempFileSaved = False
     except :
-        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+        myUtils.pritnExceptionTrace()
         pass
     return notam
-
-################################################################################################
-# def getNotam(driver, command, searchTexts):
-#     notam = {}
-#     isFirstNotam = True
-    
-#     try:
-#         for searchText in searchTexts:
-#             driver.get(constants.NOTAM_URL)
-#             myUtils.checkVPN(driver)
-#             select = ''
-
-#             if isFirstNotam:
-#                 sleep(1)
-#                 myUtils.elementClick(driver, 10, constants.XPATH_BUTTON_DISCLAIMER)
-
-#             WebDriverWait(driver, 60).until_not(EC.presence_of_element_located((By.XPATH, constants.XPATH_DIV_HIDE1)))
-#             WebDriverWait(driver, 60).until_not(EC.presence_of_element_located((By.XPATH, constants.XPATH_DIV_HIDE2)))
-#             WebDriverWait(driver, 60).until_not(EC.presence_of_element_located((By.XPATH, constants.XPATH_DIV_HIDE3)))
-
-#             select = WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.XPATH, constants.XPATH_SELECT_TYPE)))
-#             select = myUtils.elementXPath(driver, 30, constants.XPATH_SELECT_TYPE)
-
-#             if select:
-#                 driver.execute_script("arguments[0].scrollIntoView();", select)
-
-#                 if isFirstNotam:
-#                     sleep(2)
-#                     myUtils.elementInput(driver, 30, constants.COMMANDS['Location'], searchText)
-#                     print()
-#                 else:
-#                     select.click()
-#                     myUtils.elementXPath(driver, 10, constants.XPATH_SELECT_OPTION.format(command))
-
-#                     if 'RJJJ' not in searchText:
-#                         print(f"Searching {command}: {searchText}")
-
-#                     Select(select).select_by_visible_text(command)
-#                     myUtils.elementInput(driver, 30, constants.COMMANDS[command], searchText)
-#                 myUtils.elementClick(driver, 30, constants.XPATH_BUTTON_SEARCH)
-
-#                 if isFirstNotam:
-#                     isFirstNotam = False
-#                     sleep(2)
-#                 else:
-#                     notam.update(getNotamDetail(driver, searchText))
-#         myUtils.isTempFileSaved = False
-
-    # except ElementClickInterceptedException as e:
-    #     print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-    #     pass
-    # except ElementNotInteractableException as e:
-    #     print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-    #     pass
-    # except NoSuchElementException as e:
-    #     print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-    #     pass
-    # except Exception as e:
-    #     # print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-    #     pass
-    # return notam
-
-################################################################################################
-# def getNotamDetail(driver, searchText):
-#     notam = {}
-
-#     try:
-#         WebDriverWait(driver, 130).until_not(EC.presence_of_element_located((By.XPATH, constants.XPATH_DIV_HIDE1)))
-#         WebDriverWait(driver, 130).until_not(EC.presence_of_element_located((By.XPATH, constants.XPATH_DIV_HIDE2)))
-
-#         try:
-#             element = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, constants.XPATH_TRS_NOTAM)))
-#             driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
-#             # driver.execute_script("arguments[0].scrollIntoView(true);", element)
-#         except:
-#             pass
-        
-#         if searchText == 'TEMPORARY RESTRICTED AREA ESTABLISHED BOUNDED':
-#             driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
-#             sleep(10)
-#         trs = driver.find_elements(By.XPATH, constants.XPATH_TRS_NOTAM)
-
-#         for iTr in range(len(trs)):
-#             WebDriverWait(driver, 130).until_not(EC.presence_of_element_located((By.XPATH, constants.XPATH_DIV_HIDE2)))
-#             WebDriverWait(driver, 130).until_not(EC.presence_of_element_located((By.XPATH, constants.XPATH_DIV_HIDE3)))
-
-#             tr = driver.find_elements(By.XPATH, constants.XPATH_TRS_NOTAM)[iTr]
-#             tds = tr.find_elements(By.XPATH,".//child::td")
-#             tdArray = []
-
-#             for td in tds:
-#                 tdArray.append(td.text)
-
-#             location = 'KZAK' if tdArray[constants.COL_LOCATION] == 'ZAK' else tdArray[constants.COL_LOCATION]
-
-#             if location in constants.LOCATIONS_PATTERN:
-#                 if tdArray[constants.COL_END_DATE_UTC] == 'PERM':
-#                     continue
-
-#                 endDateUtc = convertDate(tdArray[constants.COL_END_DATE_UTC])
-#                 if myUtils.isPastTime(endDateUtc):
-#                     continue
-#                 startDateUtc = convertDate(tdArray[constants.COL_START_DATE_UTC])
-
-#                 condition = myUtils.removeAllSpaces(tdArray[constants.COL_CONDITION])
-#                 if myUtils.isNotChinaNotam(location, condition):
-#                     continue
-
-#                 patterns = constants.LOCATIONS_PATTERN[location].split('|')[0].split(";")
-#                 # items = findall(patterns[0], condition)
-
-#                 # if len(items) == 0 or condition[-3:] == '...':
-#                 if condition[-3:] == '...':
-#                     condition = myUtils.removeAllSpaces(myUtils.getConditionDetail(driver, tds[constants.COL_CONDITION]))
-                    
-#                 area = findLatitudeLongitude(patterns[0], condition)
-
-#                 if len(patterns) > 1 and (area == '' or area[0] not in 'NS'):
-#                     area = findLatitudeLongitude(patterns[1], condition)
-
-#                 if searchText == 'FLW SEGMENT OF ATS RTE CLSD' and len(area.split('|')) == 1:
-#                     continue
-
-#                 if area != '':
-#                     number = tdArray[constants.COL_NUMBER]
-#                     notam = getNoatmDict(notam, number, startDateUtc, endDateUtc, location, area)
-                    # if number in notam:
-                    #     location = notam[number].split(";")[2] + "/" + location
-                    # notam[number] = startDateUtc + ";"
-                    # notam[number] = notam[number] + endDateUtc + ";"
-                    # notam[number] = notam[number] + location + ";"
-                    # notam[number] = notam[number] + area #+ ";" + str([(p.dm()) for p in coords])
-
-    # except ElementClickInterceptedException as e:
-    #     print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-    #     pass
-    # except ElementNotInteractableException as e:
-    #     print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-    #     pass
-    # except TimeoutException as e:
-    #     print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-    #     pass
-    # except NoSuchElementException as e:
-    #     print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-    #     pass
-    # except Exception as e:
-    #     print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-    #     pass
-    # return notam
 
 ################################################################################################
 def getNoatmDict(notamDict, number, startDate, endDate, location, area):
@@ -290,17 +147,16 @@ def main():
     try:
         firLocations = myUtils.readConfigFirNames()
         notam_data = getNotamDetailNew(driver, command, firLocations)
-        # notam_data = notam.getNotamDetailNew(driver, command, constants.FIR_LOCATIONS)
 
         if notam_data:
-            # notamDict = myUtils.readNotamDictDetailFromTextFile('./data/notams.txt')
-            # if notamDict:
-            #     notam_data.update(notamDict)
             notam_data =  myUtils.sortDictByValue(notam_data)
             printNotam(notam_data)
+            subject = f"NOTAM发射预测{myUtils.getJapanTime()}"
+            body = [f'{i + 1:02} {k}:{v}\n' for i, (k, v) in notam_data.items()]
+            sendEmail(subject, body)
             myUtils.createKmlFile(notam_data)
     except:
-        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+        myUtils.pritnExceptionTrace()
 
     if driver:
         driver.quit()
@@ -308,7 +164,7 @@ def main():
 ################################################################################################
 def showRunTime(func):
     result = timeit(func, number=1, globals=globals())
-    print(f'\nFinished in {timedelta(seconds=result)}')
+    print(f'Finished in {timedelta(seconds=result)}\n')
 
 ################################################################################################
 if __name__ == "__main__":
