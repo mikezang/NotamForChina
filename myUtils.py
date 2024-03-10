@@ -1153,7 +1153,8 @@ def printNotamDict(d):
     for i, (key, value) in enumerate(d.items()):
         # if len(value) > PRINT_NOTAM_LENGTH:
         #     value = value[:PRINT_NOTAM_LENGTH] + '...'
-        print(f'{i + 1:02} {key}:{value}')
+        msg = f'{i + 1:02} {key}:{value}'
+        print(msg)
 
 ################################################################################################
 def splitNotam(item):
@@ -1219,7 +1220,7 @@ def elementXPathFocus(driver, xpath, preventScroll):
   driver.execute_script(JavaScriptFocusToElement, element, preventScroll)
 
 ################################################################################################
-def elementID(driver, time, id):
+def elementId(driver, time, id):
     return WebDriverWait(driver, time).until(EC.presence_of_element_located((By.ID, id)))
 
 ################################################################################################

@@ -70,17 +70,10 @@ def getCTripList(driver):
 
     try:
         driver.get(constants.CTRIP_URL)
-        # myUtils.checkVPN(driver)
-
-        # show list page
-        myUtils.elementID(driver, 60, "grp-10650014575-list-tab-产品").click()
-        # WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "grp-10650014575-list-tab-产品"))).click()
-
-        # input '海口','文昌','西昌','酒泉',
         print(f'Searching', end=' ', flush=True)
         tripCity = myUtils.readConfig(['TripCity'])
 
-        for i, city in enumerate(tripCity): #['海口','文昌','西昌','酒泉']:
+        for i, city in enumerate(tripCity):
             if i < len(tripCity) - 1:
                 print(f'{city}', end=',', flush=True)
             else:
@@ -98,7 +91,7 @@ def getCTripList(driver):
             sleep(2)
 
             # show list page again
-            WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "grp-10650014575-list-tab-产品"))).click()
+            myUtils.elementId(driver, 30, "grp-10650014575-list-tab-产品").click()
             sleep(2)
 
             driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
@@ -109,23 +102,18 @@ def getCTripList(driver):
 
             for pid, link in zip(div1, div2):
                 title = link.find_element(By.TAG_NAME, 'h3').text
-                if '观礼' not in title:
-                    continue
+                if '观礼' in title:
+                    url = pid.get_attribute("data-pid")
+                    if url not in urls:
+                        titles.append(title)
+                        urls.append(url)
 
-                url = pid.get_attribute("data-pid")
-                if url in urls:
-                    continue
-
-                titles.append(title)
-                urls.append(url)
-
-                if '文昌' in title:
-                    locations.append('文昌')
-                elif '西昌' in title:
-                    locations.append('西昌')
-                elif '酒泉' in title or '东方航天城' in title:
-                    locations.append('酒泉')
-
+                        if '文昌' in title:
+                            locations.append('文昌')
+                        elif '西昌' in title:
+                            locations.append('西昌')
+                        elif '酒泉' in title or '东方航天城' in title:
+                            locations.append('酒泉')
     except:
         myUtils.pritnExceptionTrace()
         pass
