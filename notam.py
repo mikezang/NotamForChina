@@ -2,8 +2,6 @@
     Thie is NOTAM module to parse luanch data from NOTAM site
     https://notams.aim.faa.gov/notamSearch/
 """
-from email.mime.text import MIMEText
-import smtplib
 from time import sleep
 from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
@@ -20,21 +18,6 @@ def printNotam(dictData):
     myUtils.printNotamDict(dictData)
     print("================================")
     print(f"NOTAM发射预测{myUtils.getJapanTime()}\n")
-
-####################################################################
-def sendEmail(subject, body, toEmail='zhengrong.zang@gmail.com'):
-    if myUtils.isMacOS() or myUtils.isLinux():
-        sender = 'mikezang2008@gmail.com'
-        password = 'New@20230831'
-        msg = MIMEText(body)
-        msg['Subject'] = subject
-        msg['From'] = sender
-        msg['To'] = toEmail
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
-       smtp_server.login(sender, password)
-       smtp_server.sendmail(sender, toEmail, msg.as_string())
-    print("Message sent!")
-
 
 ################################################################################################
 def parseMsa(text):
@@ -151,9 +134,9 @@ def main():
         if notam_data:
             notam_data =  myUtils.sortDictByValue(notam_data)
             printNotam(notam_data)
-            subject = f"NOTAM发射预测{myUtils.getJapanTime()}"
-            body = [f'{i + 1:02} {k}:{v}\n' for i, (k, v) in notam_data.items()]
-            sendEmail(subject, body)
+            # subject = f"NOTAM发射预测{myUtils.getJapanTime()}"
+            # body = [f'{i + 1:02} {k}:{v}\n' for i, (k, v) in enumerate(notam_data.items())]
+            # myUtils.sendEmail(subject, body)
             myUtils.createKmlFile(notam_data)
     except:
         myUtils.pritnExceptionTrace()

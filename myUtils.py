@@ -6,7 +6,7 @@
 import json
 import logging
 import os
-import shutil
+# import shutil
 import socket
 import subprocess
 import pytz
@@ -41,7 +41,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 import ffmpeg
 import traceback
-
+from email.mime.text import MIMEText
+import smtplib
 
 import constants
 import myPlot
@@ -1200,6 +1201,20 @@ def exceptPrint():
 ################################################################################################
 def scrollBottom(driver):
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+
+####################################################################
+def sendEmail(subject, body, toEmail='zhengrong.zang@gmail.com'):
+    if isMacOS() or isLinux():
+        sender = 'mikezang2008@gmail.com'
+        password = 'New@20230831'
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = sender
+        msg['To'] = toEmail
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
+       smtp_server.login(sender, password)
+       smtp_server.sendmail(sender, toEmail, msg.as_string())
+    print("Message sent!")
 
 ################################################################################################
 def findElementsByClass(driver, className):
