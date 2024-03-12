@@ -511,7 +511,7 @@ def checkArgv():
 
 def showRunTime(func):
     result = timeit(func, number=1, globals=globals())
-    print(f'\nFinished in {timedelta(seconds=result)}')
+    print(f'Finished in {timedelta(seconds=result)}\n')
 
 ################################################################################################
 def parseUrlList(site:str, videoId, sId):
@@ -537,9 +537,11 @@ def main():
         else:
             print(f'No videoIds for {videoNames}!')
     elif videoId:
-        textFilename = f'**/*{videoId}-{sId}.txt'
-        filePaths = glob(textFilename, recursive=True)
-
+        if mergedFolder != '':
+            textFilename = f'**/*{videoId}-{sId}.txt'
+            filePaths = glob(textFilename, recursive=True)
+        else:
+            filePaths = ''
         if filePaths:
             urls = myUtils.readDictFromFile(filePaths[0])
         if not urls:
@@ -549,8 +551,8 @@ def main():
                 myUtils.saveDictToFile(f'data/{site.upper()}-{year}-{videoName}-{videoId}-{sId}.txt', urls)
             else:
                 print(f'No accessable url list for videoId {videoId}!')
-        if urls and mergedFolder:
-            downloadVideoFiles(urls, mergedFolder, filename)
+    if urls and mergedFolder:
+        downloadVideoFiles(urls, mergedFolder, filename)
 
 ################################################################################################
 def parseArguments():

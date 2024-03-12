@@ -86,6 +86,7 @@ def getCTripList(driver):
             sleep(2)
         
             # select input first city
+            myUtils.elementClass(driver, 10, "search_cn")
             liList = driver.find_elements(By.CLASS_NAME, "search_cn")
             liList[0].click()
             sleep(2)
