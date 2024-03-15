@@ -175,8 +175,7 @@ def main():
 ################################################################################################
 def showRunTime(func):
     result = timeit(func, number=1, globals=globals())
-    print(f'Finished in {timedelta(seconds=result)}\n')
-
+    print(f'\nFinished in {timedelta(seconds=result)}')
 
 ################################################################################################
 def convert2DDList() -> None:

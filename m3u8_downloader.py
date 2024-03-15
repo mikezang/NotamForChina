@@ -15,16 +15,10 @@ from sys import path
 
 path.append("")
 
+import constants
 import myUtils
 
 MAX_POOLS = 10
-
-header = {
-    'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4_3) "
-                  "AppleWebKit/602.4.8 (KHTML, like Gecko) Version"
-                  "/10.0.3 Safari/602.4.8"
-}
-
 class Video_Decoder(object):
     def __init__(self, x_key: dict, m3u8_http_base: str = ""):
         self.method = x_key["METHOD"] if "METHOD" in x_key.keys() else ""
@@ -59,7 +53,7 @@ class Video_Decoder(object):
 
 def decode_key_uri(base:str, URI: str):
     uri = URI if URI.startswith('https://') else base + URI
-    uri_req = requests.get(uri, headers=header)
+    uri_req = requests.get(uri, headers=constants.header)
     uri_str = "".join(["{:02x}".format(c) for c in uri_req.content])
     return uri_str
 
@@ -84,7 +78,7 @@ def download_ts_file(seq_and_ts_url: tuple[int, str], store_dir: str, attempts: 
     
     for _ in range(attempts):
         try:
-            ts_res = requests.get(ts_url, headers=header)
+            ts_res = requests.get(ts_url, headers=constants.header)
             if ts_res.status_code in [200, 403]:
                 break
         except Exception:
@@ -102,7 +96,7 @@ def downloadM3u8File(m3u8_link):
     m3u8_content = ""
     if m3u8_link.startswith("http"):
         try:
-            m3u8_content = requests.get(m3u8_link, headers=header).content.decode("utf-8")
+            m3u8_content = requests.get(m3u8_link, headers=constants.header).content.decode("utf-8")
             m3u8_http_base = m3u8_link.rstrip(m3u8_link.split("/")[-1])
         except:
             print(f'Timeout for access {m3u8_link}')
