@@ -65,12 +65,7 @@ def plotIOUs(fig, axs, newPolys, oldPolys):
                             iou = 0.0 if union.area == 0.0 else intersection.area / union.area
                         except Exception as e:
                             pass
-                    # elif newPoly.within(oldPoly) or oldPoly.within(newPoly):
-                    #     iou = 1.0
-                    # else:
-                    #     iou = 0.0
-                    
-                    if iou > 0.1:
+                    if iou > 0.01:
                         text = f'{geomName} JSI: {iou:.1%}'
                         ious.append(text)
                         # print(text)
