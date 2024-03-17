@@ -85,11 +85,14 @@ def download_ts_file(seq_and_ts_url: tuple[int, str], store_dir: str, attempts: 
             pass
         time.sleep(.5)
 
-    if isinstance(ts_res, Response) and ts_res.status_code == 200:
-        with open(ts_dir, 'wb+') as f:
-            f.write(ts_res.content)
+    if isinstance(ts_res, Response):
+        if ts_res.status_code == 200:
+            with open(ts_dir, 'wb+') as f:
+                f.write(ts_res.content)
+        else:
+            print(f"Status Code:{ts_res.status_code}, failed to download streaming file: {ts_url}.")
     else:
-        print(f"Status Code:{ts_res.status_code}, failed to download streaming file: {ts_url}.")
+        print(f"Respons:{ts_res}, failed to download streaming file: {ts_url}.")
 
 def downloadM3u8File(m3u8_link):
     m3u8_http_base = ""
