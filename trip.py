@@ -61,6 +61,18 @@ def getCTrip(driver):
     return launch_date
 
 ################################################################################################
+def selectCity(driver, city):
+    myUtils.elementClick(driver, 30, "//div[@class='suppliers_search_destination_starting']")
+    myUtils.elementInput(driver, 30, "//input[@class='search_text']", city)
+    myUtils.elementClick(driver, 30, "//input[@class='search_text']")
+    sleep(2)
+
+    # select input first city
+    myUtils.elementClass(driver, 10, "search_cn")
+    liList = driver.find_elements(By.CLASS_NAME, "search_cn")
+    liList[0].click()
+
+################################################################################################
 def getCTripList(driver):
     urls, titles, locations = [], [], []
 
@@ -76,22 +88,14 @@ def getCTripList(driver):
                 print(f'{city}\n')
 
             # click "change city" button
-            myUtils.elementClick(driver, 30, "//div[@class='suppliers_search_destination_starting']")
-            myUtils.elementInput(driver, 30, "//input[@class='search_text']", city)
-            myUtils.elementClick(driver, 30, "//input[@class='search_text']")
-            sleep(2)
-        
-            # select input first city
-            myUtils.elementClass(driver, 10, "search_cn")
-            liList = driver.find_elements(By.CLASS_NAME, "search_cn")
-            liList[0].click()
+            # selectCity(driver, city)
             sleep(2)
 
             # show list page again
             myUtils.elementId(driver, 30, "grp-10650014575-list-tab-产品").click()
             sleep(2)
 
-            driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+            myUtils.scrollBottom(driver)
             sleep(2)
 
             div1 = driver.find_elements(By.CLASS_NAME, "shop_list_item")
@@ -114,7 +118,6 @@ def getCTripList(driver):
     except:
         myUtils.pritnExceptionTrace()
         pass
-
     return urls, titles, locations
 
 ################################################################################################
@@ -137,7 +140,10 @@ def parseTripDate(driver, this_city, this_year, this_month, day_diff):
                 day_int -= 31
                 month_int += 1
 
-            if month_int < this_month + 2:
+            c1 = this_month == month_int
+            c2 = this_month + 1 == month_int
+            c3 = this_month == 12 and month_int == 1
+            if c1 or c2 or c3:
                 month_text = f'{month_int:02}'
                 day_text = f'{day_int:02}'
                 this_year1 = calcYear(this_year, month_int, this_month)
@@ -167,7 +173,7 @@ def getCTripDetail(driver, urls, titles):
             try:
                 driver.get(real_url)
                 print('\n')
-                sleep(1)
+                sleep(3)
             except:
                 print(' (Timeout)\n')
                 pass
@@ -292,7 +298,6 @@ def main():
         printTrip(trip_data)
         if trip_data:
             print('\n./temp/LaunchTravels.html created!')
-
     except:
         print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
     if driver:
