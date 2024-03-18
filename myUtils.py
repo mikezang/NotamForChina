@@ -169,7 +169,7 @@ def msgbox(title, text, style):
 ################################################################################################
 def combineValuesForSameDictKey(d1: dict, d2: dict) -> dict:
     return {k: (d1[k] + '/' + d2[k]
-                if k in d1 and k in d2 and d1[k] != d2[k]
+                if k in d1 and k in d2 and d1[k] not in d2[k] and d2[k] not in d1[k]
                 else d1[k] if k in d1 else d2[k])
             for k in set(d1).union(d2)}
 
@@ -523,11 +523,12 @@ def createMsaDropZonesKmlFile(oldFile):
                 content += line
         location, number, startDates, endDates, areas = notam.parseMsa(content)
 
-        for startDate, endDate, area in zip(startDates, endDates, areas):
+        # for startDate, endDate, area in zip(startDates, endDates, areas):
+        for i, area in enumerate(areas):
             kml = Kml()
             notams = {}
-            startDate = startDate if startDate else getUTCTime()[:-3]
-            endDate = endDate if endDate else getUTCTime()[:-3]
+            startDate = startDates[i] if i < len(startDates) else getUTCTime()[:-3]
+            endDate = endDate[i] if i < len(endDates) else getUTCTime()[:-3]
             title = f"{oldFile.replace('.txt', '').split('/')[-1]}"
             title = convertTitle(startDate, endDate, title)
             if area:

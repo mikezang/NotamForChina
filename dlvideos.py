@@ -227,29 +227,32 @@ def parseVideoId(site:str, videoNames):
     videoDict = {}
     site = site.upper()
 
-    for videoName in videoNames.split(','):
-        if site == CNYS:
-            driver = myUtils.getFirefoxDriver()
+    if site == CNYS:
+        driver = myUtils.getFirefoxDriver()
+        for videoName in videoNames.split(','):
             videoDict.update(parseVideoIdCNYS(driver, videoName))
-        elif site == CTV:
-            driver = myUtils.getFirefoxDriver()
+    elif site == CTV:
+        driver = myUtils.getFirefoxDriver()
+        for videoName in videoNames.split(','):
             videoDict.update(parseVideoIdCTV(driver, videoName))
-        elif site == WJYS:
-            driver = myUtils.getFirefoxDriver(0)
+    elif site == WJYS:
+        driver = myUtils.getFirefoxDriver(0)
+        for videoName in videoNames.split(','):
             videoDict.update(parseVideoIdWJYS(driver, videoName))
-        else:
-            driver = myUtils.getFirefoxDriver()
+    else:
+        driver = myUtils.getFirefoxDriver()
+        for videoName in videoNames.split(','):
             videoDict.update(parseVideoIdCNYS(driver, videoName))
             sleep(0.5)
 
             videoDict.update(parseVideoIdCTV(driver, videoName))
             sleep(0.5)
 
-            driver.quit()
-            driver = myUtils.getFirefoxDriver(0, False)
+        driver.quit()
+        driver = myUtils.getFirefoxDriver(0, False)
+        for videoName in videoNames.split(','):
             videoDict.update(parseVideoIdWJYS(driver, videoName))
-        sleep(0.5)
-
+            sleep(0.5)
     driver.quit()
     return videoDict
 
@@ -507,6 +510,8 @@ def checkArgv():
         if folder.endswith('.mp4'):
             filename = os.path.basename(folder)
             folder = os.path.dirname(folder)
+        if not folder.startswith('/'):
+            folder = f'/Users/mikezang/movies/{folder}'
     return site, videoName, videoId, sId, folder, filename
 
 def showRunTime(func):
