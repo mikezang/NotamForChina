@@ -15,6 +15,38 @@ import myUtils
 import constants
 
 ################################################################################################
+def splitTitle(item: list) -> str:
+    items = item[1].split(' - ')
+    count = len(items)
+    if count == 4:
+        titleDate = getDateFromTitle(item[1])
+        localDate = convertNsfDate(titleDate, constants.TIMEZONE_BEIJING)
+        localDateStr = localDate.strftime("%Y年%m月%d日%H時%M分") if localDate else items[3]
+        key = items[1] + localDateStr + items[2] + items[0]
+    elif count == 3:
+        key = items[1] + items[2] + items[0]
+    elif count == 2:
+        key = items[1] + items[0]
+    else:
+        key = items[0]
+    return key
+
+################################################################################################
+def sortByTitle(d: dict) -> dict:
+    return {k : v for k, v in sorted(d.items(), key=lambda x: splitTitle(x))}
+
+################################################################################################
+def writeNsfToFile(nsfDict):
+    # filename = f'./data/notam{getJapanTime("%Y%m%d-%H%M%S")}.txt'
+    filename = f'./data/nsfLinkList.html'
+    newText = f"<H2>NSF Link List</H2>"
+    nsfDict = sortByTitle(nsfDict)
+    for i, (key, value) in enumerate(nsfDict.items()):
+        # items = value.split(';')
+        newText += f'<a target=_blank href={key}>{i + 1:03}: {value}</a><br>'
+    myUtils.saveTextFile(filename, newText)
+
+################################################################################################
 def isPastDate(oldDate) -> bool:
 #    baseDate = datetime(2021, 12, 31).astimezone(pytz.timezone(constants.TIMEZONE_TOKYO))
     baseDate = date.today()

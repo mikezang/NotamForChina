@@ -11,6 +11,7 @@ from sys import argv
 from selenium.webdriver.common.by import By
 # import pyautogui
 import warnings
+from selenium import webdriver
 
 # Suppress specific warning
 warnings.filterwarnings("ignore", message="invalid value encountered in exp2")
@@ -79,7 +80,7 @@ SITE_DETAIL_URL = {
 DOUBAN_BASE_URL = 'https://movie.douban.com'
 
 ################################################################################################
-def parseVideoIdCNYS(driver, videoName):
+def parseVideoIdCNYS(driver: webdriver, videoName: str) -> dict:
     videoDict = {}
     page = 1
     videoUrl = CNYS_SEARCH_URL.format(videoName)
@@ -127,7 +128,7 @@ def parseVideoIdCNYS(driver, videoName):
     return videoDict
 
 ################################################################################################
-def parseVideoIdWJYS(driver, videoName):
+def parseVideoIdWJYS(driver: webdriver, videoName: str) -> dict:
     videoDict = {}
     page = 1
     videoUrl = WJYS_SEARCH_URL.format(videoName)
@@ -179,7 +180,7 @@ def parseVideoIdWJYS(driver, videoName):
     return videoDict
 
 ################################################################################################
-def parseVideoIdCTV(driver, videoName):
+def parseVideoIdCTV(driver: webdriver, videoName: str) -> dict:
     videoDict = {}
     page = 1
     videoUrl = CTV_SEARCH_URL.format(videoName)
@@ -223,7 +224,7 @@ def parseVideoIdCTV(driver, videoName):
     return videoDict
 
 ################################################################################################
-def parseVideoId(site:str, videoNames):
+def parseVideoId(site:str, videoNames:str) -> dict:
     videoDict = {}
     site = site.upper()
 
@@ -257,7 +258,7 @@ def parseVideoId(site:str, videoNames):
     return videoDict
 
 ################################################################################################
-def sortDictValue(videoDict):
+def sortDictValue(videoDict: dict) -> dict:
     return {k : v for k, v in sorted(videoDict.items(), key=lambda x: x[0].split('-')[0] + x[1])}
 
 ################################################################################################
@@ -355,7 +356,7 @@ def parseUrlListCNYS(base, videoId):
     return videoName, year, urls, sId
 
 ################################################################################################
-def parseUrlListCTV(base, videoId):
+def parseUrlListCTV(base: str, videoId: int):
     videoName, year = '', ''
     sId = 1
     page = 1
@@ -401,7 +402,7 @@ def parseUrlListCTV(base, videoId):
     return videoName, year, urls, sId
 
 ################################################################################################
-def parseUrlListWJYS(base, videoId, sId):
+def parseUrlListWJYS(base: str, videoId: int, sId: int) -> list:
     videoName, year = '', ''
     page = 1
     urls = {}
@@ -424,7 +425,6 @@ def parseUrlListWJYS(base, videoId, sId):
                 element2 = myUtils.findElementsByXPath(element1[0], './/a[@class="tag-link"]')
                 year = element2[1].text if element2 else '????'
 
-            # TODO loop to multiple tabls for not vip url
             url, url_next = getUrlsFromJavaScript(driver)
             if not url:
                 break
@@ -444,7 +444,8 @@ def parseUrlListWJYS(base, videoId, sId):
                 page += 2
                 link = base.format(videoId, sId, page)
                 driver.get(link)
-            else:
+            elif len(tabs) > tabIndex:
+                # loop to multiple tabls for not vip url
                 link = tabs[tabIndex].get_property('href')
                 driver.get(link)
                 tabIndex += 1
@@ -456,7 +457,7 @@ def parseUrlListWJYS(base, videoId, sId):
     return videoName, year, urls, sId
 
 ################################################################################################
-def downloadVideoFiles(urls, mergedFolder, filename):
+def downloadVideoFiles(urls: dict, mergedFolder:str, filename: str) -> None:
     try:
         count = len(urls)
         existsFiles = sorted(list(myUtils.listFiles(mergedFolder, '.mp4', onlyFilename=True, includeSubFolder=False)))
@@ -478,7 +479,7 @@ def downloadVideoFiles(urls, mergedFolder, filename):
         pass
 
 ################################################################################################
-def checkArgv():
+def checkArgv() -> list:
     site, videoName, videoId, sId, folder, filename = '', '', '', '2', '', ''
     count = len(argv)
     if  count <= 1:
@@ -519,7 +520,7 @@ def showRunTime(func):
     print(f'Finished in {timedelta(seconds=result)}\n')
 
 ################################################################################################
-def parseUrlList(site:str, videoId, sId):
+def parseUrlList(site:str, videoId: int, sId: int) -> list:
     if site.upper() == CNYS:
         videoName, year, urls, sId = parseUrlListCNYS(CNYS_VIDEO_URL, videoId)
     elif site.upper() == CTV:
@@ -529,7 +530,7 @@ def parseUrlList(site:str, videoId, sId):
     return videoName, year, urls, sId
 
 ################################################################################################
-def main():
+def main() -> None:
     site, videoNames, videoId, sId, mergedFolder, filename = checkArgv()
     urls = {}
     
@@ -595,7 +596,7 @@ def parseArguments():
         "output",
         default="", 
         type=str,
-        help="File polder and filename for saved mp4, e.g. /movie/title.mp4," 
+        help="File folder and filename for saved mp4, e.g. /movie/title.mp4," 
              "or /drama to save 01.mp4-99.mp4 to folder /drama, "
              "If not specified, the output file name will be set to current folder"
     )

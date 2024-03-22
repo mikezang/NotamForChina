@@ -112,7 +112,7 @@ def main():
                 print('Create all NSF launched urls from site...')
                 page = 'url'
                 nsfDict = nsf.getNsfUrlList(driver, page)
-                myUtils.writeNsfToFile(nsfDict)
+                nsf.writeNsfToFile(nsfDict)
             except:
                 print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
         elif command == 'nsfcontents':

@@ -424,6 +424,7 @@ def handleEvents(excelSheet1, event, window, values, years, rockets, retired, se
             else:
                 seriesChecked = removeSeriesText(seriesChecked)
                 plotLaunchByDate.plot2(cn_font, excelSheet1, seriesChecked, dictUpperStage, seriesPrintLast, dfLastLaunch)
+                plotLaunchByRocket.plot1(cn_font, excelSheet1)
 
             if seriesMaiden:
                 plotLaunchByDate.plotGraphForMaiden(cn_font, excelSheet1, dictUpperStage)

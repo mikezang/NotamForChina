@@ -12,12 +12,12 @@ import constants
 import nsf
 
 ###############################################################################################
-def printNotam(dictData):
-    print(f"\nNOTAM发射预测{myUtils.getJapanTime()}")
+def printNotam(dictData, start):
+    print(f"\nNOTAM发射预测{start}")
     print("================================")
     myUtils.printNotamDict(dictData)
     print("================================")
-    print(f"NOTAM发射预测{myUtils.getJapanTime()}\n")
+    print(f"NOTAM发射预测{start}\n")
 
 ################################################################################################
 def parseMsa(text):
@@ -39,7 +39,8 @@ def parseNotam(text):
 
 ################################################################################################
 def getNotamDetailNew(driver, command, searchLocaltions):
-    print(f"{myUtils.getJapanTime()}")
+    start = myUtils.getJapanTime()
+    print(f"{start}")
     print(f"Searching {command}: {searchLocaltions}")
     notam = {}
     
@@ -58,11 +59,11 @@ def getNotamDetailNew(driver, command, searchLocaltions):
                 radio.click()
                 myUtils.elementInput(driver, 30, constants.NEW_XPATH_TEXTAREA, searchLocaltions)
                 myUtils.elementClick(driver, 30, constants.NEW_XPATH_SEARCH_BUTTON)
-                sleep(3)
+                sleep(2)
 
                 window_after = driver.window_handles[-1]
                 driver.switch_to.window(window_after)
-                sleep(1)
+                sleep(3)
 
                 form = driver.find_element(By.XPATH, "//form[@name='NotamRetrievalForm']")
                 if form:
@@ -92,7 +93,7 @@ def getNotamDetailNew(driver, command, searchLocaltions):
     except :
         myUtils.pritnExceptionTrace()
         pass
-    return notam
+    return notam, start
 
 ################################################################################################
 def getNoatmDict(notamDict, number, startDate, endDate, location, area):
@@ -129,11 +130,11 @@ def main():
     command = 'Location'
     try:
         firLocations = myUtils.readConfigFirNames()
-        notam_data = getNotamDetailNew(driver, command, firLocations)
+        notam_data, start = getNotamDetailNew(driver, command, firLocations)
 
         if notam_data:
             notam_data =  myUtils.sortDictByValue(notam_data)
-            printNotam(notam_data)
+            printNotam(notam_data, start)
             # subject = f"NOTAM发射预测{myUtils.getJapanTime()}"
             # body = [f'{i + 1:02} {k}:{v}\n' for i, (k, v) in enumerate(notam_data.items())]
             # myUtils.sendEmail(subject, body)

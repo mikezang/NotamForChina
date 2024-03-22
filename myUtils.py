@@ -1167,7 +1167,7 @@ def splitNotam(item):
 ################################################################################################
 # key: [P1865/23]
 # value: [2023/05/17 01:00;2023/05/20 06:00;RJJJ;N22°25',E127°18'|N22°43',E126°23'|N22°27',E126°18'|N22°09',E127°12']
-def sortDictByValue(d):
+def sortDictByValue(d: dict) -> dict:
 #    sorted_tuples = sorted(d.items(), key=lambda item: item[1])
 #    sorted_dict = {k: v for k, v in sorted_tuples}
     return {k : v for k, v in sorted(d.items(), key=lambda x: splitNotam(x))}
@@ -1297,18 +1297,6 @@ def updateTempFile(notams):
             saveTextFile(filename, newText)
     except FileNotFoundError:
         saveTextFile(filename, newText)
-
-################################################################################################
-def writeNsfToFile(nsfDict):
-    # filename = f'./data/notam{getJapanTime("%Y%m%d-%H%M%S")}.txt'
-    filename = f'./data/nsfLinkList.html'
-    # newText = f"NOTAM发射预测{getJapanTime()}\n"
-    newText = f"<H2>NSF Link List</H2>"
-    # newText += "================================\n"
-    for i, (key, value) in enumerate(nsfDict.items()):
-        # items = value.split(';')
-        newText += f'<a target=_blank href={key}>{i + 1:03}: {value}</a><br>'
-    saveTextFile(filename, newText)
 
 def saveTextFile(filename, newText):
     print(f'Save to file "{filename}"')
@@ -1594,16 +1582,22 @@ def convertPattern6(s):
     return f"{s[4:5]}{s[0:2]}°{s[2:4]}',{s[11:12]}{s[6:9]}°{s[9:11]}'"
 
 ################################################################################################
-#0123456789012345678
+#0123456789012345678901
 #37-42.4N120-10.8E
+#18-18.60N118-09.46E
 #37-42-46N120-10-98E
 def convertPattern7(s):
     if len(s) == 19:
-        return f"{s[8:9]}{s[0:2]}°{s[3:5]}'{s[6:8]}\",{s[18:19]}{s[9:12]}°{s[13:15]}'{s[16:18]}\""
+        if '.' in s:
+            nSecond = str(int(s[6:8]) * 6 / pow(10, len(s[6:8]) - 1))[:2]
+            eSecond = str(int(s[16:18]) * 6 / pow(10, len(s[16:18]) - 1))[:2]
+            return f"{s[8:9]}{s[0:2]}°{s[3:5]}'{nSecond}\",{s[18:19]}{s[9:12]}°{s[13:15]}'{eSecond}\""
+        else:
+            return f"{s[8:9]}{s[0:2]}°{s[3:5]}'{s[6:8]}\",{s[18:19]}{s[9:12]}°{s[13:15]}'{s[16:18]}\""
     elif len(s) == 21:
         nSecond = str(int(s[6:9]) * 6 / pow(10, len(s[6:9]) - 1))[:2]
-        ESecond = str(int(s[17:20]) * 6 / pow(10, len(s[17:20]) - 1))[:2]
-        return f"{s[9]}{s[0:2]}°{s[3:5]}'{nSecond}\",{s[20]}{s[10:13]}°{s[14:16]}'{ESecond}\""
+        eSecond = str(int(s[17:20]) * 6 / pow(10, len(s[17:20]) - 1))[:2]
+        return f"{s[9]}{s[0:2]}°{s[3:5]}'{nSecond}\",{s[20]}{s[10:13]}°{s[14:16]}'{eSecond}\""
     return f"{s[7:8]}{s[0:2]}°{s[3:5]}',{s[16:17]}{s[8:11]}°{s[12:14]}'"
 
 ################################################################################################

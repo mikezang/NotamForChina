@@ -76,28 +76,49 @@ def countDataFrameByRocket(df, retired_rockets):
     dfNczTotal = pd.DataFrame(rowNczTotal, index=[0])
 
     # Concat two dfs to result df
+    dfCzResult = pd.concat([dfCzTotal, dfResult], ignore_index=True)
+    cz = dfCzResult['火箭'].str.startswith('长征')
+    dfCzResult = dfCzResult[cz]
+    dfNczResult = pd.concat([dfNczTotal, dfResult], ignore_index=True)
+    ncz = ~dfNczResult['火箭'].str.startswith('长征')
+    ncz &= ~dfNczResult['火箭'].str.startswith('总计')
+    dfNczResult = dfNczResult[ncz]
     dfResult = pd.concat([dfCzTotal, dfResult], ignore_index=True)
     dfResult = pd.concat([dfNczTotal, dfResult], ignore_index=True)
 
     # Copy before sort
     dfSort = dfResult.copy()
+    dfCzSort = dfCzResult.copy()
+    dfNczSort = dfNczResult.copy()
 
     # create a new column that maps each row to either 长征组 or 其他组
     dfSort['长征分组'] = np.where(dfSort['火箭'].str.startswith(('总计', '长征')), '长征组', '其他组')
+    dfCzSort['长征分组'] = np.where(dfCzSort['火箭'].str.startswith(('总计', '长征')), '长征组', '其他组')
+    dfNczSort['长征分组'] = np.where(dfNczSort['火箭'].str.startswith(('总计', '长征')), '长征组', '其他组')
 
     # create a new column that maps each row to either 现役组 or 退役组
     dfSort['现役分组'] = np.where(dfSort['火箭'].isin(retired_rockets), '现役组', '退役组')
+    dfCzSort['现役分组'] = np.where(dfCzSort['火箭'].isin(retired_rockets), '现役组', '退役组')
+    dfNczSort['现役分组'] = np.where(dfNczSort['火箭'].isin(retired_rockets), '现役组', '退役组')
 
     # Sort 
     # dfSortResult = dfSort.sort_values(by=['分组', '发射数', '成功率', '火箭'], ascending=[True, True, True, True])
     # dfSortResult = dfSort.sort_values(by=['长征分组', '现役分组', '发射数', '成功率', '火箭'], ascending=[True, True,  True, True, True])
     dfSortResult1 = dfSort.sort_values(by=['长征分组', '现役分组', '发射数', '成功率', '日期'], ascending=[True, True,  True, True, False])
+    dfCzSortResult1 = dfCzSort.sort_values(by=['长征分组', '现役分组', '发射数', '成功率', '日期'], ascending=[True, True,  True, True, False])
+    dfNczSortResult1 = dfNczSort.sort_values(by=['长征分组', '现役分组', '发射数', '成功率', '日期'], ascending=[True, True,  True, True, False])
 
     # Sort by successful rate
     dfSortResult2 = dfSort.sort_values(by=['长征分组', '现役分组', '成功率', '发射数', '日期'], ascending=[True, True,  True, True, False])
+    dfCzSortResult2 = dfCzSort.sort_values(by=['长征分组', '现役分组', '成功率', '发射数', '日期'], ascending=[True, True,  True, True, False])
+    dfNczSortResult2 = dfNczSort.sort_values(by=['长征分组', '现役分组', '成功率', '发射数', '日期'], ascending=[True, True,  True, True, False])
     noSum = ~dfSortResult2['火箭'].str.contains('合计') & ~dfSortResult2['火箭'].str.contains('总计')
+    noCzSum = ~dfCzSortResult2['火箭'].str.contains('合计') & ~dfCzSortResult2['火箭'].str.contains('总计')
+    noNczSum = ~dfNczSortResult2['火箭'].str.contains('合计') & ~dfNczSortResult2['火箭'].str.contains('总计')
     dfSortResult2 = dfSortResult2[noSum]
-    return [dfSortResult1, dfSortResult2]
+    dfCzSortResult2 = dfCzSortResult2[noCzSum]
+    dfNczSortResult2 = dfNczSortResult2[noNczSum]
+    return [dfSortResult1, dfSortResult2, dfCzSortResult1, dfCzSortResult2, dfNczSortResult1, dfNczSortResult2]
 
 ################################################################################################
 def plotLineGraphByRocket(cn_font, ax, df, retired_rockets, startYear):
@@ -155,7 +176,7 @@ def plotTitleLegendByRocket(cn_font, title, hasGreyLabel=False):
     plt.legend(handles=handles, loc='upper center', ncol=4, prop=cn_font)
     plt.title(title, fontproperties=cn_font, fontsize=18)
 
-def plotbyRocket(cn_font, df, title, path, startYear):
+def plotByRocket(cn_font, df, title, path, startYear):
     fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) 
 
     retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
@@ -172,18 +193,27 @@ def plotbyRocket(cn_font, df, title, path, startYear):
 def plotGraphByRocket(cn_font, excelSheet, title, startYear=None, endYear=None):
     retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
     df = myPlot.parseExcelSheetToDataFrame(excelSheet, columnYear='日期', columnNotNull='结果', startYear=startYear, endYear=endYear)
-    df1, df2 = countDataFrameByRocket(df, retiredRocketsDict)
+    df1, df2, dfCz1, dfCz2, dfNcz1, dfNcz2 = countDataFrameByRocket(df, retiredRocketsDict)
     title1 = myPlot.getPlotTitle(title.replace('发射统计', '发射数统计'), startYear, endYear)
     path1 = '' if startYear == None else '火箭年发射数统计/'
-    plotbyRocket(cn_font, df1, title1, path1, startYear)
+    if path1 == '':
+        plotByRocket(cn_font, df1, title1.replace('中国', '中国全部'), path1, startYear)
+        plotByRocket(cn_font, dfCz1, title1.replace('中国', '中国长征'), path1, startYear)
+        plotByRocket(cn_font, dfNcz1, title1.replace('中国', '中国其他'), path1, startYear)
+    else:
+        plotByRocket(cn_font, df1, title1, path1, startYear)
 
     title2 = myPlot.getPlotTitle(title.replace('发射统计', '发射率统计'), startYear, endYear)
     path2 = '' if startYear == None else '火箭年发射率统计/'
-    plotbyRocket(cn_font, df2, title2, path2, startYear)
+    if path1 == '':
+        plotByRocket(cn_font, df2, title2.replace('中国', '中国全部'), path1, startYear)
+        plotByRocket(cn_font, dfCz2, title2.replace('中国', '中国长征'), path1, startYear)
+        plotByRocket(cn_font, dfNcz2, title2.replace('中国', '中国其他'), path1, startYear)
+    else:
+        plotByRocket(cn_font, df2, title2, path2, startYear)
 
 ################################################################################################
-def plot1(cn_font, excelSheet, startYear):
-    plotGraphByRocket(cn_font, excelSheet, '中国全部运载火箭发射统计')
+def plot1(cn_font, excelSheet, startYear=None):
     plotGraphByRocket(cn_font, excelSheet, '中国运载火箭发射统计', startYear)
 
 ################################################################################################
@@ -193,8 +223,11 @@ def main():
     sheetName = "发射纪录"
     excelBook = loadXLSX(excelFile, data_only=True, read_only=True)
     excelSheet = excelBook[sheetName]
-    startYear = '2023'
-    plot1(cn_font, excelSheet, startYear)
+    startYear = '2024'
+    if startYear:
+        plot1(cn_font, excelSheet, startYear)
+    else:
+        plot1(cn_font, excelSheet)
 
 ################################################################################################
 def showRunTime(func):

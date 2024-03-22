@@ -75,49 +75,60 @@ def selectCity(driver, city):
 ################################################################################################
 def getCTripList(driver):
     urls, titles, locations = [], [], []
+    print(f'Searching...', end='', flush=True)
 
-    try:
-        driver.get(constants.CTRIP_URL)
-        print(f'Searching', end=' ', flush=True)
-        tripCity = myUtils.readConfig(['TripCity'])
+    for i in range(0, 3):
+        try:
+            driver.get(constants.CTRIP_URL)
+            tripCity = myUtils.readConfig(['TripCity'])
 
-        for i, city in enumerate(tripCity):
-            if i < len(tripCity) - 1:
-                print(f'{city}', end=',', flush=True)
+            for city in tripCity:
+                # click "change city" button
+                # selectCity(driver, city)
+                sleep(2)
+
+                # show list page
+                myUtils.elementId(driver, 30, "grp-10650014575-list-tab-产品").click()
+                sleep(2)
+
+                # if i < len(tripCity) - 1:
+                #     print(f'{city}', end=',', flush=True)
+                # else:
+                #     print(f'{city}\n')
+
+                myUtils.scrollBottom(driver)
+                sleep(2)
+
+                div1 = driver.find_elements(By.CLASS_NAME, "shop_list_item")
+                div2 = driver.find_elements(By.CLASS_NAME, 'shop_tour_content')
+                urls, titles, locations = parseUrls(div1, div2)
+            print('\n')
+            break
+        except:
+            if i == 2:
+                myUtils.pritnExceptionTrace()
             else:
-                print(f'{city}\n')
+                print('...', end='', flush=True)
+                sleep(3)
+            pass
+    return urls, titles, locations
 
-            # click "change city" button
-            # selectCity(driver, city)
-            sleep(2)
+def parseUrls(div1, div2):
+    urls, titles, locations = [], [], []
+    for pid, link in zip(div1, div2):
+        title = link.find_element(By.TAG_NAME, 'h3').text
+        if '观礼' in title:
+            url = pid.get_attribute("data-pid")
+            if url not in urls:
+                titles.append(title)
+                urls.append(url)
 
-            # show list page again
-            myUtils.elementId(driver, 30, "grp-10650014575-list-tab-产品").click()
-            sleep(2)
-
-            myUtils.scrollBottom(driver)
-            sleep(2)
-
-            div1 = driver.find_elements(By.CLASS_NAME, "shop_list_item")
-            div2 = driver.find_elements(By.CLASS_NAME, 'shop_tour_content')
-
-            for pid, link in zip(div1, div2):
-                title = link.find_element(By.TAG_NAME, 'h3').text
-                if '观礼' in title:
-                    url = pid.get_attribute("data-pid")
-                    if url not in urls:
-                        titles.append(title)
-                        urls.append(url)
-
-                        if '文昌' in title:
-                            locations.append('文昌')
-                        elif '西昌' in title:
-                            locations.append('西昌')
-                        elif '酒泉' in title or '东方航天城' in title:
-                            locations.append('酒泉')
-    except:
-        myUtils.pritnExceptionTrace()
-        pass
+                if '文昌' in title:
+                    locations.append('文昌')
+                elif '西昌' in title:
+                    locations.append('西昌')
+                elif '酒泉' in title or '东方航天城' in title:
+                    locations.append('酒泉')
     return urls, titles, locations
 
 ################################################################################################
