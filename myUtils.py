@@ -61,9 +61,24 @@ def readDictFromFile(filename):
     
 ################################################################################################
 def saveDictToFile(filename, dataDict):
-    with open(filename, 'w') as f:
+    with open(filename, 'w', encoding="utf-8") as f:
         f.write(json.dumps(dataDict))
         print(f'Save dict to "{os.path.abspath(filename)}"')
+
+################################################################################################
+def saveDictToTextFile(filename, dataDict):
+    lines = ''
+    with open(filename, 'w', encoding="utf-8") as f:
+        for i, (key, value) in enumerate(dataDict.items(), 1):
+            lines += f'{i:02} {key}: {value}\n'
+        f.write(lines)
+        print(f'Save dict to "{os.path.abspath(filename)}"')
+
+################################################################################################
+def saveDictToJsonFile(nsfDict, filename):
+    print(f'Save   to file "{filename}.json"')
+    with open(f'{filename}.json', "w", encoding="utf-8") as f:
+        dump(nsfDict, f, ensure_ascii=False, indent=2)
 
 ################################################################################################
 def elementAttributes(driver, element):
@@ -1405,12 +1420,6 @@ def updateDictToJsonFile(nsf_data, filename, isBackup=False):
         saveDictToJsonFile(nsf_data, f"{filename}")
         if isBackup:
             saveDictToJsonFile(nsf_data, f'{filename}{getJapanTime("-%Y%m%d-%H%M%S")}')
-
-################################################################################################
-def saveDictToJsonFile(nsfDict, filename):
-    print(f'Save   to file "{filename}.json"')
-    with open(f'{filename}.json', "w", encoding="utf-8") as f:
-        dump(nsfDict, f, ensure_ascii=False, indent=2)
 
 ################################################################################################
 def isInvalidLocation(location, locations):

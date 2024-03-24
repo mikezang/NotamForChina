@@ -540,11 +540,12 @@ def main() -> None:
         if videoDict:
             videoDict = sortDictValue(videoDict)
             myUtils.printDict(videoDict)
+            myUtils.saveDictToTextFile(f'/tmp/{videoNames}.txt', videoDict)
         else:
             print(f'No videoIds for {videoNames}!')
     elif videoId:
         if mergedFolder != '':
-            textFilename = f'**/*{videoId}-{sId}.txt'
+            textFilename = f'/tmp/*{videoId}-{sId}.txt'
             filePaths = glob(textFilename, recursive=True)
         else:
             filePaths = ''
@@ -554,7 +555,7 @@ def main() -> None:
             videoName, year, urls, sId = parseUrlList(site, videoId, sId)
 
             if urls:
-                myUtils.saveDictToFile(f'data/{site.upper()}-{year}-{videoName}-{videoId}-{sId}.txt', urls)
+                myUtils.saveDictToFile(f'/tmp/{site.upper()}-{year}-{videoName}-{videoId}-{sId}.txt', urls)
             else:
                 print(f'No accessable url list for videoId {videoId}!')
     if urls and mergedFolder:

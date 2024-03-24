@@ -12,6 +12,7 @@ from datetime import datetime
 from functools import partial
 from multiprocessing import get_context
 from sys import path
+from urllib.parse import urlparse
 
 path.append("")
 
@@ -24,7 +25,7 @@ class Video_Decoder(object):
         self.method = x_key["METHOD"] if "METHOD" in x_key.keys() else ""
         self.uri = decode_key_uri(m3u8_http_base, x_key["URI"]) if "URI" in x_key.keys() else ""
         self.iv = x_key["IV"].lstrip("0x") if "IV" in x_key.keys() else ""
-        if self.method != '':
+        if self.method == 'aes-128-cbc':
             print(f"URI: '{self.uri}'")
             print(f"IV:, '{self.iv}'")
 
@@ -52,7 +53,7 @@ class Video_Decoder(object):
             pass
 
 def decode_key_uri(base:str, URI: str):
-    uri = URI if URI.startswith('https://') else base + URI
+    uri = URI if URI.startswith('https://') else mergePath(base, URI)
     uri_req = requests.get(uri, headers=constants.header)
     uri_str = "".join(["{:02x}".format(c) for c in uri_req.content])
     return uri_str
@@ -92,7 +93,7 @@ def download_ts_file(seq_and_ts_url: tuple[int, str], store_dir: str, attempts: 
         else:
             print(f"Status Code:{ts_res.status_code}, failed to download streaming file: {ts_url}.")
     else:
-        print(f"Respons:{ts_res}, failed to download streaming file: {ts_url}.")
+        print(f"Response:{ts_res}, failed to download streaming file: {ts_url}.")
 
 def downloadM3u8File(m3u8_link):
     m3u8_http_base = ""
@@ -112,6 +113,20 @@ def downloadM3u8File(m3u8_link):
                 raise RuntimeError(f"The m3u8 file: {m3u8_link} is empty.")
     return m3u8_http_base, m3u8_content
 
+def mergePath(basePath: str, subPath: str):
+    url = ''
+    if subPath.startswith("/"):
+        urlParsed = urlparse(basePath)
+        url = f"{urlParsed.scheme}://{urlParsed.netloc}{subPath.split('?')[0]}"
+    else:
+        urls = subPath.split('/')
+        link = ''
+        for word in urls:
+            if word not in basePath:
+                link += word + '/'
+            url = f'{basePath}/{link[:-1].split("?")[0]}'
+    return url
+
 def parseM3u8Content(m3u8_content, m3u8_http_base):
     m3u8 = m3u8_content.replace('\r', '').split('\n')
     ts_url_list = []
@@ -124,7 +139,7 @@ def parseM3u8Content(m3u8_content, m3u8_http_base):
         elif line_str.startswith("#EXTINF"):
             ts_url = m3u8[i_str+1]
             if not ts_url.startswith("http"):
-                ts_url = m3u8_http_base + ts_url
+                ts_url = mergePath(m3u8_http_base, ts_url)
             ts_url_list.append(ts_url)
 
     return ts_url_list, x_key_dict
@@ -132,13 +147,7 @@ def parseM3u8Content(m3u8_content, m3u8_http_base):
 def getExtM3u8Link(m3u8_content, m3u8_http_base):
     items = m3u8_content.replace('\r', '').split('\n')
     url = items[-1] if items[-1] else items[-2]
-    url = url[1:]if url[0] == '/' else url
-    urls = url.split('/')
-    link = ''
-    for word in urls:
-        if word not in m3u8_http_base:
-            link += word + '/'
-    return os.path.join(m3u8_http_base, link[:-1].split('?')[0])
+    return mergePath(m3u8_http_base, url)
 
 def download(m3u8_link, output):
     startTime = datetime.now()
@@ -197,7 +206,7 @@ def download(m3u8_link, output):
         except KeyboardInterrupt:
             print('Ctrl+c entered.')
             downloaded_ts = sorted(glob.glob("*.ts"))
-            if len(download_ts_file) < total:
+            if len(downloaded_ts) > 0 and len(downloaded_ts) < total:
                 pass
             else:
                 break
