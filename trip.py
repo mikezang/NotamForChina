@@ -77,7 +77,7 @@ def getCTripList(driver):
     urls, titles, locations = [], [], []
     print(f'Searching...', end='', flush=True)
 
-    for i in range(0, 3):
+    for i in range(0, 10):
         try:
             driver.get(constants.CTRIP_URL)
             tripCity = myUtils.readConfig(['TripCity'])
@@ -105,7 +105,7 @@ def getCTripList(driver):
             print('\n')
             break
         except:
-            if i == 2:
+            if i == 9:
                 myUtils.pritnExceptionTrace()
             else:
                 print('...', end='', flush=True)
@@ -132,7 +132,8 @@ def parseUrls(div1, div2):
     return urls, titles, locations
 
 ################################################################################################
-def parseTripDate(driver, this_city, this_year, this_month, day_diff):
+def parseTripDate(driver, this_city, day_diff):
+    today = date.today()
     launch_temp = {}
     last_day = 0
     html = driver.page_source
@@ -151,13 +152,13 @@ def parseTripDate(driver, this_city, this_year, this_month, day_diff):
                 day_int -= 31
                 month_int += 1
 
-            c1 = this_month == month_int
-            c2 = this_month + 1 == month_int
-            c3 = this_month == 12 and month_int == 1
-            if c1 or c2 or c3:
+            m1 = (today.month == month_int) & (day_int > today.day)
+            m2 = today.month + 1 == month_int
+            m3 = today.month == 12 and month_int == 1
+            if m1 or m2 or m3:
                 month_text = f'{month_int:02}'
                 day_text = f'{day_int:02}'
-                this_year1 = calcYear(this_year, month_int, this_month)
+                this_year1 = calcYear(today.year, month_int, today.month)
                 this_date = str(this_year1) + "/" + month_text + "/" + day_text
                 launch_temp[this_date] = this_city
         else:
@@ -167,9 +168,6 @@ def parseTripDate(driver, this_city, this_year, this_month, day_diff):
 
 ################################################################################################
 def getCTripDetail(driver, urls, titles):
-    today = date.today()
-    this_year = today.year
-    this_month = today.month
     launch_date = {}
 
     for j, (url, title_text) in enumerate(zip(urls, titles)):
@@ -195,7 +193,7 @@ def getCTripDetail(driver, urls, titles):
                     break
 
                 day_diff = getDayDiff(title_text)
-                launch_temp = parseTripDate(driver, this_city, this_year, this_month, day_diff)
+                launch_temp = parseTripDate(driver, this_city, day_diff)
                 launch_date = myUtils.combineValuesForSameDictKey(launch_date, launch_temp)
         except:
             myUtils.pritnExceptionTrace()
@@ -293,7 +291,7 @@ def createHtmlpage(urls, titles, locations) -> None:
     mainUrl = "https://m.ctrip.com/webapp/vacations/shop/home?productid=31375689&brandId=77691&detailId=31375689&proId=1292581&saleMode=R"
     baseUrl = "https://m.ctrip.com/webapp/vacations/tour/detail?productid="
     city = ''
-    filename = './temp/LaunchTravels.html'
+    filename = 'data/LaunchTravels.html'
 
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(f'<a target=_blank href={mainUrl}><h1>CTRIP火箭发射观礼旅行</H1></a><br>\n\n')
@@ -302,13 +300,13 @@ def createHtmlpage(urls, titles, locations) -> None:
             city = writeTitle(f, title, location, city)
             f.write(f'{i + 1:02}: <a target=_blank href={baseUrl}{url}>{title}</a><br>\n')
 
+        print('{filename} created!')
+
 def main():
     try:
         driver = myUtils.getFirefoxDriver(disableImage=False)
         trip_data = getCTrip(driver)
         printTrip(trip_data)
-        if trip_data:
-            print('\n./temp/LaunchTravels.html created!')
     except:
         print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
     if driver:
