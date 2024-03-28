@@ -20,6 +20,27 @@ from selenium.webdriver.support import expected_conditions as EC
 import myUtils
 import constants
 
+BASE_CTRIP_URL = "https://m.ctrip.com/webapp/vacations/tour/detail?productid="
+CTRIP_URL = "https://m.ctrip.com/webapp/vacations/shop/home?productid=31375689&brandId=77691&detailId=31375689&proId=1292581&saleMode=R"
+ENIUTRIP_URL = "https://mp.sohu.com/profile?xpt=ZW5pdXBsYW5ldEBzaW5hLmNvbQ==&_f=index_pagemp_1&spm=smpc.content-abroad.author.1.1659536786116JJXcGX9"
+
+DAYS_DIFF = {
+    '房车·中国海南文昌3日2晚跟团游' : 2,
+    '酒泉4天3晚' : 2,
+    # '酒泉3天2晚' : 2,
+    "酒泉2日" : 1,
+    # "西昌2日" : 0,
+    # "文昌3日" : 2,
+    # "半日" : 0,
+    "2天" : 1,
+    "3天" : 1,
+    "3日" : 1,
+    "5日" : 2,
+    "5天" : 2,
+    "4日" : 3,
+    "4天" : 1,
+}
+
 ################################################################################################
 def calcYear(this_year, month_int, this_month):
     if month_int < this_month:
@@ -30,7 +51,7 @@ def calcYear(this_year, month_int, this_month):
 ################################################################################################
 def getDayDiff(title_text):
     day_diff1 = 0
-    for key, value in constants.DAYS_DIFF.items():
+    for key, value in DAYS_DIFF.items():
         if key in title_text:
             day_diff1 = value
             break
@@ -56,9 +77,9 @@ def getCTrip(driver):
 
     if urls and titles:
         urls, titles, locations = zip(*sorted(zip(urls, titles, locations), key=lambda x: x[2] + x[1]))
-        createHtmlpage(urls, titles, locations)
         launch_date = getCTripDetail(driver, urls, titles)
-    return launch_date
+        printTrip(launch_date)
+        createHtmlpage(urls, titles, locations)
 
 ################################################################################################
 def selectCity(driver, city):
@@ -79,7 +100,7 @@ def getCTripList(driver):
 
     for i in range(0, 10):
         try:
-            driver.get(constants.CTRIP_URL)
+            driver.get(CTRIP_URL)
             tripCity = myUtils.readConfig(['TripCity'])
 
             for city in tripCity:
@@ -153,8 +174,8 @@ def parseTripDate(driver, this_city, day_diff):
                 month_int += 1
 
             m1 = (today.month == month_int) & (day_int > today.day)
-            m2 = today.month + 1 == month_int
-            m3 = today.month == 12 and month_int == 1
+            m2 = (today.month + 1 == month_int) | (today.month + 2 == month_int)
+            m3 = today.month == 12 and (month_int == 1 or month_int == 1)
             if m1 or m2 or m3:
                 month_text = f'{month_int:02}'
                 day_text = f'{day_int:02}'
@@ -174,7 +195,7 @@ def getCTripDetail(driver, urls, titles):
         try:
             this_city = ""
             day_diff = 0
-            real_url = constants.BASE_CTRIP_URL + url
+            real_url = BASE_CTRIP_URL + url
             print(f'Title{j + 1:02}: {title_text}')
             print(f' Link{j + 1:02}: {real_url}', end='', flush=True)
 
@@ -212,7 +233,7 @@ def getENiuTripList(driver):
     urls = {}
 
     try:
-        driver.get(constants.ENIUTRIP_URL)
+        driver.get(ENIUTRIP_URL)
         myUtils.checkVPN(driver)
 
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME, "tpl-text-feed-item-content")))
@@ -300,13 +321,12 @@ def createHtmlpage(urls, titles, locations) -> None:
             city = writeTitle(f, title, location, city)
             f.write(f'{i + 1:02}: <a target=_blank href={baseUrl}{url}>{title}</a><br>\n')
 
-        print('{filename} created!')
+        print(f'\n{filename} created!')
 
 def main():
     try:
         driver = myUtils.getFirefoxDriver(disableImage=False)
-        trip_data = getCTrip(driver)
-        printTrip(trip_data)
+        getCTrip(driver)
     except:
         print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
     if driver:

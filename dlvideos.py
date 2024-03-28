@@ -447,6 +447,8 @@ def parseUrlListWJYS(base: str, videoId: int, sId: int) -> list:
             elif len(tabs) > tabIndex:
                 # loop to multiple tabls for not vip url
                 link = tabs[tabIndex].get_property('href')
+                links = link.split('-')
+                sId = links[1]
                 driver.get(link)
                 tabIndex += 1
     except:

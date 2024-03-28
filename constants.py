@@ -7,22 +7,6 @@ import pytz
 
 HEADLESS = 1
 
-DAYS_DIFF = {
-    '酒泉4天3晚' : 2,
-    # '酒泉3天2晚' : 2,
-    "酒泉2日" : 1,
-    # "西昌2日" : 0,
-    # "文昌3日" : 2,
-    # "半日" : 0,
-    "2天" : 1,
-    "3天" : 1,
-    "3日" : 1,
-    "5日" : 2,
-    "5天" : 2,
-    "4日" : 3,
-    "4天" : 1,
-}
-
 header = {
     'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4_3) "
                   "AppleWebKit/602.4.8 (KHTML, like Gecko) Version"
@@ -304,10 +288,6 @@ CITIES = {
     "南海" : f"南海|,|{COLOR_SEA}",
     "东风航天城" : f"酒泉|{COODINATE_JIUQUAN}|{COLOR_JIUQUAN}",
 }
-
-BASE_CTRIP_URL = "https://m.ctrip.com/webapp/vacations/tour/detail?productid="
-CTRIP_URL = "https://m.ctrip.com/webapp/vacations/shop/home?productid=31375689&brandId=77691&detailId=31375689&proId=1292581&saleMode=R"
-ENIUTRIP_URL = "https://mp.sohu.com/profile?xpt=ZW5pdXBsYW5ldEBzaW5hLmNvbQ==&_f=index_pagemp_1&spm=smpc.content-abroad.author.1.1659536786116JJXcGX9"
 
 LUVAR = 'N323606E0990000'
 MEPEP = 'N360906E0973800'
