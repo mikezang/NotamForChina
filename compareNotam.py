@@ -18,15 +18,11 @@ import myPlot
 import notam
 
 def plotNotam(axs, polys, color=None, legend=None, lables=None):
-    # plot
     if isinstance(polys, gpd.GeoDataFrame):
         polys.exterior.plot(ax=axs, facecolor=color, color=color, label=legend, zorder=3)
     elif isinstance(polys, Polygon):
         x, y = polys.exterior.xy
         plt.plot(x, y, color=color, zorder=3)
-        # plt.fill(x, y, color=color)
-    # elif isinstance(polys, Point):
-
 
     if lables != None:
         for i, iloc in enumerate(polys.geometry.iloc):
@@ -228,7 +224,6 @@ def compareNotam(newFile, cn_font):
                 print('')
             else:
                 myPlot.saveFig(fig, f'./temp/unmatch/{filename}', False)
-
         except Exception as e:
             print(f"{oldFile} No Data!")
             print(f'Exception: {e}\n')
