@@ -627,10 +627,14 @@ def mergeData(dfPivot, dfPivotOk, columnYear):
     dfResult.set_index(columnYear, inplace=True)
     return dfResult
 
+# if __name__ == "__main__":
+#     seriesDict = myUtils.readConfigSeriesDictList()
+    
 ################################################################################################
 def ChangeToSeriesName(df, columnRocket, seriesDict):
     if seriesDict is None:
-        seriesDict = constants.ROCKET_SERIES
+        seriesDict = myUtils.readConfigSeriesDictList()
+        # seriesDict = constants.ROCKET_SERIES
     for series in seriesDict:
         df[columnRocket] = df[columnRocket].replace(series)
     return df

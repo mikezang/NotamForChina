@@ -868,6 +868,34 @@ def readConfigFirNames():
     return firNames
 
 ################################################################################################
+def readConfigSeriesDictList():
+    data = readConfig()
+    seriesAll = data[5]
+    seriesCZ = seriesAll[0]
+    seriesNCZ = seriesAll[1]
+    seriesCZRockets = seriesAll[2]
+    seriesNCZRockets = seriesAll[3]
+    # series = seriesAll[4]
+    seriesList = []
+    czList = seriesCZ.split(',')
+    nczList = seriesNCZ.split(',')
+    czRocketList = seriesCZRockets.split(',')
+    nczRocketList = seriesNCZRockets.split(',')
+    for cz, czRocket in zip(czList, czRocketList):
+        czRockets = czRocket.split('|')
+        seriesDict = {}
+        for rocket in czRockets:
+            seriesDict[rocket] = f'{cz}系列'
+        seriesList.append(seriesDict)
+    for ncz, nczRocket in zip(nczList, nczRocketList):
+        nczRockets = nczRocket.split('|')
+        seriesDict = {}
+        for rocket in nczRockets:
+            seriesDict[rocket] = f'{ncz}系列'
+        seriesList.append(seriesDict)
+    return seriesList
+
+################################################################################################
 def readConfigRetiredDict():
     data = readConfig()
     retiredData = data[4]
