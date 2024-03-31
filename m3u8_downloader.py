@@ -25,7 +25,7 @@ class Video_Decoder(object):
         self.method = x_key["METHOD"] if "METHOD" in x_key.keys() else ""
         self.uri = decode_key_uri(m3u8_http_base, x_key["URI"]) if "URI" in x_key.keys() else ""
         self.iv = x_key["IV"].lstrip("0x") if "IV" in x_key.keys() else ""
-        if self.method == 'aes-128-cbc':
+        if self.method == 'AES-128':
             print(f"URI: '{self.uri}'")
             print(f"IV:, '{self.iv}'")
 
