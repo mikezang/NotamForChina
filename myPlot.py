@@ -217,12 +217,14 @@ def plotTextOnCenterOfBar(ax, rect, ok, ng, fontsize=10, color='w'):
         ax.text(x, y, ok, color=color, fontsize=fontsize, horizontalalignment='center', verticalalignment='center')
 
 ################################################################################################
-def plotXAxis(cn_font, ax, xLabel, xTicks, xTickLabels, minLim, maxLim, fontsize=14, retired_rockets=None):
+def plotXAxis(cn_font, ax, xLabel, xTicks, xTickLabels, minLim, maxLim, fontsize=14, retired_rockets=None, inVerticle=True):
     ax.set_xlim(minLim, maxLim) # Set the x-limits of the plot to reduce the gap between the left side of the plot and the first x-tick
     ax.set_xticks(xTicks)  # Explicitly set tick positions
     ax.set_xlabel(xLabel, fontproperties=cn_font, fontsize=fontsize)
 
-    ax.set_xticklabels(insertLf(xTickLabels), fontproperties=cn_font, fontsize=fontsize)
+    if inVerticle:
+        xTickLabels = insertLf(xTickLabels)
+    ax.set_xticklabels(xTickLabels, fontproperties=cn_font, fontsize=fontsize)
     hasGreyLable = False
 
     if retired_rockets:
@@ -232,6 +234,15 @@ def plotXAxis(cn_font, ax, xLabel, xTicks, xTickLabels, minLim, maxLim, fontsize
                 tick.set_backgroundcolor('lightgrey')
                 hasGreyLable = True
     return hasGreyLable
+
+################################################################################################
+def setYAxisLog(cn_font, ax, yTicks):
+    ax.set(yscale='log')
+    ax.set_yticks(yTicks)
+    ax.set_ylabel('发射数', fontproperties=cn_font, loc='top')
+    ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%d'))
+    ax.set_ylim(0.5, yTicks[-1])
+    hideYTicks(ax, yTicks)
 
 ################################################################################################
 def plotYAxis(cn_font, ax, yLabel, yTicks, minLim, maxLim, fontsize=None, copyYAxis=True):
@@ -1047,6 +1058,7 @@ def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear
         dfList.append(dfSelected)
     return dfList
 
+################################################################################################
 def calcColsPerLine(newLabels):
     count = len(newLabels)
     ncols1 = 6
