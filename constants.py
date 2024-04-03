@@ -114,7 +114,6 @@ EXCEL_COLUMN_LOCATION = '地点'
 EXCEL_COLUMN_RESULT = '结果'
 EXCEL_COLUMN_PAYLOAD = '载荷'
 
-# TODO 用config.ini取代# 用config.ROCKET_SERIES
 # ROCKET_SERIES = [
 #     {'长征三号甲': '长征三号甲系列', '长征三号乙': '长征三号甲系列', '长征三号丙': '长征三号甲系列'},
 #     {'长征四号甲': '长征四号系列', '长征四号乙': '长征四号系列', '长征四号丙': '长征四号系列'},

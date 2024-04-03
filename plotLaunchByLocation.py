@@ -153,40 +153,40 @@ def plotBarByMonthLocations(cn_font, ax, df, startYear, endYear=None):
 ################################################################################################
 def plotBarByLocations(cn_font, axLeft, df):
     # Set y axis
-    yTicks = myPlot.getLogList(max(df['全部发射数']) + 1)
-    myPlot.setYAxisLog(axLeft, cn_font, yTicks)
+    yTicks = myPlot.getLogList(max(df['全部发射数']))
+    myPlot.setYAxisLog(cn_font, axLeft, yTicks)
     axRight = axLeft.twinx()
-    myPlot.setYAxisLog(axRight, cn_font, yTicks)
+    myPlot.setYAxisLog(cn_font, axRight, yTicks)
+
+    # # Set x axis
+    xTickLabels = list(df['地点'])
+    barWidth = 0.3
+    xTicks1 = [i + 1 - barWidth for i in range(0, len(xTickLabels))]
+    xTicks2 = [i + 1 for i in range(0, len(xTickLabels))]
+    xTicks3 = [i + 1 + barWidth for i in range(0, len(xTickLabels))]
+    axLeft.set_xlabel('发射地', fontproperties=cn_font)
+    axLeft.set_xticks(xTicks2)
+    axLeft.set_xticklabels(xTickLabels, fontproperties=cn_font, fontsize=14)
 
     dfAll, dfAllOk, dfAllNg = df['全部发射数'], df['全部成功数'], df['全部发射数'] - df['全部成功数']
     dfCZ, dfCZOk, czCZNg = df['长征发射数'], df['长征成功数'], df['长征发射数'] - df['长征成功数']
     dfNCZ, dfNCZOk, czNCZNg = df['其他发射数'], df['其他成功数'], df['其他发射数'] - df['其他成功数']
     dfAllRate, dfCZRate, dfNCZRate = df['全部成功率'], df['长征成功率'], df['其他成功率']
 
-    barWidth = 0.3
-    xTickLabels = list(df['地点'])
-    xTicks1 = [i + 0.7 for i in range(0, len(xTickLabels))]
     bar1 = axRight.bar(xTicks1, dfNCZOk, color='blue', edgecolor='k', width=barWidth)
     bar2 = axRight.bar(xTicks1, czNCZNg, color='red', edgecolor='k', width=barWidth, bottom=dfNCZOk)
     myPlot.plotTextOnCenterOfBars(axRight, bar1, list(dfNCZOk))
     myPlot.plotTextOnTopOfBars(axRight, bar2, list(dfNCZ))
 
-    xTicks2 = [i for i in range(1, len(xTickLabels) + 1)]
     bar1 = axRight.bar(xTicks2, dfCZOk, color='green', edgecolor='k', width=barWidth)
     bar2 = axRight.bar(xTicks2, czCZNg, color='red', edgecolor='k', width=barWidth, bottom=dfCZOk)
     myPlot.plotTextOnCenterOfBars(axRight, bar1, list(dfCZOk))
     myPlot.plotTextOnTopOfBars(axRight, bar2, list(dfCZ))
 
-    xTicks3 = [i + 0.3 for i in range(1, len(xTickLabels) + 1)]
     bar1 = axRight.bar(xTicks3, dfAllOk, color='orange', edgecolor='k', width=barWidth)
     bar2 = axRight.bar(xTicks3, dfAllNg, color='red', edgecolor='k', width=barWidth, bottom=dfAllOk)
     myPlot.plotTextOnCenterOfBars(axRight, bar1, list(dfAllOk))
     myPlot.plotTextOnTopOfBars(axRight, bar2, list(dfAll))
-
-    # # Set x axis
-    axRight.set_xlabel('发射地', fontproperties=cn_font)
-    axRight.set_xticks(xTicks2)
-    axRight.set_xticklabels(xTickLabels, fontproperties=cn_font, fontsize=14)
 
     for pos in xTicks3[:-1]:
         axRight.axvline(pos + 0.2, color='black', linestyle='--')

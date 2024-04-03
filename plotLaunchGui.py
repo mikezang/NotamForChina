@@ -231,7 +231,7 @@ def toogleAllCheckbox(window, values, prefix):
             window[key].update(isCheckAll)
 
 ################################################################################################
-def getSelectedItems(values, items, prefix):
+def getSelectedItems(values, items, prefix) -> list:
     itemsSelect = []
     itemsChecked = [element for element in values if values[element]==True and prefix in element]
     for itemChecked in itemsChecked:
@@ -393,17 +393,19 @@ def handleEvents(excelSheet1, event, window, values, years, rockets, retired, se
         if yearsChecked:
             print(f'\nYear Checked: {yearsChecked}')
             yearsChecked = splitYearsChecked(yearsChecked)
-            plotLaunchByLocation.plot2(cn_font, excelSheet1)
+            # plotLaunchByLocation.plot2(cn_font, excelSheet1)
             for years in yearsChecked:
+                for year in years:
+                    plotLaunchByRocket.plot1(cn_font, excelSheet1, year)
+
+                    plotLaunchByLocation.plot2(cn_font, excelSheet1, year)
+
                 if len(years) == 2:
                     plotLaunchByDate.plot1(cn_font, excelSheet1, years[0], years[1], dictUpperStage)
                 else:
                     plotLaunchByDate.plot1(cn_font, excelSheet1, years[0], upperStage=dictUpperStage)
 
                 plotLaunchByYearMonth.plot1(cn_font, excelSheet1, years)
-                for year in years:
-                    plotLaunchByRocket.plot1(cn_font, excelSheet1, year)
-                    plotLaunchByLocation.plot2(cn_font, excelSheet1, year)
 
         if rocketsChecked or retiredChecked:
             if rocketsChecked:
@@ -416,15 +418,8 @@ def handleEvents(excelSheet1, event, window, values, years, rockets, retired, se
 
         if seriesChecked:
             print(f'\nSeries Checked: {seriesChecked}')
-            if seriesFailed or seriesRetired:
-                if seriesFailed:
-                    plotLaunchByDate.plot6(cn_font, excelSheet1, seriesChecked, dictUpperStage, seriesPrintLast)
-                if seriesRetired:
-                    plotLaunchByDate.plot7(cn_font, excelSheet1, retired[0].split(','), retired[1].split(','), dictUpperStage, seriesPrintLast)
-            else:
-                seriesChecked = removeSeriesText(seriesChecked)
-                plotLaunchByDate.plot2(cn_font, excelSheet1, seriesChecked, dictUpperStage, seriesPrintLast, dfLastLaunch)
-                plotLaunchByRocket.plot1(cn_font, excelSheet1)
+            plotLaunchByYearMonth.plot1(cn_font, excelSheet1)
+            plotLaunchByLocation.plot2(cn_font, excelSheet1)
 
             if seriesMaiden:
                 plotLaunchByDate.plotGraphForMaiden(cn_font, excelSheet1, dictUpperStage)
@@ -432,11 +427,19 @@ def handleEvents(excelSheet1, event, window, values, years, rockets, retired, se
                 plotLaunchByDate.plotGraphForLunarNewYear(cn_font, excelSheet1, dictUpperStage)
             if seriesFirstLast:
                 plotLaunchByDate.plotGraphForFirstLast(cn_font, excelSheet1, dictUpperStage)
+            if seriesFailed or seriesRetired:
+                if seriesFailed:
+                    plotLaunchByDate.plot6(cn_font, excelSheet1, seriesChecked, dictUpperStage, seriesPrintLast)
+                if seriesRetired:
+                    plotLaunchByDate.plot7(cn_font, excelSheet1, retired[0].split(','), retired[1].split(','), dictUpperStage, seriesPrintLast)
+            else:
+                seriesChecked = removeSeriesText(seriesChecked)
+                plotLaunchByRocket.plot1(cn_font, excelSheet1)
+                plotLaunchByDate.plot2(cn_font, excelSheet1, seriesChecked, dictUpperStage, seriesPrintLast, dfLastLaunch)
 
         if locationsChecked:
             print(f'\nLocation Checked: {locationsChecked}')
             plotLaunchByDate.plot4(cn_font, excelSheet1, locationsChecked, dictUpperStage, locationPrintLast)
-            plotLaunchByLocation.plot2(cn_font, excelSheet1)
 
         if payloadsChecked:
             print(f'\nPayload Checked: {payloadsChecked}')
@@ -449,7 +452,9 @@ def handleEvents(excelSheet1, event, window, values, years, rockets, retired, se
         yearsChecked = getSelectedItems(values, years, 'year')
         if yearsChecked:
             print(f'\nYear Checked: {yearsChecked}')
-            plotLaunchBarChartRace.plot1(excelSheet1, yearsChecked)
+            for years in yearsChecked:
+                yearList = years.split('～')
+                plotLaunchBarChartRace.plot1(excelSheet1, yearList)
 
         categoriesChecked = getSelectedItems(values, categories, 'category')
         if categoriesChecked:

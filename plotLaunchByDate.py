@@ -304,7 +304,7 @@ def getColorDict(dfList, isMaiden):
     colorDict = SortedDict({rocket: None for rockets in rocketList for rocket in rockets.split('/') })
 
     count = len(colorDict)
-    print(f'火箭数:{count:02}', end=', ')
+    # print(f'火箭数:{count:02}', end=', ')
     if count == 1:
         for rocket in colorDict:
             colorDict[rocket] = 'orange'

@@ -526,13 +526,16 @@ def plotBarGraphByTime(cn_font, axLeft, dfList, byMonth=True):
      # Set y axis
     # myPlot.plotRightYAxis(cn_font, axRight, rightYLabel, yTicks, fontsize=14, log=True)
     yTicks = myPlot.getLogList(max(totalList[0]) + 1)
-    myPlot.setYAxisLog(cn_font, axLeft, yTicks)
     axRight = axLeft.twinx()
+    myPlot.setYAxisLog(cn_font, axLeft, yTicks)
     myPlot.setYAxisLog(cn_font, axRight, yTicks)
 
     # Set x axis
     barWidth = 0.3
     xTickList = list(range(1, len(nameList[0]) + 1))
+    xTicks1 = [i + 1 - barWidth for i in range(0, len(xTickList))]
+    xTicks2 = [i + 1 for i in range(0, len(xTickList))]
+    xTicks3 = [i + 1 + barWidth for i in range(0, len(xTickList))]
     xLabel = '发射月'
 
     if byMonth:
@@ -543,21 +546,18 @@ def plotBarGraphByTime(cn_font, axLeft, dfList, byMonth=True):
     myPlot.plotXAxis(cn_font, axLeft, xLabel, xTickList, xTickLabels, 0, len(xTickList) + 1, inVerticle=False)
 
     # Plot NCZ
-    xTicks1 = [i + 0.7 for i in range(0, len(xTickList))]
     bar1 = axRight.bar(xTicks1, nczOkList[0], color='blue', edgecolor='k', width=barWidth, zorder=1)
     bar2 = axRight.bar(xTicks1, nczNgList[0], color='red', edgecolor='k', width=barWidth, zorder=1, bottom=nczOkList[0])
     myPlot.plotTextOnCenterOfBars(axRight, bar1, nczOkList[0], fontsize=12)
     axRight.bar_label(bar2, fontsize=12, label_type='edge')
 
     # Plot CZ
-    xTicks2 = [i + 1 for i in range(0, len(xTickList))]
     bar1 = axRight.bar(xTicks2, czOkList[0], color='green', edgecolor='k', width=barWidth, zorder=1)
     bar2 = axRight.bar(xTicks2, czNgList[0], color='red', edgecolor='k', width=barWidth, zorder=1, bottom=czOkList[0])
     myPlot.plotTextOnCenterOfBars(axRight, bar1, czOkList[0], fontsize=12)
     axRight.bar_label(bar2, fontsize=12, label_type='edge')
 
     # Plot ALL
-    xTicks3 = [i + 1.3 for i in range(0, len(xTickList))]
     bar1 = axRight.bar(xTicks3, okList[0], color='orange', edgecolor='k', width=barWidth, zorder=1)
     bar2 = axRight.bar(xTicks3, ngList[0], color='red', edgecolor='k', width=barWidth, zorder=1, bottom=okList[0])
     myPlot.plotTextOnCenterOfBars(axRight, bar1, okList[0], fontsize=12)
@@ -741,7 +741,7 @@ def plotTitleLegendByYearMonthNew(cn_font, title, hasGreyLabel=False, rocketType
     plt.legend(handles=handles, loc='upper center', ncol=4, prop=cn_font)
     plt.title(title, fontproperties=cn_font, fontsize=18)
 
-# TODO: Plot data by week
+# Plot data by week
 ################################################################################################
 def countByWeek(dfListFiltered):
     dfListLast = []
@@ -855,24 +855,26 @@ def plotGraphByYearMonth(cn_font, excelSheet, title, startYear=None, endYear=Non
         myPlot.saveFig(fig, f'./images/{path}{newTitle}.png') 
 
 ################################################################################################
-def plot1(cn_font, excelSheet, years):
+def plot1(cn_font, excelSheet, years=None):
     title1 = '运载火箭发射年统计'
     title2 = '运载火箭发射月统计'
     title3 = '运载火箭发射周统计'
 
-    plotGraphByYearMonth(cn_font, excelSheet, title1)
-    plotGraphByMonth(cn_font, excelSheet, title2)
-    plotGraphByWeek(cn_font, excelSheet, title3)
+    if years:
+        for year in years:
+            plotGraphByWeek(cn_font, excelSheet, title3, year)
+            plotGraphByMonth(cn_font, excelSheet, title2, year)
 
-    for year in years:
-        plotGraphByMonth(cn_font, excelSheet, title2, year)
-        plotGraphByWeek(cn_font, excelSheet, title3, year)
+        for year in years:
+            today = datetime.today()
+            startYYMMMM = f'{year}01'
+            endYYMMMM = f'{year}12' if today.year < int(year) else f'{year}{today.strftime("%m")}'
+            plotGraphByYearMonth(cn_font, excelSheet, title2, startYYMMMM, endYYMMMM, mom=True)
+    else:
+        plotGraphByYearMonth(cn_font, excelSheet, title1)
+        plotGraphByMonth(cn_font, excelSheet, title2)
+        plotGraphByWeek(cn_font, excelSheet, title3)
 
-    for year in years:
-        today = datetime.today()
-        startYYMMMM = f'{year}01'
-        endYYMMMM = f'{year}12' if today.year < int(year) else f'{year}{today.strftime("%m")}'
-        plotGraphByYearMonth(cn_font, excelSheet, title2, startYYMMMM, endYYMMMM, mom=True)
 
 ################################################################################################
 def main():

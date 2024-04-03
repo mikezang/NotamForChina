@@ -471,22 +471,18 @@ def countDataFrameByDate(dfList):
             pass
         dfCount = dfCount.groupby('日期').first().reset_index()
         dfCountList.append(dfCount)
-
-    # if len(dfList) == 1:
-    #     return dfCount
-    # else:
     return dfCountList
 
 ################################################################################################
-def getUpperStageAndLastLuanch(df, columnRocket):
-    upperStage = {}
-    lastLuanch = []
-    df.reset_index(drop=True, inplace=True)
-    cond1 = df[columnRocket].str.startswith('远征')
-    dfSelected = df[cond1]
-    indexSelected = dfSelected.index - 1
-    df = df.iloc[indexSelected]
-    return upperStage, lastLuanch
+# def getUpperStageAndLastLuanch(df, columnRocket):
+#     upperStage = {}
+#     lastLuanch = []
+#     df.reset_index(drop=True, inplace=True)
+#     cond1 = df[columnRocket].str.startswith('远征')
+#     dfSelected = df[cond1]
+#     indexSelected = dfSelected.index - 1
+#     df = df.iloc[indexSelected]
+#     return upperStage, lastLuanch
 
 ################################################################################################
 def countRocket(df, columnRocket, rocket, seriesDict=None):
@@ -507,8 +503,7 @@ def countRocket(df, columnRocket, rocket, seriesDict=None):
             cond1 = False
             for private in privates:
                 cond1 |= df[columnRocket].str.startswith(private)
-# TODO use config.ini
-# TODO use seriesDict to or 
+# TODO use config.ini and seriesDict to or 
         elif rocket == '长征三号甲系列':
             cond1 = df[columnRocket].str.startswith('长征三号甲')
             cond1 |= df[columnRocket].str.startswith('长征三号乙')
@@ -577,9 +572,9 @@ def readDataFromSheet(excelSheet, headers, columnNotNull, columnRocket, noAbort,
     df.replace([None, np.nan], '', inplace=True) # Replace None with empty string
 
     if noAbort:
-        cond1 = df[columnNotNull] != '中止' # filter to exclude rows where 结果 is '中止'
+        cond1 = df[columnNotNull] != '中止' 
         cond1 &= df[columnNotNull].ne('')  # filter to exclude rows where 结果 is ''
-        cond1 |= df[columnRocket].str.startswith('远征') # include rows where 火箭 starts with '远征'
+        # cond1 |= df[columnRocket].str.startswith('远征') # TODO: don't need this line
         df = df[cond1] 
 
     if onlyFailed:
@@ -590,30 +585,6 @@ def readDataFromSheet(excelSheet, headers, columnNotNull, columnRocket, noAbort,
 def readDataFromBook(excelBook, sheetName, headers, columnNotNull, columnRocket, noAbort, onlyFailed):
     excelSheet = excelBook[sheetName]
     return readDataFromSheet(excelSheet, headers, columnNotNull, columnRocket, noAbort, onlyFailed)
-    # # Convert the worksheet to a DataFrame
-    # df = pd.DataFrame(worksheet.values)
-
-    # # Set the column names to the values in the first row
-    # df.columns = df.iloc[0].replace('\n', '')
-
-    # # Drop the first row, since it's already used as the column names
-    # df = df.drop(index=0)
-
-    # if headers is not None:
-    #     df.columns = headers # Modify Hedaers
-
-    # df.replace('-', np.nan, inplace=True) # Replace '-' with NaN
-    # df.replace([None, np.nan], '', inplace=True) # Replace None with empty string
-
-    # if noAbort:
-    #     cond1 = df[columnNotNull] != '中止' # filter to exclude rows where 结果 is '中止'
-    #     cond1 &= df[columnNotNull].ne('')  # filter to exclude rows where 结果 is ''
-    #     cond1 |= df[columnRocket].str.startswith('远征') # include rows where 火箭 starts with '远征'
-    #     df = df[cond1] 
-
-    # if onlyFailed:
-    #     df = df[(df[columnNotNull] != '成功')]
-    # return df
 
 ################################################################################################
 def mergeData(dfPivot, dfPivotOk, columnYear):
@@ -970,8 +941,6 @@ def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear
         if columnYear is None:
             columnYear = '日期' #df.columns[0]
 
-        # df = df[(df[columnYear].astype(str).str.startswith(str(startYear)))]
-        # df = df[df[columnYear].between(startYear, endYear)]
         if columnYear is not None:
             # remove rows where 'columnYear' is not of datetime type
             df = df[pd.to_datetime(df[columnYear], errors='coerce', format='%Y-%m-%d').notnull()]
