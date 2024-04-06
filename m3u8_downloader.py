@@ -59,21 +59,17 @@ def decode_key_uri(base:str, URI: str):
     return uri_str
 
 def decode_ext_x_key(key_str: str):
-    # TODO: check if there is case with "'"
-    key_str = key_str.replace('"', '').lstrip("#EXT-X-KEY:")
+    key_str = key_str.replace('"', '').replace("'", '').lstrip("#EXT-X-KEY:")
     v_list = re.findall(r"[^,=]+", key_str)
     key_map = {v_list[i]: v_list[i+1] for i in range(0, len(v_list), 2)}
     return key_map
 
-# def download_ts_file(ts_url: str, store_dir: str, attempts: int = 10):
 def download_ts_file(seq_and_ts_url: tuple[int, str], store_dir: str, attempts: int = 10):
-    # TODO: check 403 Forbidden
     seq, ts_url = seq_and_ts_url
-    ts_fname = ts_url.split('/')[-1]
     ts_res = None
     ts_dir = os.path.join(store_dir, f'{seq+1:04}.ts')
 
-    # TODO: Skip download if file exists
+    # Skip download if file exists
     if os.path.isfile(ts_dir):
         return
     
@@ -141,7 +137,6 @@ def parseM3u8Content(m3u8_content, m3u8_http_base):
             if not ts_url.startswith("http"):
                 ts_url = mergePath(m3u8_http_base, ts_url)
             ts_url_list.append(ts_url)
-
     return ts_url_list, x_key_dict
 
 def getExtM3u8Link(m3u8_content, m3u8_http_base):
@@ -282,8 +277,8 @@ def mergeLargeMp4(ordered_ts_names, skipHeader, merged_mp4):
         sub_files_str.rstrip('|')
 
         mp4_fnames.append('part_{}.mp4'.format(_i))
-        msg = f'Merge {200 * _i:04}.ts - '
-        msg += f'{200 * _i + 199:04}.ts ' if _i < part_num - 1 else f'{200 * _i + _idx_list[-1]:04}.ts '
+        msg = f'Merge {1 + 200 * _i:04}.ts - '
+        msg += f'{200 * (_i + 1):04}.ts ' if _i < part_num - 1 else f'{200 * _i + 1 + _idx_list[-1]:04}.ts '
         msg += f'to {mp4_fnames[_i]}...'
         print(msg)
 

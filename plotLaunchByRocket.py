@@ -195,21 +195,19 @@ def plotGraphByRocket(cn_font, excelSheet, title, startYear=None, endYear=None):
     df = myPlot.parseExcelSheetToDataFrame(excelSheet, columnYear='日期', columnNotNull='结果', startYear=startYear, endYear=endYear)
     df1, df2, dfCz1, dfCz2, dfNcz1, dfNcz2 = countDataFrameByRocket(df, retiredRocketsDict)
     title1 = myPlot.getPlotTitle(title.replace('发射统计', '发射数统计'), startYear, endYear)
+    title2 = myPlot.getPlotTitle(title.replace('发射统计', '发射率统计'), startYear, endYear)
     path1 = '' if startYear == None else '火箭年发射数统计/'
+    path2 = '' if startYear == None else '火箭年发射率统计/'
+
     if path1 == '':
         plotByRocket(cn_font, df1, title1.replace('中国', '中国全部'), path1, startYear)
         plotByRocket(cn_font, dfCz1, title1.replace('中国', '中国长征'), path1, startYear)
         plotByRocket(cn_font, dfNcz1, title1.replace('中国', '中国其他'), path1, startYear)
-    else:
-        plotByRocket(cn_font, df1, title1, path1, startYear)
-
-    title2 = myPlot.getPlotTitle(title.replace('发射统计', '发射率统计'), startYear, endYear)
-    path2 = '' if startYear == None else '火箭年发射率统计/'
-    if path1 == '':
         plotByRocket(cn_font, df2, title2.replace('中国', '中国全部'), path1, startYear)
         plotByRocket(cn_font, dfCz2, title2.replace('中国', '中国长征'), path1, startYear)
         plotByRocket(cn_font, dfNcz2, title2.replace('中国', '中国其他'), path1, startYear)
     else:
+        plotByRocket(cn_font, df1, title1, path1, startYear)
         plotByRocket(cn_font, df2, title2, path2, startYear)
 
 ################################################################################################
