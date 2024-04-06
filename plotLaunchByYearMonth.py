@@ -475,7 +475,7 @@ def plotLineGraphByYearMonth(cn_font, ax, dfList, startYear, rocketType='', byYe
     myPlot.plotLeftYAxis(cn_font, ax, leftYLabel, -0.05, 1.10, True)
 
     # Set x Axis
-    myPlot.plotXAxis(cn_font, ax, xLabel, xTickList, xTickLabels, 0, len(xTickList) + 1)
+    myPlot.plotXAxis(cn_font, ax, xLabel, xTickList, xTickLabels, 0, len(xTickList) + 1, inVerticle=not mom)
 
     ax.set_zorder(4) # Set left axis to top
     ax.patch.set_visible(False) # set the patch of the left axes to be invisible
