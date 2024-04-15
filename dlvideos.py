@@ -406,7 +406,7 @@ def parseUrlListWJYS(base: str, videoId: int, sId: int) -> list:
     videoName, year = '', ''
     page = 1
     urls = {}
-    driver = myUtils.getFirefoxDriver(0, False)
+    driver = myUtils.getFirefoxDriver(1)
     print(f'Parsing {videoId} url list on {WJYS_BASE_URL}...')
 
     try:
@@ -458,31 +458,42 @@ def parseUrlListWJYS(base: str, videoId: int, sId: int) -> list:
     driver.quit()
     return videoName, year, urls, sId
 
+def downloadMP4(url: str, key: str, filename: str, count: int, existFiles: list, mergedFolder: str):
+    if not filename:
+        filename = f'{key}.mp4'
+    if filename in existFiles:
+        print(f'{filename} exists, skip downloading!')
+    else:
+        msg = filename if count == 1 else f'{filename[:-4]}/{count:02}={int(filename[:-4]) * 100 // count}%'
+        print(f'Downloading {msg}...')
+        m3u8_downloader.download(url, f'{mergedFolder}/{filename}')
+
 ################################################################################################
-def downloadVideoFiles(urls: dict, mergedFolder:str, filename: str) -> None:
+def downloadVideoFiles(urls: dict, mergedFolder:str, filename: str, reverse=False) -> None:
     try:
         count = len(urls)
-        existsFiles = sorted(list(myUtils.listFiles(mergedFolder, '.mp4', onlyFilename=True, includeSubFolder=False)))
-        for key, url in urls.items():
-            if 'vip.' in url:
-                print(f'Inaccessible url {url}')
-            else:
-                if not filename:
-                    filename = f'{key}.mp4'
-                if filename in existsFiles:
-                    print(f'{filename} exists, skip downloading!')
-                else:
-                    msg = filename if count == 1 else f'{filename[:-4]}/{count:02}={int(filename[:-4]) * 100 // count}%'
-                    print(f'Downloading {msg}...')
-                    m3u8_downloader.download(url, f'{mergedFolder}/{filename}')
-            filename = ''
+        existFiles = sorted(list(myUtils.listFiles(mergedFolder, '.mp4', onlyFilename=True, includeSubFolder=False)))
+        if reverse:
+            for key, url in reversed(urls.items()):
+                if 'vip.' in url:
+                    print(f'Inaccessible url {url}')
+                    break
+                downloadMP4(url, key, filename, count, existFiles, mergedFolder)
+                filename = ''
+        else:
+            for key, url in urls.items():
+                if 'vip.' in url:
+                    print(f'Inaccessible url {url}')
+                    break
+                downloadMP4(url, key, filename, count, existFiles, mergedFolder)
+                filename = ''
     except:
         myUtils.pritnExceptionTrace()
         pass
 
 ################################################################################################
 def checkArgv() -> list:
-    site, videoName, videoId, sId, folder, filename = '', '', '', '2', '', ''
+    site, videoName, videoIds, sId, folder, filename = '', '', '', '2', '', ''
     count = len(argv)
     if  count <= 1:
         print('1. Search videoIds')
@@ -499,23 +510,23 @@ def checkArgv() -> list:
     elif count == 3:
         if argv[2].isdigit():
             site = argv[1].upper()
-            videoId = argv[2]
+            videoIds = argv[2]
         else:
             site = argv[1].upper()
             videoName = argv[2]
     elif count == 4:
         if argv[2].isdigit():
             site = argv[1].upper()
-            videoId = argv[2]
+            videoIds = argv[2]
             sId = argv[3]
     elif count >= 5:
-        site, videoId, sId, folder = argv[1].upper(), argv[2], argv[3], argv[4]
+        site, videoIds, sId, folder = argv[1].upper(), argv[2], argv[3], argv[4]
         if folder.endswith('.mp4'):
             filename = os.path.basename(folder)
             folder = os.path.dirname(folder)
         if not folder.startswith('/'):
             folder = f'/Users/mikezang/movies/{folder}'
-    return site, videoName, videoId, sId, folder, filename
+    return site, videoName, videoIds, sId, folder, filename
 
 def showRunTime(func):
     result = timeit(func, number=1, globals=globals())
@@ -533,7 +544,8 @@ def parseUrlList(site:str, videoId: int, sId: int) -> list:
 
 ################################################################################################
 def main() -> None:
-    site, videoNames, videoId, sId, mergedFolder, filename = checkArgv()
+    site, videoNames, videoIds, sId, mergedFolder, filename = checkArgv()
+    videoId = videoIds if videoIds[0] != '-' else videoIds[1:]
     urls = {}
     
     if videoNames:
@@ -545,7 +557,7 @@ def main() -> None:
             myUtils.saveDictToTextFile(f'/tmp/{videoNames}.txt', videoDict)
         else:
             print(f'No videoIds for {videoNames}!')
-    elif videoId:
+    elif videoIds:
         if mergedFolder != '':
             textFilename = f'/tmp/*{videoId}-{sId}.txt'
             filePaths = glob(textFilename, recursive=True)
@@ -561,7 +573,8 @@ def main() -> None:
             else:
                 print(f'No accessable url list for videoId {videoId}!')
     if urls and mergedFolder:
-        downloadVideoFiles(urls, mergedFolder, filename)
+        downloadVideoFiles(urls, mergedFolder, filename, videoIds[0] == '-')
+        myUtils.playSound()
 
 ################################################################################################
 def parseArguments():

@@ -1,4 +1,5 @@
 import os
+import pathlib
 import re
 import glob
 import time
@@ -215,6 +216,13 @@ def download(m3u8_link, output):
     
     # Decoding videos
     if video_decoder.isEncode():
+        decodingFile = f'{ts_folder}/deconing.txt'
+        if os.path.isfile(decodingFile):
+            print(f'{merged_mp4} in Decoding...')
+            return
+        decoding = pathlib.Path(decodingFile)
+        decoding.touch()
+
         for ts_fname in tqdm.tqdm(downloaded_ts, desc="Decoding *.ts files"):
             msg = video_decoder(ts_fname)
             if msg:
@@ -226,6 +234,13 @@ def download(m3u8_link, output):
     if msg:
         print(msg)
         return
+
+    mergingFile = f'{ts_folder}/merging.txt'
+    if os.path.isfile(mergingFile):
+        print(f'{merged_mp4} in Merging...')
+        return
+    decoding = pathlib.Path(mergingFile)
+    decoding.touch()
 
     # Start to merge all *.ts files
     if len(downloaded_ts) > 200:
@@ -263,7 +278,8 @@ def mergeSmallMp4(ordered_ts_names, skipHeader, merged_mp4):
 
 def mergeLargeMp4(ordered_ts_names, skipHeader, merged_mp4):
     mp4_fnames = []
-    part_num = len(ordered_ts_names) // 200 + 1
+    count = len(ordered_ts_names)
+    part_num = count // 200 + 1
 
     for _i in range(part_num):
         sub_files_str = "concat:"
@@ -278,7 +294,7 @@ def mergeLargeMp4(ordered_ts_names, skipHeader, merged_mp4):
 
         mp4_fnames.append('part_{}.mp4'.format(_i))
         msg = f'Merge {1 + 200 * _i:04}.ts - '
-        msg += f'{200 * (_i + 1):04}.ts ' if _i < part_num - 1 else f'{200 * _i + 1 + _idx_list[-1]:04}.ts '
+        msg += f'{200 * (_i + 1):04}.ts ' if _i < part_num - 1 or count == 200 * (_i + 1) else f'{200 * _i + 1 + _idx_list[-1]:04}.ts '
         msg += f'to {mp4_fnames[_i]}...'
         print(msg)
 
