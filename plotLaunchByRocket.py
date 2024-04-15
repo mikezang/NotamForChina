@@ -10,7 +10,7 @@ from matplotlib.lines import Line2D
 
 path.append("")
 
-import constants 
+# import constants 
 import myPlot
 import myUtils
 

@@ -11,8 +11,8 @@ import lxml.html
 import pytz
 from selenium.webdriver.common.by import By
 
-import myUtils
 import constants
+import myUtils
 
 ################################################################################################
 def splitTitle(item: list) -> str:

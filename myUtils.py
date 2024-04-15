@@ -3,6 +3,7 @@
 """
 # pylint: disable=W0603,W0622,W0703,C0103,C0116,C0301,E1101
 
+import hashlib
 import json
 import logging
 import os
@@ -54,13 +55,28 @@ NSF_PATH = './notams/maps/nsf/'
 KML_PATH = './temp/'
 
 ################################################################################################
-def readDictFromFile(filename):
+def isSameFile(file1: str, file2: str) -> bool:
+    file1Hash = hashlib.md5(open(file1, "rb").read()).hexdigest()
+    file2Hash = hashlib.md5(open(file2, "rb").read()).hexdigest()
+    return file1Hash == file2Hash
+
+################################################################################################
+def isSameFileInDict(file: str, dictFiles: dict) -> tuple:
+    fileHash = hashlib.md5(open(file, "rb").read()).hexdigest()
+    if fileHash in dictFiles:
+        return True, dictFiles
+    else:
+        dictFiles[fileHash] = file
+        return False, dictFiles
+
+################################################################################################
+def readDictFromFile(filename: str):
     with open(filename) as f: 
         data = f.read()
         return json.loads(data) 
     
 ################################################################################################
-def saveDictToFile(filename, dataDict):
+def saveDictToFile(filename: str, dataDict: dict):
     with open(filename, 'w', encoding="utf-8") as f:
         f.write(json.dumps(dataDict))
         print(f'Save dict to "{os.path.abspath(filename)}"')
@@ -81,7 +97,7 @@ def saveDictToJsonFile(nsfDict, filename):
         dump(nsfDict, f, ensure_ascii=False, indent=2)
 
 ################################################################################################
-def elementAttributes(driver, element):
+def elementAttributes(driver: webdriver.Firefox, element):
     script  = 'var items = {}; '
     script += 'for (index = 0; index < arguments[0].attributes.length; ++index) { '
     script += '  items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value'
@@ -91,7 +107,7 @@ def elementAttributes(driver, element):
     # driver.execute_script('var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;', element)
 
 ################################################################################################
-def isVideoWithPNGHeader(videoFile):
+def isVideoWithPNGHeader(videoFile: str) -> tuple:
     msg = ""
     ret = False
     try:
@@ -243,13 +259,13 @@ def convertTitle(utcStartDate, utcEndDate, loc, loc1=None) -> str:
     # return f'{convertToLocalDate(utcStartDate, constants.TIMEZONE_BEIJING).strftime("%Y年%m月%d日%H時%M分")}{loc}'
 
 ################################################################################################
-def getAreaCenter(coordsList) -> list:
+def getAreaCenter(coordsList) -> tuple:
     lat, lon = zip(*[(l[0], l[1]) for l in coordsList if l])
     lats, lons = sum(lat)/len(lat), sum(lon)/len(lon)
     return [lats + 180 if lats < 0 and lats > -10 else lats, lons]
 
 ################################################################################################
-def getCityCoordinate(city) -> list:
+def getCityCoordinate(city) -> tuple:
     p1s = constants.CITIES[city].split('|')[1].split(',')
     return [p1s[0], p1s[1]]
 
@@ -272,7 +288,7 @@ def getConditionDetail(driver, tdCondition) -> str:
 #Degrees, minutes and seconds	NS50°55'1.956'',EW5°55'3.9''
 #Degrees, minutes and seconds	NS505501,        EW0055503
 ################################################################################################
-def convertDMS2DD(old) -> list:
+def convertDMS2DD(old) -> tuple:
     direction = {'N':1, 'S':-1, 'E': 1, 'W':-1}
     news = old.split(',')
     new = []
@@ -442,8 +458,7 @@ def getMsaArea(contentSection) -> str:
 
 ################################################################################################
 def createKmlFileNew(notams: dict, title1='', city1='') -> None:
-    notamFiles = devideToFiles(notams)
-
+    # notamFiles = devideToFiles(notams)
     kml = Kml()
     lastStartDate = ''
     lastEndDate = ''
@@ -559,7 +574,7 @@ def createMsaDropZonesKmlFile(oldFile):
             updateKmlFile(kml, title, KML_PATH, notams)
 
 ################################################################################################
-def getNotamNumbers(content) -> list:
+def getNotamNumbers(content) -> tuple:
     numbers = finditer(constants.PATTERN_NOTAM_NUMBER_NEW, content)
     return [m.group(1) for m in numbers][0]
 
@@ -657,7 +672,7 @@ def getYYYYMMDD(year):
         return year
 
 ################################################################################################
-def getMsaDates(content) -> tuple:
+def getMsaDates(content: str) -> tuple:
     startDates, endDates = [], []
     startEndDates1 = finditer(constants.MSA_PATTERN_DATE_CHINA1, content)
     startEndDates2 = finditer(constants.MSA_PATTERN_DATE_CHINA2, content)
@@ -836,7 +851,7 @@ def drawDottedLine(kml, coords, location, color) -> None:
                 drawLine(kml, dotted, location, color)
 
 ################################################################################################
-def openConfig(section=None) -> list:
+def openConfig(section=None) -> tuple:
     config_ini = configparser.ConfigParser()
     config_ini.read('config.ini', encoding='utf-8')
     if section is None:
@@ -845,7 +860,7 @@ def openConfig(section=None) -> list:
     return readSection
 
 ################################################################################################
-def readConfigLaunchCenters():
+def readConfigLaunchCenters() -> dict:
     section = openConfig()
     count = int(section.get('FirCount'))
     launchCenters = {}
@@ -856,7 +871,7 @@ def readConfigLaunchCenters():
     return launchCenters
 
 ################################################################################################
-def readConfigFirNames():
+def readConfigFirNames() -> str:
     section = openConfig()
     count = int(section.get('FirCount'))
     firNames = ''
@@ -905,7 +920,7 @@ def readConfigRetiredDict():
     return retiredDict
 
 ################################################################################################
-def readConfig(keys:list=None, returnList=True) -> list:
+def readConfig(keys:list=None, returnList=True) -> tuple:
     read_default = openConfig()
     values = []
 
@@ -1135,7 +1150,7 @@ def removeAllSpaces(s):
     return ''.join(s.split())
 
 ################################################################################################
-def isLinux():
+def isLinux() -> bool:
     if platform == "linux" or platform == "linux2":# linux
         return True
     elif platform == "darwin":# Mac OS X
@@ -1144,7 +1159,7 @@ def isLinux():
         return False
 
 ################################################################################################
-def isWindows():
+def isWindows() -> bool:
     if platform == "linux" or platform == "linux2":# linux
         return False
     elif platform == "darwin":# Mac OS X
@@ -1153,7 +1168,7 @@ def isWindows():
         return True
 
 ################################################################################################
-def isMacOS():
+def isMacOS() -> bool:
     if platform == "linux" or platform == "linux2":# linux
         return False
     elif platform == "darwin":# macOS
@@ -1216,7 +1231,7 @@ def sortDictByValue(d: dict) -> dict:
     return {k : v for k, v in sorted(d.items(), key=lambda x: splitNotam(x))}
 
 ################################################################################################
-def sortDictByEndDate(d):
+def sortDictByEndDate(d: dict):
     sorted_tuples = sorted(d.items(), key=lambda item: item[1].split(";")[0][:10] + item[1].split(";")[1])
     sorted_dict = {k: v for k, v in sorted_tuples}
     return sorted_dict
@@ -1226,13 +1241,13 @@ def sortDictByEndDate(d):
 #P3921/22:2022/10/07 10:00;2022/10/13 16:00;RJJJ;N21°00',E134°30'|N21°15',E134°20'|N21°40',E135°00'|N21°00',E135°27
 #Q2479/22:2022/10/07 10:00;2022/10/13 16:00;RJJJ;N21°00',E136°30'
 #A2767/22:2022/10/07 13:10;2022/10/07 13:39;ZSHA;N33°56',E123°55'|N34°18',E123°33'|N34°28',E123°48'|N34°07',E124°10
-def sortDictByLatitude(d):
+def sortDictByLatitude(d: dict):
 #    sorted_tuples = sorted(d.items(), key=lambda item: item[1])
 #    sorted_dict = {k: v for k, v in sorted_tuples}
     return {k : v for k, v in sorted(d.items(), key=lambda x: x[1])}
 
 ################################################################################################
-def sortDictByKey(d):
+def sortDictByKey(d: dict):
 #    sorted_tuples = sorted(d.items(), key=lambda item: item[0])
 #    sorted_dict = {k: v for k, v in sorted_tuples}
     return  {k : v for k, v in sorted(d.items(), key=lambda x: x[0])}
@@ -1244,11 +1259,11 @@ def exceptPrint():
     print(exc_type, fname, exc_tb.tb_lineno)
 
 ################################################################################################
-def scrollBottom(driver):
+def scrollBottom(driver: webdriver.Firefox):
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
 
 ####################################################################
-def sendEmail(subject, body, toEmail='zhengrong.zang@gmail.com'):
+def sendEmail(subject: str, body: str, toEmail='zhengrong.zang@gmail.com'):
     if isMacOS() or isLinux():
         sender = 'mikezang2008@gmail.com'
         password = 'New@20230831'
@@ -1262,11 +1277,11 @@ def sendEmail(subject, body, toEmail='zhengrong.zang@gmail.com'):
     print("Message sent!")
 
 ################################################################################################
-def findElementsByClass(driver, className):
+def findElementsByClass(driver: webdriver.Firefox, className: str):
     return driver.find_elements(By.CLASS_NAME, className)
 
 ################################################################################################
-def findElementsByXPath(driver, xPath):
+def findElementsByXPath(driver: webdriver.Firefox, xPath: str):
     return driver.find_elements(By.XPATH, xPath)
 
 ################################################################################################
@@ -1274,17 +1289,17 @@ def findElementsByTag(driver, tagName):
     return driver.find_elements(By.TAG_NAME, tagName)
 
 ################################################################################################
-def elementXPathFocus(driver, xpath, preventScroll):
+def elementXPathFocus(driver: webdriver.Firefox, xpath: str, preventScroll: bool):
   JavaScriptFocusToElement = "arguments[0].focus({'preventScroll': arguments[1]})"
   element = driver.find_element(By.XPATH, xpath)
   driver.execute_script(JavaScriptFocusToElement, element, preventScroll)
 
 ################################################################################################
-def elementId(driver, time, id):
+def elementId(driver: webdriver.Firefox, time: float, id: str):
     return WebDriverWait(driver, time).until(EC.presence_of_element_located((By.ID, id)))
 
 ################################################################################################
-def elementClass(driver, time, className):
+def elementClass(driver: webdriver.Firefox, time: float, className: str):
     return WebDriverWait(driver, time).until(EC.presence_of_element_located((By.CLASS_NAME, className)))
 
 ################################################################################################
@@ -1304,7 +1319,7 @@ def elementInput(driver, time, xPath, value):
     elementXPath(driver, time, xPath).send_keys(value)
 
 ################################################################################################
-def listFiles(folder, extension, excludeFile=None, onlyFilename=False, includeSubFolder=True):
+def listFiles(folder: str, extension: str, excludeFile=None, onlyFilename=False, includeSubFolder=True):
     absPath = os.path.abspath(folder)
     for root, dirs, files in walk(absPath):
         if not includeSubFolder and root != absPath:
@@ -1316,7 +1331,7 @@ def listFiles(folder, extension, excludeFile=None, onlyFilename=False, includeSu
                     yield filepath
 
 ################################################################################################
-def updateTempFile(notams):
+def updateTempFile(notams: dict):
     # filename = f'./data/notam{getJapanTime("%Y%m%d-%H%M%S")}.txt'
     filename = f'./data/notam{getJapanTimeFilename()}.txt'
     createFolder(filename)
@@ -1341,7 +1356,7 @@ def updateTempFile(notams):
     except FileNotFoundError:
         saveTextFile(filename, newText)
 
-def saveTextFile(filename, newText):
+def saveTextFile(filename: str, newText: str):
     print(f'Save to file "{filename}"')
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(newText)
@@ -1356,7 +1371,7 @@ def saveTextFile(filename, newText):
         playSound('train.wav')
 
 ################################################################################################
-def playSound(filename=None):
+def playSound(filename:str=None):
     if filename is None:
         if isWindows() or isMacOS():
             filename = 'Alarm03.wav'
@@ -1373,7 +1388,7 @@ def playSound(filename=None):
     playsound(f'{path}{filename}')
 
 ################################################################################################
-def updateKmlFile(kml, title, filePath='', notams=None):
+def updateKmlFile(kml: Kml, title: str, filePath='', notams=None):
     try:
         createFolder(filePath)
         with open(f'{filePath}{title}.kml', encoding='utf-8') as f:
@@ -1392,15 +1407,13 @@ def updateKmlFile(kml, title, filePath='', notams=None):
             updateTempFile(notams)
 
 ################################################################################################
-def saveKmlFile(kml, title, filePath=''):
+def saveKmlFile(kml: Kml, title: str, filePath=''):
     print(f'Save to file "{filePath}{title}.kml"')
     kml.document.name = title
     kml.save(f'{filePath}{title}.kml') # this is for check content
     kml.save('doc.kml') # this is for zip to kmz file
-
     with zipfile.ZipFile(f'{filePath}{title}.kmz', mode='w') as zf:
         zf.write('doc.kml')
-
     remove('doc.kml')
 
 ################################################################################################
@@ -1488,7 +1501,7 @@ def isChinaNotam(condition):
             return isChinaNotam
     return isChinaNotam
 
-def isChinaNotamOld(condition):
+def isChinaNotamOld(condition: str) -> bool:
     ret1 = 'AGGG' in condition
     ret1 |= 'KZAK' in condition
     ret1 |= 'VCCF' in condition
@@ -1530,7 +1543,7 @@ def isChinaNotamOld(condition):
     return ret2
 
 ################################################################################################
-def isNotChinaNotam(location, condition):
+def isNotChinaNotam(location: str, condition: str) -> bool:
     if (location == 'YBBB' or location == 'YMMM') and 'CHINESE' not in condition:
         return True
     elif (location == 'VYYF' or location == 'KZAK') and 'CHINA' not in condition:

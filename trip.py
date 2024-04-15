@@ -17,8 +17,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
 
-import myUtils
 import constants
+import myUtils
 
 BASE_CTRIP_URL = "https://m.ctrip.com/webapp/vacations/tour/detail?productid="
 CTRIP_URL = "https://m.ctrip.com/webapp/vacations/shop/home?productid=31375689&brandId=77691&detailId=31375689&proId=1292581&saleMode=R"
