@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
 from timeit import timeit
 
-import myUtils
 import constants
+import myUtils
 import nsf
 
 ###############################################################################################
@@ -63,10 +63,10 @@ def getNotamDetailNew(driver, command, searchLocaltions):
 
                 window_after = driver.window_handles[-1]
                 driver.switch_to.window(window_after)
-                sleep(3)
-
+                myUtils.elementXPath(driver, 30, "//form[@name='NotamRetrievalForm']")
                 form = driver.find_element(By.XPATH, "//form[@name='NotamRetrievalForm']")
                 if form:
+                    sleep(5)
                     driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
                     table1 = form.find_element(By.TAG_NAME, "table")
                 

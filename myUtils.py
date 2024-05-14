@@ -10,6 +10,7 @@ import os
 # import shutil
 import socket
 import subprocess
+import time
 import pytz
 import inspect
 import zipfile
@@ -18,7 +19,7 @@ import ctypes
 import configparser
 import geopandas as gpd
 import matplotlib.pyplot as plt
-from time import sleep
+from time import localtime, sleep, strftime
 from re import compile, findall, finditer, match, search#, sub, IGNORECASE
 from pathlib import Path
 from numpy import zeros
@@ -26,8 +27,9 @@ from pprint import pprint
 from simplekml import Kml
 from json import dump, load
 from sys import argv, platform, exc_info
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from os import path, remove, system, walk, mkdir
+import os
 from glob import glob
 from math import radians, cos, sin, asin, sqrt, atan2, degrees, pow
 from fiona.drvsupport import supported_drivers
@@ -44,15 +46,118 @@ import ffmpeg
 import traceback
 from email.mime.text import MIMEText
 import smtplib
+from typing import NamedTuple
 
 import constants
 import myPlot
 import notam
 import nsf
 
+class FileInfo(NamedTuple):
+    origName: str   # 'videos/01.mp4'
+    baseName: str   # basename='01.mp4'
+    folderName: str # dirname='videos'
+    absFolder: str  # abspath='C://zang/python/RocketLaunch/videos'
+    fileName: str   # vfilename='01'
+    extension: str  # extension='mp4'
+
 isFirstTime = True
 NSF_PATH = './notams/maps/nsf/'
 KML_PATH = './temp/'
+
+startTime = 0
+
+# https://stackoverflow.com/a/25432403
+# https://stackoverflow.com/a/43441940
+FILE_ATTRIBUTE_HIDDEN = 0x02
+
+################################################################################################
+def listFilesByGlob(partOfFilename):
+    return glob(partOfFilename)
+
+# if __name__ == '__main__':
+#     # parseFileInfo('videos/pngsMerged.mp4')
+#     videoName = 'videos/pngsMerged.mp4'
+#     musicList = listFilesByGlob('music/momoe/*.mp3')
+#     matchMusics2Video(videoName, musicList)
+
+################################################################################################
+def mergeSmallVideos(videoList, mergedVideoFile, skipHeader=False, msg=None, tsFile=True):
+    files_str = "concat:"
+    for ts_filename in videoList:
+        files_str += ts_filename+'|'
+    # files_str.rstrip('|')
+    print(msg)
+    # print(f'Merge {ordered_ts_names[0]} - {ordered_ts_names[-1]} to {merged_mp4}...')
+
+    opts = 'ffmpeg -loglevel fatal -f mpegts' if skipHeader else 'ffmpeg -loglevel fatal'
+    opts += ' -i ' + files_str[:-1] + ' -c copy'
+    opts += ' -bsf:a aac_adtstoasc' if tsFile else ' '
+    opts += mergedVideoFile
+    subprocess.run(opts)
+
+################################################################################################
+def keepOneLineChar():
+    if isWindows():
+        return '^'
+    else:
+        return '\\'
+    
+################################################################################################
+def set_hidden_attrib(file_name):
+    """
+    Adds the NTFS hidden attribute to a file or folder.
+    Calls the SetFileAttributesW WinApi function or attrib.exe, depending on what's available.
+    """
+    # Check if running under Windows natively:
+    if platform.system() == "Windows":
+        # https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfileattributesw
+        ret = ctypes.windll.kernel32.SetFileAttributesW(
+            str(file_name), FILE_ATTRIBUTE_HIDDEN
+        )
+        if not ret:  # There was an error.
+            raise ctypes.WinError()
+    # Check if running under Cygwin. Try ATTRIB.exe:
+    elif platform.system().startswith("CYGWIN_NT"):
+        # Get native file path:
+        native_file_name = (
+            subprocess.check_output(["cygpath", "-w", str(file_name)])
+            .decode("UTF-8")
+            .strip()
+        )
+        # Call ATTRIB.exe with native file path:
+        # print(f"> ATTRIB.exe +H /D /L \"{native_file_name}\"")
+        subprocess.check_call(["attrib", "+H", "/D", "/L", native_file_name])
+
+def removeItemsFromTwoLists(list1: list, list2: list, list1Remove: list):
+    list1New = list1.copy()
+    list2New = list2.copy()
+    durationRemoved = 0
+    for i1Removed in list1Remove:
+        list1New, list2New = zip(*((l1, l2) for l1, l2 in zip(list1New, list2New) if l1 != i1Removed))
+        if i1Removed in list1:
+            removedIndex = list1.index(i1Removed)
+            durationRemoved += list2[removedIndex]
+    return list1New, list2New, durationRemoved
+
+################################################################################################
+def readTextFile(filename, tripLinefeed=False):
+    with open(filename, encoding='utf-8') as f:
+        lines = [line.rstrip('\n') for line in f.readlines()] if tripLinefeed else f.readlines()
+        return lines
+    
+################################################################################################
+def setStartTime():
+    global startTime
+    startTime = time.time()
+    
+################################################################################################
+def showRunTime():
+    global startTime
+    endTime = time.time()
+    runTime = endTime - startTime
+    print(f"\nFinish: {strftime('%Y-%m-%d %H:%M:%S', localtime(endTime))}")
+    print(f'Run time: {runTime}s')
 
 ################################################################################################
 def isSameFile(file1: str, file2: str) -> bool:
@@ -130,23 +235,24 @@ def isVideoWithPNGHeader(videoFile: str) -> tuple:
 
 ################################################################################################
 def removePngHeader(videoFileList):
-        # curDir = os.getcwd()
-        # os.chdir(curDir)
-        newDir = 'new/'
-        os.makedirs(newDir, exist_ok=True)
-        count =len(videoFileList)
-        for videoFile in videoFileList:
-            ifStr = f'if={videoFile}'
-            ofStr = f'of={newDir}{videoFile}'
-            ibs = 'ibs=8'
-            skip = 'skip=1'
-            o = subprocess.check_output(['dd', ifStr, ofStr, ibs, skip], stderr=subprocess.STDOUT)
-            no = videoFile.replace('.ts', '')
-            percent = int(no) * 100 // count
-            number = f'{no}/{count}{percent:02}%)'
-            print(f'{number}: {o}')
-            os.remove(videoFile)
-        os.chdir(newDir)
+    import subprocess
+    # curDir = os.getcwd()
+    # os.chdir(curDir)
+    newDir = 'new/'
+    os.makedirs(newDir, exist_ok=True)
+    count =len(videoFileList)
+    for videoFile in videoFileList:
+        ifStr = f'if={videoFile}'
+        ofStr = f'of={newDir}{videoFile}'
+        ibs = 'ibs=8'
+        skip = 'skip=1'
+        o = subprocess.check_output(['dd', ifStr, ofStr, ibs, skip], stderr=subprocess.STDOUT)
+        no = videoFile.replace('.ts', '')
+        percent = int(no) * 100 // count
+        number = f'{no}/{count}{percent:02}%)'
+        print(f'{number}: {o}')
+        os.remove(videoFile)
+    os.chdir(newDir)
 
 ################################################################################################
 def removeFile(folderWithWildcard):
@@ -665,6 +771,19 @@ def convertMonthToNumber(month:str):
 def convertTime(time):
     return '00:00' if time == '' else f'{time[:2]}:{time[2:]}'
 
+################################################################################################
+def convertToDate(d: str):
+    from dateutil import parser
+    try:
+        if len(d) == 4:
+            d = f'{d}0101'
+        elif len(d) == 6:
+            d = f'{d}01'
+        return parser.parse(d)
+    except:
+        pritnExceptionTrace() 
+
+################################################################################################
 def getYYYYMMDD(year):
     if len(year) == 2:
         return '20' + year
@@ -1177,21 +1296,13 @@ def isMacOS() -> bool:
         return False
 
 ################################################################################################
-# def runCommand(command):
-#     if isWindows():
-#         ret4 = subprocess.run(command, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-#     else:
-#         ret4 = subprocess.run(command, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-
-#     if ret4.stdout:
-#         retOutput = ret4.stdout
-#     else:
-#         retOutput = ret4.stderr
-
-#     if ret4.returncode == 0:
-#         return True
-#     else:
-#         return False
+def runCommand(command):
+    try:
+        ret = subprocess.run(command, encoding='utf8', check=True, shell=True, text = True, capture_output=True)
+        return ret
+    except subprocess.CalledProcessError as cpe:
+        pritnExceptionTrace()
+        raise cpe
 
 ################################################################################################
 # def getRectFromPolar(lat, lon):
@@ -1318,18 +1429,131 @@ def elementClick(driver, time, xPath):
 def elementInput(driver, time, xPath, value):
     elementXPath(driver, time, xPath).send_keys(value)
 
+# def list_files_recursive(path='.'):
+#     for entry in os.listdir(path):
+#         full_path = os.path.join(path, entry)
+#         if os.path.isdir(full_path):
+#             list_files_recursive(full_path)
+#         else:
+#             print(full_path)
+
 ################################################################################################
-def listFiles(folder: str, extension: str, excludeFile=None, onlyFilename=False, includeSubFolder=True):
+def getImageSize(filename: str) -> tuple:
+    from PIL import Image
+    im = Image.open(filename)
+    return im.width, im.height
+
+################################################################################################
+def second2Time(floatTime: float) -> str:
+    time = str(timedelta(seconds=floatTime))[:-7]
+    time = time if len(time) == 8 else f'0{time}'
+    return time
+
+################################################################################################
+def isImageFile(fileName):
+    import mimetypes
+    mimestart = mimetypes.guess_type(fileName)[0]
+    if mimestart != None:
+        mimestart = mimestart.split('/')[0]
+        if mimestart in ['image']:
+            return True
+    return False
+
+################################################################################################
+def isAudioFile(fileName):
+    import mimetypes
+    mimestart = mimetypes.guess_type(fileName)[0]
+    if mimestart != None:
+        mimestart = mimestart.split('/')[0]
+        if mimestart in ['audio']:
+            return True
+    return False
+
+################################################################################################
+def isVideoFile(fileName):
+    import mimetypes
+    mimestart = mimetypes.guess_type(fileName)[0]
+    if mimestart != None:
+        mimestart = mimestart.split('/')[0]
+        if mimestart in ['video']:
+            return True
+    return False
+
+################################################################################################
+def isMediaFile(fileName):
+    import mimetypes
+    mimestart = mimetypes.guess_type(fileName)[0]
+    if mimestart != None:
+        mimestart = mimestart.split('/')[0]
+        if mimestart in ['audio', 'video', 'image']:
+            return True
+    return False
+
+################################################################################################
+def swapListItems(swapList: list, swapIndex1: int, swapIndex2: int) -> list:
+    swapList[swapIndex1], swapList[swapIndex2] = swapList[swapIndex2], swapList[swapIndex1]
+    return swapList
+
+################################################################################################
+# TODO: remove selected files when re-enter this folder
+def listFoldersFiles(curPath: str='.', extension: str='*.*'):
+    folders = os.listdir(curPath[:-1] if curPath.endswith('/') else curPath)
+    os.chdir(curPath)
+    dirList = sorted([f'{x}/' for x in folders if os.path.isdir(x)])
+    fileList = sorted([x for x in folders if os.path.isfile(x)])
+    result = dirList
+    result.extend(fileList)
+
+    if extension == '*.*':
+        extSet = set(['*' + os.path.splitext(item)[1] if os.path.isfile(item) else '*.*' for item in result])
+        extSet.add('*.*')
+        extList = sorted(list(extSet))
+        result.insert(0, '..')
+        resultFiles = result
+    else:
+        if extension == '*':
+            ext = ''
+        else:
+            ext = extension.replace('*', '')
+        
+        resultFiles = []
+        for item in result:
+            if os.path.splitext(item)[1] == ext:
+                resultFiles.append(item)
+
+        extSet = set(['*' + os.path.splitext(item)[1] if os.path.isfile(item) else '*.*' for item in result])
+        extList = sorted(list(extSet))
+        resultFiles.insert(0, '..')
+    return resultFiles, extList
+
+################################################################################################
+def parseFileInfo(filenameOrig: str): # filename='video/01.mp4'
+    baseName = os.path.basename(filenameOrig)
+    folderName = os.path.dirname(filenameOrig)
+    absFolder = os.path.abspath(folderName)
+    fileName = baseName[:-4]
+    extension = baseName[-4:]
+    fileInfo = FileInfo(filenameOrig, baseName, folderName, absFolder, fileName, extension)
+    return fileInfo
+
+################################################################################################
+def isFloat(str):
+    return str.replace(".", "").isnumeric()
+
+################################################################################################
+def listFiles(folder: str='.', extension: str=None, excludeFile=None, onlyFilename=False, includeSubFolder=True, prefix: str=None):
     absPath = os.path.abspath(folder)
     for root, dirs, files in walk(absPath):
         if not includeSubFolder and root != absPath:
             continue
         for file in files:
-            if file.endswith(extension):
+            if prefix != None and not findall(prefix, file):
+                continue
+            if extension == None or file.endswith(extension):
                 if file != excludeFile:
                     filepath = file if onlyFilename else path.join(root, file) 
                     yield filepath
-
+    
 ################################################################################################
 def updateTempFile(notams: dict):
     # filename = f'./data/notam{getJapanTime("%Y%m%d-%H%M%S")}.txt'
@@ -1356,19 +1580,28 @@ def updateTempFile(notams: dict):
     except FileNotFoundError:
         saveTextFile(filename, newText)
 
-def saveTextFile(filename: str, newText: str):
-    print(f'Save to file "{filename}"')
+################################################################################################
+def getAge(born, ageYear=None):
+    today = date.today() if ageYear == None else ageYear
+    return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+
+################################################################################################
+def saveTextFile(filename: str, newText: str, openFile=True, noSound=False, showMsg=True):
+    if showMsg:
+        print(f'Save to file "{filename}"')
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(newText)
 
     # Opening the text file in its default editor
-    if isWindows():
-        system(f'start {filename}')
-        playSound('Alarm03.wav')
-    elif isMacOS():
-        playSound('Alarm03.wav')
-    elif isLinux():
-        playSound('train.wav')
+    if isWindows() and openFile:
+            system(f'start {filename}')
+    if not noSound:
+        if isWindows():
+            playSound('Alarm03.wav')
+        elif isMacOS():
+            playSound('Alarm03.wav')
+        elif isLinux():
+            playSound('train.wav')
 
 ################################################################################################
 def playSound(filename:str=None):
@@ -1441,6 +1674,12 @@ def updateNsfNotamJsonFile(nsf_new, filename):
     else:
         saveDictToJsonFile(nsf_new, f"{filename}")
         saveDictToJsonFile(nsf_new, f'{filename}{getJapanTime("-%Y%m%d-%H%M%S")}')
+
+################################################################################################
+def sortTwoLists(list1: list, list2: list, reverse=False):
+    sortList2 = sorted(list2)
+    sortList1 = [l1 for l1, _ in sorted(zip(list1, list2), reverse=reverse)]
+    return sortList1, sortList2
 
 ################################################################################################
 def updateDictToJsonFile(nsf_data, filename, isBackup=False):

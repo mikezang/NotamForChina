@@ -164,7 +164,7 @@ def parseTripDate(driver, this_city, day_diff):
     matches = findall(r'(0[1-9]|1[1,2])-(0[1-9]|[12][0-9]|3[01])', html)
     for match in matches:
         # month_int, day_int = map(int, match.split("-"))
-        month_int, day_int = map(int, match)
+        month_int, day_int = int(match[0].replace(',', '')), int(match[1])
         day_int += day_diff
 
         if last_day + 1 != day_int:
@@ -321,7 +321,7 @@ def createHtmlpage(urls, titles, locations) -> None:
             city = writeTitle(f, title, location, city)
             f.write(f'{i + 1:02}: <a target=_blank href={baseUrl}{url}>{title}</a><br>\n')
 
-        print(f'\n{filename} created!')
+        print(f'Saved to {filename}!')
 
 def main():
     try:

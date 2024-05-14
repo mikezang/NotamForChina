@@ -244,9 +244,10 @@ def download(m3u8_link, output):
 
     # Start to merge all *.ts files
     if len(downloaded_ts) > 200:
-        mergeLargeMp4(downloaded_ts, skipHeader, merged_mp4)
+        mergeLargeVideos(downloaded_ts, merged_mp4, skipHeader)
     else:
-        mergeSmallMp4(downloaded_ts, skipHeader, merged_mp4)
+        msg = f'Merge {downloaded_ts[0]} - {downloaded_ts[-1]} to {merged_mp4}...'
+        myUtils.mergeSmallVideos(downloaded_ts, merged_mp4, skipHeader, msg)
 
     print(f"{merged_mp4} stored in {mergedDIR}")
 
@@ -263,20 +264,7 @@ def download(m3u8_link, output):
     print(f"Time spent: {endTime - startTime}\n")
     # end
 
-def mergeSmallMp4(ordered_ts_names, skipHeader, merged_mp4):
-    files_str = "concat:"
-    for ts_filename in ordered_ts_names:
-        files_str += ts_filename+'|'
-    files_str.rstrip('|')
-    print(f'Merge {ordered_ts_names[0]} - {ordered_ts_names[-1]} to {merged_mp4}...')
-
-    opts = ['ffmpeg', '-loglevel', 'fatal']
-    if skipHeader:
-        opts.extend(['-f', 'mpegts'])
-    opts.extend(['-i', files_str, '-c', 'copy', '-bsf:a', 'aac_adtstoasc', merged_mp4])
-    subprocess.run(opts)
-
-def mergeLargeMp4(ordered_ts_names, skipHeader, merged_mp4):
+def mergeLargeVideos(ordered_ts_names, merged_mp4, skipHeader=False):
     mp4_fnames = []
     count = len(ordered_ts_names)
     part_num = count // 200 + 1
@@ -297,19 +285,15 @@ def mergeLargeMp4(ordered_ts_names, skipHeader, merged_mp4):
         msg += f'{200 * (_i + 1):04}.ts ' if _i < part_num - 1 or count == 200 * (_i + 1) else f'{200 * _i + 1 + _idx_list[-1]:04}.ts '
         msg += f'to {mp4_fnames[_i]}...'
         print(msg)
-
-        opts = ['ffmpeg', '-loglevel', 'fatal']
-        if skipHeader:
-            opts.extend(['-f', 'mpegts'])
-        opts.extend(['-i', sub_files_str, '-c', 'copy'])
-        opts.extend(['-bsf:a', 'aac_adtstoasc', '-y', 'part_{}.mp4'.format(_i)])
+        opts = 'ffmpeg -loglevel fatal -f mpegts' if skipHeader else 'ffmpeg -loglevel fatal'
+        opts += f'-i{sub_files_str} -c copy -bsf:a aac_adtstoasc -y part_{_i}.mp4'
         subprocess.run(opts)
 
     print(f'Merge {mp4_fnames} to {merged_mp4}...')
     with open("mylist.txt", 'w') as f:
         for mp4_fname in mp4_fnames:
             f.write(f"file {mp4_fname}\n")
-    subprocess.run(['ffmpeg', '-loglevel', 'fatal', '-f', 'concat', '-i', 'mylist.txt', '-codec', 'copy', merged_mp4])
+    subprocess.run(f'ffmpeg -loglevel fatal -f concat -i mylist.txt -codec copy {merged_mp4}')
 
 def main(args):
     m3u8_link = args.m3u8

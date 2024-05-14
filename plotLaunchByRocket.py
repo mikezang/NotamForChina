@@ -171,14 +171,14 @@ def plotTitleLegendByRocket(cn_font, title, hasGreyLabel=False):
         Line2D([0], [0], linestyle='none', mfc='red', mec='red', marker='s', label='失败数'),
     ]
     if hasGreyLabel:
-        handles.append(Line2D([0], [0], linestyle='none', mfc='lightgrey', mec='lightgrey', marker='s', label='退役'))
+        handles.append(Line2D([0], [0], linestyle='none', mfc='grey', mec='grey', marker='s', label='退役'))
 
     plt.legend(handles=handles, loc='upper center', ncol=4, prop=cn_font)
     plt.title(title, fontproperties=cn_font, fontsize=18)
 
 def plotByRocket(cn_font, df, title, path, startYear):
-    fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) 
-
+    # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) 
+    fig, axLeft =  myPlot.getFigure()
     retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
     hasGreyLabel = plotLineGraphByRocket(cn_font, axLeft, df, retiredRocketsDict, startYear=startYear)
     axRight = axLeft.twinx()
@@ -186,13 +186,13 @@ def plotByRocket(cn_font, df, title, path, startYear):
     plotBarGraphByRocket(cn_font, axRight, df, startYear)
     plotTitleLegendByRocket(cn_font, title, hasGreyLabel)
 
-    myPlot.show()
+    myPlot.showBackend()
     myPlot.saveFig(fig, f'./images/{path}{title}.png') # Save the plot to a file
 
 ################################################################################################
-def plotGraphByRocket(cn_font, excelSheet, title, startYear=None, endYear=None):
+def plotGraphByRocket(cn_font, df, title, startYear=None, endYear=None, series=None):
     retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
-    df = myPlot.parseExcelSheetToDataFrame(excelSheet, columnYear='日期', columnNotNull='结果', startYear=startYear, endYear=endYear)
+    df = myPlot.parseToDataFrame(df, columnYear='日期', columnNotNull='结果', startYear=startYear, endYear=endYear)
     df1, df2, dfCz1, dfCz2, dfNcz1, dfNcz2 = countDataFrameByRocket(df, retiredRocketsDict)
     title1 = myPlot.getPlotTitle(title.replace('发射统计', '发射数统计'), startYear, endYear)
     title2 = myPlot.getPlotTitle(title.replace('发射统计', '发射率统计'), startYear, endYear)
@@ -211,21 +211,20 @@ def plotGraphByRocket(cn_font, excelSheet, title, startYear=None, endYear=None):
         plotByRocket(cn_font, df2, title2, path2, startYear)
 
 ################################################################################################
-def plot1(cn_font, excelSheet, startYear=None):
-    plotGraphByRocket(cn_font, excelSheet, '中国运载火箭发射统计', startYear)
+def plot1(cn_font, df, startYear=None, series=None):
+    plotGraphByRocket(cn_font, df, '中国运载火箭发射统计', startYear, series=series)
 
 ################################################################################################
 def main():
     cn_font = myPlot.init()
     excelFile = "./data/ChinaRocketLaunch.xlsx"
     sheetName = "发射纪录"
-    excelBook = loadXLSX(excelFile, data_only=True, read_only=True)
-    excelSheet = excelBook[sheetName]
+    df = myPlot.readDataFromSheetNew(excelFile, sheetName)
     startYear = '2024'
     if startYear:
-        plot1(cn_font, excelSheet, startYear)
+        plot1(cn_font, df, startYear)
     else:
-        plot1(cn_font, excelSheet)
+        plot1(cn_font, df)
 
 ################################################################################################
 def showRunTime(func):

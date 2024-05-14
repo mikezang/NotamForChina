@@ -1,4 +1,10 @@
+import io
+import os
 import random
+# import shutil
+import subprocess
+from PIL import Image
+import ffmpeg
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
@@ -13,9 +19,124 @@ import pyexcel as xls
 from fiona.drvsupport import supported_drivers
 from shapely.geometry import Polygon, LineString #, Point
 import matplotlib.colors as mcolors
+import PySimpleGUI as sg
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 import constants
 import myUtils
+
+################################################################################################
+def calcDurationByFrames(frames, framerate):
+    return frames / framerate
+
+################################################################################################
+def getFileFrameRate(filename: str) -> float:
+    if not os.path.isfile(filename):
+        print(f'{filename} not found!')
+        return 0
+    cmd = f"ffprobe.exe -v error -show_entries stream=avg_frame_rate -of default=nw=1:nk=1 {filename}"
+    result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    return int(result.stdout.split('/')[0])
+
+################################################################################################
+def getFileDuration(filename: str) -> float:
+    if not os.path.isfile(filename):
+        print(f'{filename} not found!')
+        return 0
+    cmd = f"ffprobe -v fatal -show_entries format=duration -of default=nw=1:nk=1 {filename}"
+    result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    return float(result.stdout)
+    # return myUtils.runCommand(command)
+
+################################################################################################
+def diffFrames(oldFramesList: list, newFramesList: list):
+    oldDiffList = sorted(list(set(oldFramesList) - set(newFramesList)))
+    newDiffList = sorted(list(set(newFramesList) - set(oldFramesList)))
+    oldFrames = [oldDiffList]
+    newFrames = [newDiffList]
+    oldFrames.append(len(oldFramesList))
+    newFrames.append(len(newFramesList))
+    oldFrames.append(len(oldDiffList))
+    newFrames.append(len(newDiffList))
+    return oldFrames, newFrames 
+
+def trimFrames(inputFile, startFrame, endFrame, outputFile):
+    inputVideo = ffmpeg.input(inputFile)
+    outputVideo = ffmpeg.output(inputVideo.trim(start_frame=startFrame, end_frame=endFrame), outputFile)
+    ffmpeg.run(outputVideo)
+
+# TODO: resume plot the newest part for shorter time
+# remove last count(removeFramesCount) of frames from old mp4 file
+# plot last count(plotFramesCount) of frames newPart mp4 file
+# merge newPart to old as new mp4 file
+# ffmpeg -i IN -c copy -bsf:v noise=drop=between(n\,20\,30) OUT
+def testTrimMergeVideo(oldVideo, oldFile, newFile):
+    oldFrames = myUtils.readTextFile(oldFile)
+    newFrames = myUtils.readTextFile(newFile)
+    oldList, newList = diffFrames(oldFrames, newFrames)
+    trimFrames(oldVideo, oldList[1] - oldList[2], oldList[1], 
+                           oldVideo.replace('.mp4', f'-trim{oldList[2]}.mp4'))
+
+# def testSlideImages():
+#     # inputList = myUtils.readTextFile('pngsImageList.txt', True)
+#     # outputFile = 'videos/pngsMerged.mp4'
+#     inputList = myUtils.readTextFile('yearsVideoList.txt', True)
+#     outputFile = 'videos/yearsMerged.mp4'
+#     mergeSlideImagesVideos(inputList, outputFile)
+
+# if __name__ == "__main__":
+#     testSlideImages()
+    # testMergeVideo()
+    # video = 'videos\\中国航天员在轨动态条形图.mp4'
+    # oldFrames = 'videos\\中国航天员在轨动态条形图-20240501.csv'
+    # newFrames = 'videos\\中国航天员在轨动态条形图-20240502.csv'
+    # testTrimMergeVideo(video, oldFrames, newFrames)
+
+################################################################################################
+def addImages2BarChart():
+    labels = ['CW', 'CV', 'GW', 'SX', 'DO']
+    colors = ['crimson', 'dodgerblue', 'teal', 'limegreen', 'gold']
+    taikos = ['C:\\zang\\python\\RocketLaunch\\images\\flags\\china.png', 
+            '..\\images\\flags\\japan.png', 
+            '..\\images\\flags\\singapore.png', 
+            '..\\images\\flags\\southkorea.png', 
+            '..\\images\\flags\\vietnam.png']
+    values = 30 + np.random.randint(5, 20, len(labels)).cumsum()
+    height = 0.9
+    plt.barh(y=labels, width=values, height=height, color=colors, align='center')
+
+    for i, (label, value, taiko) in enumerate(zip(labels, values, taikos)):
+        img = mpimg.imread(taiko) 
+        rect = [value - 8, value - 2, i - height / 4, i + height / 4]
+        plt.imshow(img, extent=rect, aspect='auto', zorder=2)
+    plt.xlim(0, max(values) * 1.05)
+    plt.ylim(-0.5, len(labels) - 0.5)
+    plt.tight_layout()
+    plt.show()
+
+################################################################################################
+def getFramesCount(filename):
+    frames = subprocess.run('ffprobe -show_frames ' + filename)
+    return frames
+
+################################################################################################
+def make_dpi_aware():
+    import ctypes
+    import platform
+    if myUtils.isWindows() and int(platform.release()) >= 8:
+        ctypes.windll.shcore.SetProcessDpiAwareness(True)
+
+def moveWindow(window, x=None, y=None):
+    w0, h0 = sg.Window.get_screen_size()
+    x0, y0 = window.current_location()
+    w, h = window.size
+    if x is None:
+        x = (w0 - w) // 2 - 10
+    if y is None:
+        y = y0
+    window.move(x, y)
 
 ################################################################################################
 def get_nearest_row(df, dateIndex):
@@ -25,6 +146,17 @@ def get_nearest_row(df, dateIndex):
     except KeyError:
         # If the exact date is not found, find the nearest date
         nearest_index = min(df.index, key=lambda x: abs(x - pd.Timestamp(dateIndex)))
+        return df.loc[nearest_index]
+
+################################################################################################
+def get_nearest_taikonaut(df, date, taikonaut, use_pinyin=False):
+    try:
+        taikoColumn = 'Pinyin' if use_pinyin else '航天员'
+        cond = df[taikoColumn] == taikonaut
+        return df[cond]
+    except KeyError:
+        # If the exact date is not found, find the nearest date
+        nearest_index = min(df.index, key=lambda x: abs(x - pd.Timestamp(date)))
         return df.loc[nearest_index]
 
 ################################################################################################
@@ -77,24 +209,46 @@ def init(setDefaultFont=False):
         # mpl.rcParams['font.family'] = 'SimHei'
         mpl.rcParams['font.family'] = cn_font.get_name()
     # enable the read and write functionalities for KML-driver
-    # by passing 'rw' to whitelist of fiona’s supported drivers:
+    # by passing 'rw' to whitelist of fiona's supported drivers:
     supported_drivers['KML'] = 'rw'
 
     return cn_font
 
 ################################################################################################
-def show():
+def showBackend():
     # print(plt.get_backend())
     if plt.get_backend() not in ['agg', 'TkAgg', 'GTK3Agg', 'MacOSX']:
         plt.show()
 
 ################################################################################################
-def saveFig(fig, filename, isPrint=True):
+# def getFigure(nrows=1, ncols=1, figsize=(18, 10.5), layout="constrained"):
+def getFigure(nrows=1, ncols=1, figsize=(18, 10.5)):
+    # layout="constrained"
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize) 
+    # fig = figure.Figure(figsize, dpi)
+    # ax = fig.add_subplot(pos)
+    return fig, ax
+
+################################################################################################
+def saveFig(fig, filename, isPrint=True, resizeToEven=True):
     myUtils.createFolder(filename)
+    if resizeToEven:
+        buf = io.BytesIO()
+        # fig.savefig(buf, bbox_inches='tight')
+        fig.savefig(buf, bbox_inches='tight', dpi=300)
+        plt.close(fig)
+        buf.seek(0)
+        img = Image.open(buf)
+        figsize = fig.get_size_inches()
+        size = figsize * 300 # size in pixels
+        img_resize = img.resize(size.astype(int))
+        img_resize.save(filename)
+    else:
+        fig.savefig(filename, bbox_inches='tight')
+        plt.close(fig)
     if isPrint:
         print(f'Save to file: {filename}')
-    fig.savefig(filename, bbox_inches='tight', pad_inches=0, dpi=250)
-    plt.close(fig)
+    return 
 
 ################################################################################################
 # Insert '\n' after every character
@@ -310,31 +464,35 @@ def plotPayloadInsideBar(cn_font, ax, yDataList, rocketList, payloadList, colorD
             plotRocketNumber(cn_font, ax, x, y, gap, label[:16], fontsize, color)
 
 ################################################################################################
-def plotRocketNumberInsideBar(cn_font, ax, yDataList, xuhaoList, rocketList, colorDict, fontsize, upperSrage=None):
+def plotRocketNumberInsideBar(cn_font, ax, yDataList, xuhaoList, rocketList, colorDict, fontsize, upperSrage=None, spotList=None, title=''):
     gap = 0.065
-    for x, (c, xuhaos, rockets) in enumerate(zip(yDataList, xuhaoList, rocketList)):
-        for i, (xuhao, rocket) in enumerate(zip(xuhaos.split('/'), rockets.split('/'))):
+    for x, (c, xuhaos, rockets, spots) in enumerate(zip(yDataList, xuhaoList, rocketList, spotList)):
+        for i, (xuhao, rocket, spot) in enumerate(zip(xuhaos.split('/'), rockets.split('/'), str(spots).split('/'))):
             color = 'white' if isDarkColor(colorDict[rocket]) else 'black'
             y = c / 2 if c == 1 else c / 4 + i * c / 2
             y = y * 3.5 if rocket == '春节' else y
             if f'{rocket}{xuhao}' in upperSrage:
                 upperStage = upperSrage[f'{rocket}{xuhao}'].split('|')
-                if isSingleRocket(ax):
+                if isSingleRocket(ax) and '(火箭)' not in title:
                     withUpperStage = xuhao + '/' + upperStage[0]
                 else:
                     withUpperStage = rocket + xuhao + '/' + upperStage[0]
+                withUpperStage += f'/{spot[2:].split("（")[0]}' if len(spot) > 1 and spot[1] == '海' else ''
                 label = convertStringToArray(withUpperStage)
             else:
                 if xuhao.startswith('遥') or xuhao.startswith('天'):
-                    if not isSingleRocket(ax):
+                    if not isSingleRocket(ax) or '(火箭)' in title:
                         xuhao = rocket + xuhao
+                    xuhao += f'/{spot[2:].split("（")[0]}' if len(spot) > 1 and spot[1] == '海' else ''
                     label = convertStringToArray(xuhao)
                 else:
-                    if not isSingleRocket(ax):
+                    if not isSingleRocket(ax) or '(火箭)' in title:
+                        rocket += f'/{spot[2:].split("（")[0]}' if len(spot) > 1 and spot[1] == '海' else ''
                         label = convertStringToArray(rocket)
                         label.append(xuhao)
                     else:
                         label = xuhao
+                        label += f'/{spot[2:].split("（")[0]}' if len(spot) > 1 and spot[1] == '海' else ''
             plotRocketNumber(cn_font, ax, x, y, gap, label, fontsize, color)
 
 ################################################################################################
@@ -394,9 +552,9 @@ def plotVLineBetweenYearsMonths(ax, xDataList, dx=0.5, yMin=-0.24, yMax=0.8, mus
 
 ################################################################################################
 def getLogList(y):
-    yList1 = [0.5, 1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 40, 50, 60, 80, 100, 150, 200, 250, 300, 400, 500]
+    yList1 = [0.5, 1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 40, 50, 60, 90, 120, 150, 200, 250, 300, 400, 500]
     # yList1 = np.array([0.5, 1, 2, 3, 4, 5, 6, 8, 10, 20, 30, 40, 50, 60, 80, 100, 150, 200, 250, 300, 400, 500])
-    yList2 = [700, 800, 900, 1000]
+    yList2 = [800, 1000]
     # yList2 = np.array([600, 700, 800, 900, 1000])
     
     if y >= 500:
@@ -422,7 +580,7 @@ def kml2ShapelyLine(geom):
     return line
 
 ################################################################################################
-def countRace(df, columnRocket, rocket, startYear, endYear, seriesDict):
+def countRocketWide(df, columnRocket, rocket, startYear, endYear, seriesDict, use_pinyin=False):
     if rocket == '全部' or rocket == '系列':
         if rocket == '系列':
             df = ChangeToSeriesName(df, columnRocket, seriesDict)
@@ -446,6 +604,7 @@ def countRace(df, columnRocket, rocket, startYear, endYear, seriesDict):
     if endYear:
         columnYear = '日期'
         cond1 &= df[columnYear] < pd.to_datetime(f'{endYear}0101')
+#TODO: modify chinese to pinyin when use_pinyin
     return df[cond1]
 
 ################################################################################################
@@ -467,6 +626,7 @@ def countDataFrameByDate(dfList):
             dfCount[constants.EXCEL_COLUMN_PAYLOAD] = dfCount.groupby([constants.EXCEL_COLUMN_DATE])[constants.EXCEL_COLUMN_PAYLOAD].transform(lambda x: '/'.join(x))
             dfCount[constants.EXCEL_COLUMN_LOCATION] = dfCount.groupby([constants.EXCEL_COLUMN_DATE])[constants.EXCEL_COLUMN_LOCATION].transform(lambda x: '/'.join(x))
             dfCount[constants.EXCEL_COLUMN_RESULT] = dfCount.groupby([constants.EXCEL_COLUMN_DATE])[constants.EXCEL_COLUMN_RESULT].transform(lambda x: '/'.join(x))
+            dfCount[constants.EXCEL_COLUMN_SPOT] = dfCount.groupby([constants.EXCEL_COLUMN_DATE])[constants.EXCEL_COLUMN_SPOT].transform(lambda x: '/'.join(str(i) for i in x))
         except:
             pass
         dfCount = dfCount.groupby('日期').first().reset_index()
@@ -503,7 +663,7 @@ def countRocket(df, columnRocket, rocket, seriesDict=None):
             cond1 = False
             for private in privates:
                 cond1 |= df[columnRocket].str.startswith(private)
-# TODO use config.ini and seriesDict to or 
+# TODO: use config.ini and seriesDict to or 
         elif rocket == '长征三号甲系列':
             cond1 = df[columnRocket].str.startswith('长征三号甲')
             cond1 |= df[columnRocket].str.startswith('长征三号乙')
@@ -555,6 +715,17 @@ def readShipMoveData(excelFile, sheetName=None, skipRows=None, headers=None):
     return df
 
 ################################################################################################
+def readDataFromSheetNew(excelFile, sheetName, onlyFailed=False):
+    df = pd.read_excel(excelFile, sheetName, header=0, usecols='A:O', dtype={constants.EXCEL_COLUMN_SPOT: str})
+    cond1 = df[constants.EXCEL_COLUMN_RESULT] != '中止'
+    cond2 = ~df[constants.EXCEL_COLUMN_RESULT].isna()
+    # cond3 = df[constants.EXCEL_COLUMN_RESULT] != '成功'
+    df = df[cond1 & cond2]
+    df.replace('-', np.nan, inplace=True) # Replace '-' with NaN
+    df.replace([None, np.nan], '', inplace=True) # Replace None with empty string
+    return df
+
+################################################################################################
 def readDataFromSheet(excelSheet, headers, columnNotNull, columnRocket, noAbort, onlyFailed):
     # Convert the worksheet to a DataFrame
     df = pd.DataFrame(excelSheet.values)
@@ -574,7 +745,6 @@ def readDataFromSheet(excelSheet, headers, columnNotNull, columnRocket, noAbort,
     if noAbort:
         cond1 = df[columnNotNull] != '中止' 
         cond1 &= df[columnNotNull].ne('')  # filter to exclude rows where 结果 is ''
-        # cond1 |= df[columnRocket].str.startswith('远征') # TODO: don't need this line
         df = df[cond1] 
 
     if onlyFailed:
@@ -667,12 +837,20 @@ def duplicateLastRow(df, today):
     return df
 
 ################################################################################################
-def readUpperStageDict():
-    excelFile = "./data/ChinaRocketLaunch.xlsx"
-    sheetName = "发射纪录"
-    excelBook = loadXLSX(excelFile, data_only=True, read_only=True)
-    excelSheet = excelBook[sheetName]
-    dfList = parseExcelSheetToDataFrame(excelSheet, rocket='上面级+最后发射')
+def readUpperStageDictOld(excelSheet, headers=None):
+    # excelFile = "./data/ChinaRocketLaunch.xlsx"
+    # sheetName = "发射纪录"
+    # excelBook = loadXLSX(excelFile, data_only=True, read_only=True)
+    # excelSheet = excelBook[sheetName]
+    dfList = parseExcelSheetToDataFrame(excelSheet, headers=headers, rocket='上面级+最后发射')
+    dfUpperStages = dfList[:-1] # 上面级
+    dfLastLaunch = dfList[-1] # 最后的发射
+    dictUpperStage = getUpperStageDict(dfUpperStages)
+    return dictUpperStage, dfLastLaunch
+
+################################################################################################
+def readUpperStageDict(df):
+    dfList = parseToDataFrame(df, rocket='上面级+最后发射')
     dfUpperStages = dfList[:-1] # 上面级
     dfLastLaunch = dfList[-1] # 最后的发射
     dictUpperStage = getUpperStageDict(dfUpperStages)
@@ -711,29 +889,29 @@ def getLastLaunch(df, columnResult):
 
 ################################################################################################
 def parseExcelSheetToDataFrame(excelSheet, 
-                               rocket:str=None, location=None, payload=None, startYear=None, endYear=None, 
-                               columnRocket='火箭', columnLocation='地点', columnPayload='载荷', 
-                               columnYear='日期', columnNotNull='结果', 
-                               headers=None, noAbort=True, mom=False,
-                               onlyFailed=False, isRace=False, isAfterRetired=None, 
-                               seriesDict=None, isMaiden=False, isFirstLast=False, isLunarNewYear=False, 
-                               plotMonth=None, plotLocation=False):
+        rocket:str=None, location=None, payload=None, startYear=None, endYear=None, 
+        columnRocket='火箭', columnLocation='地点', columnPayload='载荷', 
+        columnYear='日期', columnNotNull='结果', 
+        headers=None, noAbort=True, mom=False,
+        onlyFailed=False, isRocket=False, isAfterRetired=None, 
+        seriesDict=None, isMaiden=False, isFirstLast=False, isLunarNewYear=False, 
+        plotMonth=None, plotLocation=False):
     df = readDataFromSheet(excelSheet, headers, columnNotNull, columnRocket, noAbort, onlyFailed)
     return parseToDataFrame(df, rocket, location, payload, startYear, endYear, columnRocket, columnLocation, columnPayload, 
-        columnYear, columnNotNull, headers, noAbort, mom, onlyFailed, isRace, isAfterRetired, seriesDict, 
+        columnYear, columnNotNull, headers, noAbort, mom, onlyFailed, isRocket, isAfterRetired, seriesDict, 
         isMaiden, isFirstLast, isLunarNewYear, plotMonth, plotLocation)
 
 ################################################################################################
 def parseExcelBookToDataFrame(excelBook, sheetName, 
-                               rocket:str=None, location=None, payload=None, startYear=None, endYear=None, 
-                               columnRocket='火箭', columnLocation='地点', columnPayload='载荷', 
-                               columnYear='日期', columnNotNull='结果', 
-                               headers=None, noAbort=True, mom=False,
-                               onlyFailed=False, isRace=False, isAfterRetired=None, 
-                               seriesDict=None):
+        rocket:str=None, location=None, payload=None, startYear=None, endYear=None, 
+        columnRocket='火箭', columnLocation='地点', columnPayload='载荷', 
+        columnYear='日期', columnNotNull='结果', 
+        headers=None, noAbort=True, mom=False,
+        onlyFailed=False, isRocket=False, isAfterRetired=None, 
+        seriesDict=None):
     df = readDataFromBook(excelBook, sheetName, headers, columnNotNull, columnRocket, noAbort, onlyFailed)
     return parseToDataFrame(df, rocket, location, payload, startYear, endYear, columnRocket, columnLocation, columnPayload, 
-        columnYear, columnNotNull, headers, noAbort, mom, onlyFailed, isRace, isAfterRetired, seriesDict)
+        columnYear, columnNotNull, headers, noAbort, mom, onlyFailed, isRocket, isAfterRetired, seriesDict)
 
 ################################################################################################
 def getDfFirstlast(df, columnYear):
@@ -801,9 +979,9 @@ def parseLunarNewYear(df, columnYear, columnRocket, columnLocation, columnNotNul
     return dfResult
 
 ################################################################################################
-def parseRace(df, columnYear, columnRocket, columnNotNull, rocket, startYear, endYear, seriesDict, isAfterRetired):
+def convertDataFrame2WideRocket(df, columnYear, columnRocket, columnNotNull, rocket, startYear, endYear, seriesDict, isAfterRetired, use_pinyin=False):
     dfList = []
-    df = countRace(df, columnRocket, rocket, startYear, endYear, seriesDict)
+    df = countRocketWide(df, columnRocket, rocket, startYear, endYear, seriesDict, use_pinyin)
     df = df.copy()
     df.loc[:, 'count'] = 1
     df.loc[:, 'ok'] = 0
@@ -844,7 +1022,7 @@ def parseRace(df, columnYear, columnRocket, columnNotNull, rocket, startYear, en
     retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
 
     if isAfterRetired:
-        dfResult = pd.DataFrame(index=dfPivot.index)
+        dfRank = pd.DataFrame(index=dfPivot.index)
         for label, date_value in retiredRocketsDict.items():
             conditionColumn = (dfPivot.columns == label)
             if conditionColumn.any():
@@ -852,21 +1030,21 @@ def parseRace(df, columnYear, columnRocket, columnNotNull, rocket, startYear, en
                 conditionRow = (dfPivot.index >= date_value)
                 dfTemp_date = np.where(conditionRow[:, np.newaxis], dfTemp_label, dfPivot * 1000 + dfPivotOk / 1000)
                 df_temp_result = pd.DataFrame(dfTemp_date, columns=dfPivot.columns, index=dfPivot.index)
-                if dfResult.empty:
-                    dfResult = df_temp_result.copy()
+                if dfRank.empty:
+                    dfRank = df_temp_result.copy()
                 else:
-                    dfResult[label] = df_temp_result[label]
-        if dfResult.empty:
-            dfResult = dfPivot * 1000 + dfPivotOk / 1000    # convert to float
+                    dfRank[label] = df_temp_result[label]
+        if dfRank.empty:
+            dfRank = dfPivot * 1000 + dfPivotOk / 1000    # convert to float
     elif isAfterRetired == False:
         # retiredRocketsDict = myUtils.readConfigRetiredDict #constants.RETIRED_ROCKETS
         condition = dfPivot.columns.isin(retiredRocketsDict)
         dfTemp = np.where(condition, dfPivot + dfPivotOk / 1000, dfPivot * 1000 + dfPivotOk / 1000)
-        dfResult = pd.DataFrame(dfTemp, columns=dfPivot.columns, index=dfPivot.index)
+        dfRank = pd.DataFrame(dfTemp, columns=dfPivot.columns, index=dfPivot.index)
     else:
-        dfResult = dfPivot * 1000 + dfPivotOk / 1000    # convert to float
+        dfRank = dfPivot * 1000 + dfPivotOk / 1000    # convert to float
 
-    dfList.append(dfResult)
+    dfList.append(dfRank)
     dfList.append(dfOk)
     dfList.append(dfAll)
     return dfList
@@ -904,18 +1082,118 @@ def parseLocationData(df, columnRocket, columnLocation, columnNotNull, columnYea
     dfLast['其他成功率'] = [ok / all if all != 0 else 0 for ok, all in zip(dfLast['其他成功数'], dfLast['其他发射数'])]
     return dfLast
 
+def getEndRow(row):
+    return row.replace(hour=23, minute=59, second=59)
+
 ################################################################################################
-def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear=None, endYear=None, 
+def convertDataFrame2TimeSeries(df, use_pinyin=False):
+    # myUtils.setStartTime()
+    removeColumns = ['发射日期', '着陆日期', '在轨日数', '载人飞船', 'Ship']  
+    removeColumns += ['出生日期', '年龄', '入选年', '批次', 'Gap']
+    removeColumns.append('航天员') if use_pinyin else removeColumns.append('Pinyin')
+
+    df['日期'] = df.apply(lambda row: pd.date_range(row['发射日期'], 
+                      min(pd.to_datetime(myUtils.getJapanDate()), row['着陆日期'])), axis=1)
+    df = (df.drop(columns=removeColumns).explode('日期', ignore_index=True)
+          .sort_values(by=['日期', 'Rank']).reset_index(drop=True))
+    df.columns = ['航天员', 'Rank', '日期']
+    # myUtils.showRunTime()
+    return df
+
+################################################################################################
+def convertDataFrame2TWideTaikonaut(dfOld, use_pinyin=False):
+    dfTimeSeries = convertDataFrame2TimeSeries(dfOld, use_pinyin)
+    dfList = []
+    df = dfTimeSeries.copy()
+
+    df['count'] = np.where(df.航天员.duplicated(), 1, 0)
+    column_order = df['航天员'].unique() # Reorder columns to match the original order
+    dfPivot = df.pivot_table(index='日期', columns='航天员', 
+                             values='count', aggfunc='sum', fill_value=0)[column_order]
+    dfPivot.reset_index(inplace=True)
+    dfPivot['日期'].iloc[-1] = dfPivot['日期'].iloc[-1].replace(hour=23, minute=59, second=59)
+    dfPivot = dfPivot.set_index('日期').cumsum()
+
+    dfRank = dfPivot.copy()
+    columnTaiko = 'Pinyin' if use_pinyin else '航天员'
+    for startDate, endDate, person in zip(dfOld['发射日期'], dfOld['着陆日期'], dfOld[columnTaiko]):
+        dfRank.loc[startDate : endDate, person] += 1000 #在轨期间优先排序
+
+    dfList.append(dfPivot)
+    dfList.append(dfRank)
+    return dfList
+
+################################################################################################
+def convertDataFrame2TimeSeriesOld(df):
+    myUtils.setStartTime()
+    newRows = []
+
+    # Iterate over each row in the original DataFrame
+    for _, row in df.iterrows():
+        startDate = row['发射日期']
+        endDate = min(pd.to_datetime(myUtils.getJapanDate()), row['着陆日期'])
+        name = row['航天员']
+        rank = row['Rank']
+        dateRange = pd.date_range(start=startDate, end=endDate)
+
+        for date in dateRange:
+            newRow = {'日期' : pd.to_datetime(date), '航天员': name, 'Rank': rank}
+            newRows.append(newRow)
+
+    dfDuplicateDates = pd.DataFrame(newRows)
+    dfDuplicateDates.sort_values(by=['日期', 'Rank'], inplace=True)
+
+    # Reset index to ensure a clean DataFrame
+    dfDuplicateDates.reset_index(drop=True, inplace=True)
+    myUtils.showRunTime()
+    return dfDuplicateDates
+
+################################################################################################
+def InterpolateGapTime(df):
+    dfNew = df.copy()
+    threshold_months = 1
+
+    for idx in range(len(df) - 1):
+        diff_months = (df.index[idx + 1] - df.index[idx]).days // 30
+        if diff_months > threshold_months:
+            start_date = df.index[idx]
+            end_date = df.index[idx + 1]
+            dates = pd.date_range(start=start_date, end=end_date, freq='MS')  # 'MS' = month start
+            df_interpolate = pd.DataFrame(index=dates)
+            df_interpolated = df_interpolate.interpolate(method='ffill')
+            # dfBackward = dfNew.loc[start_date : end_date].bfill()
+            # df_interpolated = df_interpolated.combine_first(dfBackward.loc[start_date:end_date])
+            df_interpolated = df_interpolated.combine_first(dfNew.loc[start_date:end_date])
+            dfNew = pd.concat([dfNew, df_interpolated])
+
+    dfNew.sort_index(inplace=True)
+    # dfNew.reset_index(inplace=True)
+    dfNew.index.name = df.index.name
+    return dfNew
+
+################################################################################################
+def parseToDataFrame(dfOld, rocket:str=None, location=None, payload=None, startYear=None, endYear=None, 
                                columnRocket='火箭', columnLocation='地点', columnPayload='载荷', 
                                columnYear='日期', columnNotNull='结果', 
                                headers=None, noAbort=True, mom=False,
-                               onlyFailed=False, isRace=False, isAfterRetired=None, 
+                               onlyFailed=False, isRocket=False, isAfterRetired=None, 
                                seriesDict=None, isMaiden=False, isFirstLast=False, isLunarNewYear=False, 
-                               plotMonth=None, plotLocation=False):
+                               plotMonth=None, plotLocation=False, isShenzhou=False, use_pinyin=False):
     dfList = []
     
+    if onlyFailed:
+        df = dfOld[dfOld[constants.EXCEL_COLUMN_RESULT] != '成功']
+    else:
+        df = dfOld.copy()
+
+    # convert df to wide for plot race bar chart
+    if isShenzhou:
+        dfList = convertDataFrame2TWideTaikonaut(df, use_pinyin) 
+    elif isRocket:
+        dfList = convertDataFrame2WideRocket(df, columnYear, columnRocket, columnNotNull, rocket, startYear, endYear, seriesDict, isAfterRetired, use_pinyin)
+
     # Extract rows by condition
-    if plotLocation:
+    elif plotLocation:
         dfList = parseLocationData(df, columnRocket, columnLocation, columnNotNull, columnYear, startYear)
     elif plotMonth:
         dfList = split50perPage(parseMonthData(df, columnYear, plotMonth))
@@ -930,9 +1208,6 @@ def parseToDataFrame(df, rocket:str=None, location=None, payload=None, startYear
         dfList.append(dfAll)
         dfList.append(dfCZ)
         dfList.append(dfNCZ)
-
-    elif isRace:
-        dfList = parseRace(df, columnYear, columnRocket, columnNotNull, rocket, startYear, endYear, seriesDict, isAfterRetired)
 
     elif startYear:
         if endYear is None:
@@ -1077,6 +1352,9 @@ def getUniqueColorList(n: int):
     colorList = list(mpl.colors.CSS4_COLORS.values())
     random.shuffle(colorList)
     return colorList[:n]
+
+def countdownVideoDuration(filename):
+    duration = getFileDuration(filename)
 
 
 

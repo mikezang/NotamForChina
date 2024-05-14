@@ -777,8 +777,8 @@ def countDataFrameByWeek(dfList):
     return dfListLast
 
 ################################################################################################
-def plotGraphByWeek(cn_font, excelSheet, title, startYear=None):
-    dfList = myPlot.parseExcelSheetToDataFrame(excelSheet, columnYear='日期', columnNotNull='结果', startYear=startYear)
+def plotGraphByWeek(cn_font, df, title, startYear=None):
+    dfList = myPlot.parseToDataFrame(df, columnYear='日期', columnNotNull='结果', startYear=startYear)
     dfList = countDataFrameByWeek(dfList)
     if startYear:
         newTitle = myPlot.getPlotTitle(f'中国{title}', startYear)
@@ -787,16 +787,17 @@ def plotGraphByWeek(cn_font, excelSheet, title, startYear=None):
         newTitle = myPlot.getPlotTitle(f'中国全部{title}')
         savePath = f'./images/{newTitle}.png'
 
-    fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
+    # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
+    fig, axLeft =  myPlot.getFigure()
     # plotLineGraphByTime(cn_font, axLeft, dfList, False)
     plotBarGraphByTime(cn_font, axLeft, dfList, False)
     plotTitleLegendByTime(cn_font, newTitle)
-    myPlot.show()
+    myPlot.showBackend()
     myPlot.saveFig(fig, f'{savePath}') 
 
 ################################################################################################
-def plotGraphByMonth(cn_font, excelSheet, title, startYear=None):
-    dfList = myPlot.parseExcelSheetToDataFrame(excelSheet, columnYear='日期', columnNotNull='结果', startYear=startYear)
+def plotGraphByMonth(cn_font, df, title, startYear=None):
+    dfList = myPlot.parseToDataFrame(df, columnYear='日期', columnNotNull='结果', startYear=startYear)
     dfList = countDataFrameByMonth(dfList)
 
     if startYear:
@@ -806,18 +807,18 @@ def plotGraphByMonth(cn_font, excelSheet, title, startYear=None):
         newTitle = myPlot.getPlotTitle(f'中国全部{title}')
         savePath = f'./images/{newTitle}.png'
 
-    fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
+    # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
+    fig, axLeft =  myPlot.getFigure()
     # newTitle = myPlot.getPlotTitle(f'中国全部{title}')
     # plotLineGraphByTime(cn_font, axLeft, dfList)
     plotBarGraphByTime(cn_font, axLeft, dfList)
     plotTitleLegendByTime(cn_font, newTitle)
-    myPlot.show()
+    myPlot.showBackend()
     myPlot.saveFig(fig, f'{savePath}') 
 
 ################################################################################################
-def plotGraphByYearMonth(cn_font, excelSheet, title, startYear=None, endYear=None, byYear=True, mom=False):
-    dfList = myPlot.parseExcelSheetToDataFrame(excelSheet, columnYear='日期', columnNotNull='结果', 
-                                               startYear=startYear, endYear=endYear, mom=mom)
+def plotGraphByYearMonth(cn_font, df, title, startYear=None, endYear=None, byYear=True, mom=False):
+    dfList = myPlot.parseToDataFrame(df, columnYear='日期', columnNotNull='结果', startYear=startYear, endYear=endYear, mom=mom)
     if startYear:
         byYear = False
     else:
@@ -829,7 +830,8 @@ def plotGraphByYearMonth(cn_font, excelSheet, title, startYear=None, endYear=Non
 
     if (mom and startYear[:4] == myUtils.getThisYear()) or startYear == None:
         for i in range(0, len(rocketList)):
-            fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
+            # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
+            fig, axLeft =  myPlot.getFigure()
             newTitle = myPlot.getPlotTitle(f'{prefix}{rocketList[i]}{title}', startYear, endYear, byYear=byYear, mom=mom)
             if startYear is None and '长征' not in newTitle and '其他' not in newTitle:
                 newTitle = newTitle.replace('中国', '中国全部')
@@ -838,11 +840,12 @@ def plotGraphByYearMonth(cn_font, excelSheet, title, startYear=None, endYear=Non
             plotBarGraphByYearMonth(cn_font, axRight, dfList, startYear, rocketType=rocketList[i], byYear=byYear, mom=mom)
             plotTitleLegendByYearMonth(cn_font, newTitle, rocketType=rocketList[i], mom=mom)
 
-            myPlot.show()
+            myPlot.showBackend()
             path = '' if startYear == None else '年度别发射月统计/'
             myPlot.saveFig(fig, f'./images/{path}{newTitle}.png') 
     else:
-        fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
+        # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
+        fig, axLeft =  myPlot.getFigure()
         newTitle = myPlot.getPlotTitle(f'{prefix}{title}', startYear, endYear, byYear=byYear)
 
         plotLineGraphByYearMonthNew(cn_font, axLeft, dfList, startYear, rocketType=rocketList)
@@ -850,30 +853,30 @@ def plotGraphByYearMonth(cn_font, excelSheet, title, startYear=None, endYear=Non
         plotBarGraphByYearMonthNew(cn_font, axRight, dfList, startYear, rocketType=rocketList, byYear=byYear)
         plotTitleLegendByYearMonthNew(cn_font, newTitle, rocketType=rocketList)
 
-        myPlot.show()
+        myPlot.showBackend()
         path = '' if startYear == None else '年度别发射月统计/'
         myPlot.saveFig(fig, f'./images/{path}{newTitle}.png') 
 
 ################################################################################################
-def plot1(cn_font, excelSheet, years=None):
+def plot1(cn_font, df, years=None, series=None):
     title1 = '运载火箭发射年统计'
     title2 = '运载火箭发射月统计'
     title3 = '运载火箭发射周统计'
 
     if years:
         for year in years:
-            plotGraphByWeek(cn_font, excelSheet, title3, year)
-            plotGraphByMonth(cn_font, excelSheet, title2, year)
+            plotGraphByWeek(cn_font, df, title3, year)
+            plotGraphByMonth(cn_font, df, title2, year)
 
         for year in years:
             today = datetime.today()
             startYYMMMM = f'{year}01'
             endYYMMMM = f'{year}12' if today.year < int(year) else f'{year}{today.strftime("%m")}'
-            plotGraphByYearMonth(cn_font, excelSheet, title2, startYYMMMM, endYYMMMM, mom=True)
+            plotGraphByYearMonth(cn_font, df, title2, startYYMMMM, endYYMMMM, mom=True)
     else:
-        plotGraphByYearMonth(cn_font, excelSheet, title1)
-        plotGraphByMonth(cn_font, excelSheet, title2)
-        plotGraphByWeek(cn_font, excelSheet, title3)
+        plotGraphByYearMonth(cn_font, df, title1)
+        plotGraphByMonth(cn_font, df, title2)
+        plotGraphByWeek(cn_font, df, title3)
 
 
 ################################################################################################
@@ -881,20 +884,20 @@ def main():
     cn_font = myPlot.init()
     excelFile = "./data/ChinaRocketLaunch.xlsx"
     sheetName = "发射纪录"
-    excelBook = loadXLSX(excelFile, data_only=True, read_only=True)
-    excelSheet = excelBook[sheetName]
+    df = myPlot.readDataFromSheetNew(excelFile, sheetName)
     years =  ['2024', '2023', '2022', '2021', '2020']
     years += ['2019', '2018', '2017', '2016', '2015', '2014', '2013', '2012', '2011', '2010']
     years += ['2009', '2008', '2007', '2006', '2005', '2004', '2003', '2002', '2001', '2000']
     years += ['1999', '1998', '1997', '1996', '1995', '1994', '1993', '1992', '1991', '1990']
     years = ['2024']
+    plot1(cn_font, df, years)
     # plot1(cn_font, excelSheet, years)
-    title1 = '运载火箭发射月统计'
-    plotGraphByMonth(cn_font, excelSheet, title1)
-    plotGraphByMonth(cn_font, excelSheet, title1, years[0])
-    title2 = '运载火箭发射周统计'
-    plotGraphByWeek(cn_font, excelSheet, title2, years[0])
-    plotGraphByWeek(cn_font, excelSheet, title2)
+    # title1 = '运载火箭发射月统计'
+    # plotGraphByMonth(cn_font, excelSheet, title1)
+    # plotGraphByMonth(cn_font, excelSheet, title1, years[0])
+    # title2 = '运载火箭发射周统计'
+    # plotGraphByWeek(cn_font, excelSheet, title2, years[0])
+    # plotGraphByWeek(cn_font, excelSheet, title2)
 
 ################################################################################################
 def showRunTime(func):

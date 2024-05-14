@@ -232,18 +232,20 @@ def plotGraphByMonthLocations(cn_font, excelSheet, title, startYear, endYear=Non
                '酒泉其他发射数', '太原其他发射数', '海上其他发射数', '西昌其他发射数', '文昌其他发射数', '合计其他发射数',
                '酒泉发射数', '太原发射数', '海上发射数', '西昌发射数', '文昌发射数', '合计发射数', '月合计发射数']
     df = parseExcelSheetToDataFrame(excelSheet, headers)
-    fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) # Create a figure with a single row and two columns
+    # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
+    fig, axLeft =  myPlot.getFigure()
     czSumList, nczSumList = plotBarByMonthLocations(cn_font, axLeft, df, startYear) # Plot bar graph on right axis
     plotTitleLegendByMonthLocations(cn_font, title, czSumList, nczSumList) # plot legend
-    myPlot.show()
+    myPlot.showBackend()
     myPlot.saveFig(fig, f'./images/年度别发射地统计/{title}.png')
 
-def plotGraphByLocations(cn_font, excelSheet, title, startYear=None):
-    df = myPlot.parseExcelSheetToDataFrame(excelSheet, rocket='', startYear=startYear, plotLocation=True)
-    fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) # Create a figure with a single row and two columns
+def plotGraphByLocations(cn_font, df, title, startYear=None):
+    df = myPlot.parseToDataFrame(df, rocket='', startYear=startYear, plotLocation=True)
+    # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
+    fig, axLeft =  myPlot.getFigure()
     plotBarByLocations(cn_font, axLeft, df) # Plot bar graph on right axis
     plotTitleLegendByLocations(cn_font, title) # plot legend
-    myPlot.show()
+    myPlot.showBackend()
     path = f'./images/年度别发射地统计/{title}.png' if startYear else f'./images/{title}.png'
     myPlot.saveFig(fig, path)
 
@@ -252,14 +254,15 @@ def plot1(cn_font, excelSheet, startYears):
         title = f'{startYear}中国运载火箭发射地统计'
         plotGraphByMonthLocations(cn_font, excelSheet, title, int(startYear))
 
-def plot2(cn_font, excelSheet, startYear=None):
+def plot2(cn_font, df, startYear=None):
     title = f'{startYear}中国运载火箭发射地统计' if startYear else '中国全部运载火箭发射地统计'
-    plotGraphByLocations(cn_font, excelSheet, title, startYear)
+    plotGraphByLocations(cn_font, df, title, startYear)
 
 def main():
     cn_font = myPlot.init()
     excelFile = "./data/ChinaRocketLaunch.xlsx"
-    excelBook = loadXLSX(excelFile, data_only=True, read_only=True)
+    sheetName = "发射纪录"
+    df = myPlot.readDataFromSheetNew(excelFile, sheetName)
     # startYears = ['1970', '1971', '1972', '1973', '1974', '1975', '1976', '1977', '1978', '1979']
     # startYears += ['1980', '1981', '1982', '1983', '1984', '1985', '1986', '1987', '1988', '1989']
     # startYears += ['1990', '1991', '1992', '1993', '1994', '1995', '1996', '1997', '1998', '1999']
@@ -267,10 +270,8 @@ def main():
     # startYears = ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019']
     # startYears += ['2020', '2021', '2022', '2023']
     startYears = ['2024']
-    sheetName1 = "发射纪录"
-    excelSheet1 = excelBook[sheetName1]
     for startYear in startYears:
-        plot2(cn_font, excelSheet1, startYear)
+        plot2(cn_font, df, startYear)
     # sheetName2 = "发射地月間統計"
     # excelSheet2 = excelBook[sheetName2]
     # plot1(cn_font, excelSheet2, startYears)
