@@ -91,10 +91,10 @@ def mergeSmallVideos(videoList, mergedVideoFile, skipHeader=False, msg=None, tsF
     # print(f'Merge {ordered_ts_names[0]} - {ordered_ts_names[-1]} to {merged_mp4}...')
 
     opts = 'ffmpeg -loglevel fatal -f mpegts' if skipHeader else 'ffmpeg -loglevel fatal'
-    opts += ' -i ' + files_str[:-1] + ' -c copy'
+    opts += f' -i "{files_str[:-1]}" -c copy'
     opts += ' -bsf:a aac_adtstoasc' if tsFile else ' '
     opts += mergedVideoFile
-    subprocess.run(opts)
+    subprocess.run(opts, shell=True)
 
 ################################################################################################
 def keepOneLineChar():

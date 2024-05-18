@@ -278,7 +278,7 @@ def mergeLargeVideos(ordered_ts_names, merged_mp4, skipHeader=False):
 
         for ts_idx in _idx_list:
             sub_files_str += ordered_ts_names[ts_idx + _i * 200] + '|'
-        sub_files_str.rstrip('|')
+        # sub_files_str.rstrip('|')
 
         mp4_fnames.append('part_{}.mp4'.format(_i))
         msg = f'Merge {1 + 200 * _i:04}.ts - '
@@ -286,14 +286,15 @@ def mergeLargeVideos(ordered_ts_names, merged_mp4, skipHeader=False):
         msg += f'to {mp4_fnames[_i]}...'
         print(msg)
         opts = 'ffmpeg -loglevel fatal -f mpegts' if skipHeader else 'ffmpeg -loglevel fatal'
-        opts += f'-i{sub_files_str} -c copy -bsf:a aac_adtstoasc -y part_{_i}.mp4'
-        subprocess.run(opts)
+        opts += f' -i "{sub_files_str[:-1]}" -c copy -bsf:a aac_adtstoasc -y part_{_i}.mp4'
+        subprocess.run(opts, shell=True)
 
     print(f'Merge {mp4_fnames} to {merged_mp4}...')
     with open("mylist.txt", 'w') as f:
         for mp4_fname in mp4_fnames:
             f.write(f"file {mp4_fname}\n")
-    subprocess.run(f'ffmpeg -loglevel fatal -f concat -i mylist.txt -codec copy {merged_mp4}')
+    cmd = f'ffmpeg -loglevel fatal -f concat -i mylist.txt -codec copy {merged_mp4}'
+    subprocess.run(cmd, shell=True)
 
 def main(args):
     m3u8_link = args.m3u8
