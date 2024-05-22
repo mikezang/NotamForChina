@@ -239,14 +239,16 @@ def plotGraphByMonthLocations(cn_font, excelSheet, title, startYear, endYear=Non
     myPlot.showBackend()
     myPlot.saveFig(fig, f'./images/年度别发射地统计/{title}.png')
 
-def plotGraphByLocations(cn_font, df, title, startYear=None):
-    df = myPlot.parseToDataFrame(df, rocket='', startYear=startYear, plotLocation=True)
-    # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
+def plotGraphByLocations(cn_font, df, title, startYear=None, rocket=None):
+    if startYear:
+        path = f'./images/年度别发射地统计/{title}.png'
+    else:
+        path = f'./images/{title}.png'        
+    df = myPlot.parseToDataFrame(df, rocket=rocket, startYear=startYear, plotLocation=True)
     fig, axLeft =  myPlot.getFigure()
     plotBarByLocations(cn_font, axLeft, df) # Plot bar graph on right axis
     plotTitleLegendByLocations(cn_font, title) # plot legend
     myPlot.showBackend()
-    path = f'./images/年度别发射地统计/{title}.png' if startYear else f'./images/{title}.png'
     myPlot.saveFig(fig, path)
 
 def plot1(cn_font, excelSheet, startYears):
@@ -254,9 +256,16 @@ def plot1(cn_font, excelSheet, startYears):
         title = f'{startYear}中国运载火箭发射地统计'
         plotGraphByMonthLocations(cn_font, excelSheet, title, int(startYear))
 
-def plot2(cn_font, df, startYear=None):
-    title = f'{startYear}中国运载火箭发射地统计' if startYear else '中国全部运载火箭发射地统计'
-    plotGraphByLocations(cn_font, df, title, startYear)
+def plot2(cn_font, df, startYear=None, seriesList=None):
+    if startYear:
+        title = f'{startYear}中国运载火箭发射地统计'
+        plotGraphByLocations(cn_font, df, title, startYear, rocket='')
+    else:
+        for rocket in seriesList:
+            if rocket not in '全部,长征,其他':
+                continue
+            title = f'中国{rocket}运载火箭发射地统计'
+            plotGraphByLocations(cn_font, df, title, rocket=rocket)
 
 def main():
     cn_font = myPlot.init()

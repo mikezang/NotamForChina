@@ -390,6 +390,7 @@ def plot1(cn_font, df, startYear, endYear=None, upperStage=None, SeriesDict=None
 def plot2(cn_font, df, rockets, upperStage=None, plotLast=True, dfLastLaunch=None):
     for rocket in rockets:
         title = f'中国{rocket}运载火箭发射日统计'
+        rocket = '' if rocket == '全部' else rocket
         plotGraphByRocketsDate(cn_font, df, title, rocket, upperStage=upperStage, plotLast=plotLast)
 
         if rocket == '':

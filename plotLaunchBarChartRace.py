@@ -34,7 +34,7 @@ def getFilenameAndTitle(isAfterRetired, rocket, no='', startYear='', endYear='',
         years = f'{startYear}' if startYear == endYear - 1 else f'{startYear}～{endYear - 1}'
     else:
         years = ''
-    plotYear = '自' + plotStartYear if plotStartYear else ''
+    plotYear = '至' + plotStartYear if plotStartYear else ''
     title = f'中国{rocket}运载火箭发展史{retiredTitle}'
     title = f'{years}' + title if startYear else title
     title = f'{plotYear}' + title if plotStartYear else title
@@ -117,12 +117,12 @@ def plotRocketChartRaceAnimation(df, rocket, startYear=None, endYear=None, no=''
     periodTemplate = '%Y年%m月%d日'
     rocketsCount = min(30, len(dfFormat.columns))
     labelFontSize = 5 if rocketsCount >= 30 else 7
-    stepsPerPeriod = 20 if startYear else 10
+    # stepsPerPeriod = 20 if startYear else 10
 
     bcr.bar_chart_race(dfAll, dfFormat, 
         save_last_frame_image=True, plot_last_frames=False, last_frames_count=100,
         save_frames_csv=True, incremental_plot=False,
-        title=title, filename=filename,interpolate_period=True, steps_per_period=stepsPerPeriod,  
+        title=title, filename=filename,interpolate_period=True, #steps_per_period=stepsPerPeriod,  
         tick_template=tickFunc, period_summary_func=sumFunc, bar_texttemplate=barFunc, 
         period_template=periodTemplate, filter_column_colors=True, 
         tick_label_font=labelFontSize, bar_label_font=labelFontSize, n_bars=rocketsCount)
@@ -265,7 +265,7 @@ def plotShenzhouChartRaceAnimation(df, plotStartYear='', use_pinyin=False):
     if use_pinyin:
         filename, title = 'videos\\ChinaTaikonautsOrbitBarChartRace.mp4', 'China Taikonauts Orbit Bar Chart Race (On-orbit Priority)'
     else:
-        plotYear = '自' + plotStartYear if plotStartYear else ''
+        plotYear = '至' + plotStartYear if plotStartYear else ''
         filename, title = f'videos\\{plotYear}中国航天员在轨动态条形图.mp4', f'{plotYear}中国航天员在轨动态条形图(在轨优先)'
     myLogger.info(f'Start ploting bar char race: {filename}')
     myUtils.createFolder(filename)

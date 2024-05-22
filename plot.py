@@ -139,7 +139,8 @@ def getCategoriesFrame(categories, lastCategory):
     layout2 = [categoriesTitle]
     for i, subCategory in enumerate(subCategories):
         checkbox = [sg.Checkbox(item, key=f'category-{i * 10 + j + 1}', size=(10, 1), 
-                    default=True if item in lastCategory else False) for j, item in enumerate(subCategory)]
+                    default=True if item in lastCategory else False) for j, item in enumerate(subCategory[:-1])]
+        checkbox.append(sg.Checkbox(subCategory[-1], key='category-6', size=(10, 1), default=True))
         layout2.append(checkbox)      
     return sg.Frame('运载火箭分类（动态条形图）', layout2)
 
@@ -389,6 +390,9 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
             print(f'\nYear Checked: {yearsChecked}')
             yearsChecked = splitYearsChecked(yearsChecked)
 
+            if seriesChecked:
+                print(f'\nSeries Checked: {seriesChecked}')
+
             for years in yearsChecked:
                 for year in years:
                     plotLaunchByRocket.plot1(cn_font, df, year, seriesChecked)
@@ -399,7 +403,7 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
                 else:
                     plotLaunchByDate.plot1(cn_font, df, years[0], upperStage=dictUpperStage)
 
-                plotLaunchByYearMonth.plot1(cn_font, df, years)
+                plotLaunchByYearMonth.plot1(cn_font, df, years, seriesList=seriesChecked)
 
         if rocketsChecked or retiredChecked:
             if rocketsChecked:
@@ -412,8 +416,8 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
 
         if seriesChecked:
             print(f'\nSeries Checked: {seriesChecked}')
-            plotLaunchByYearMonth.plot1(cn_font, df, series=seriesChecked)
-            plotLaunchByLocation.plot2(cn_font, df)
+            plotLaunchByYearMonth.plot1(cn_font, df, seriesList=seriesChecked)
+            plotLaunchByLocation.plot2(cn_font, df, seriesList=seriesChecked)
 
             if seriesMaiden:
                 plotLaunchByDate.plotGraphForMaiden(cn_font, df, dictUpperStage)
@@ -427,8 +431,8 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
                 if seriesRetired:
                     plotLaunchByDate.plot7(cn_font, df, retired[0].split(','), retired[1].split(','), dictUpperStage, seriesPrintLast)
             else:
+                plotLaunchByRocket.plot1(cn_font, df, seriesList=seriesChecked)
                 seriesChecked = removeSeriesText(seriesChecked)
-                plotLaunchByRocket.plot1(cn_font, df)
                 plotLaunchByDate.plot2(cn_font, df, seriesChecked, dictUpperStage, seriesPrintLast, dfLastLaunch)
 
         if locationsChecked:

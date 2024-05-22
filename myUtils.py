@@ -697,6 +697,8 @@ def createKmlFile(notams, title1='', city1='') -> None:
 
     for number, item in notams.items():
         itemArray = item.split(';')
+        if itemArray[2] == 'RJJJ' and number.startswith('Q'):
+            continue
         startDate = itemArray[0]
         endDate = itemArray[1]
         loc = itemArray[2]
@@ -721,6 +723,8 @@ def createKmlFile(notams, title1='', city1='') -> None:
                 if len(coordsList) == 1:
                     seaCoord['海上']= coordsList[0]
                     lowestPoint = coordsList[0]
+                elif loc == 'ZSHA':
+                    seaCoord['海上']= highestPoint
             else:
                 drawRoutes(kml, lastCity, highestPoint, lowestPoint, seaCoord)
                 title = convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
@@ -735,6 +739,9 @@ def createKmlFile(notams, title1='', city1='') -> None:
                     lastCity, highestPoint, lowestPoint = getFirstLastPoint(lowestPoint, highestPoint, coords, lastCity, city)
                 if len(coordsList) == 1:
                     seaCoord['海上']= coordsList[0]
+                    lowestPoint = coordsList[0]
+                elif loc == 'ZSHA':
+                    seaCoord['海上']= highestPoint
             lastStartDate = startDate
             lastEndDate = endDate
 

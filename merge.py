@@ -14,34 +14,73 @@ import myUtils
 import myPlot
 
 ################################################################################################
-def createSlideScript(inputList, index, pauseTime=10, duration=0, width=864, height=504, fontPath='/WINDOWS/Fonts/Arial.ttf'):
+def createSlideScriptNew(inputList, index, countdown=10, duration=0, width=864, height=504, fontPath='/WINDOWS/Fonts/Arial.ttf'):
+    if index == 0:
+        if myUtils.isImageFile(inputList[index]):
+            pauseDuration = countdown
+            script = f"[0:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s0];\n"
+            script += "[s0]split=2[bg][s1];\n"
+            script += "[bg]drawbox=color=black:t=fill[bg];\n"
+            script += f"[bg][s1]overlay=x='if(between(t,0,{countdown}),"
+            script += f"max(W-w*t,0),max(0-w*(t-{countdown}),0-W))'[s3],\n"
+        else:
+            pauseDuration =  countdown + duration
+            script = f"[0:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s0];\n"
+            script += "[s0]split=2[bg][s1];\n"
+            script += f"[bg]drawbox=color=black:t=fill[bg];\n"
+            script += f"[bg][s1]overlay=y='if(between(t,0,{pauseDuration}),"
+            script += f"max(H-h*t,0),max(0-h*(t-{pauseDuration}),0-H))'[s2],\n"
+            script += f"[s2]tpad=stop_mode=clone:stop_duration={countdown}[s3];\n"
+    else:
+        if myUtils.isImageFile(inputList[index]):
+            pauseDuration = countdown
+            script = f"[0:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s0];\n"
+            script += f"[1:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s1];\n"
+            script += f"color=white:{width}x{height}[bg];\n"
+            script += f"[bg][s0]overlay=x=0-w*t[bg];\n"
+            script += f"[bg][s1]overlay=x='if(between(t,0,{countdown}),"
+            script += f"max(W-w*t,0),max(0-w*(t-{countdown}),0-W))'[s3],\n"
+        else:
+            pauseDuration =  countdown + duration
+            script = f"[0:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s0];\n"
+            script += f"[1:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s1];\n"
+            script += f"color=white:{width}x{height}[bg];\n"
+            script += f"[bg][s0]overlay=y=0-h*t[bg];\n"
+            script += f"[bg][s1]overlay=y='if(between(t,0,{pauseDuration}),"
+            script += f"max(H-h*t,0),max(0-h*(t-{pauseDuration}),0-H))'[s2],\n"
+            script += f"[s2]tpad=stop_mode=clone:stop_duration={pauseDuration}[s3];\n"
+    script += f"[s3]drawtext=fontfile='{fontPath}':text='%{{eif\\:{pauseDuration}-t\\:d}}':\n"
+    script += f"box=1:boxborderw=10:boxcolor=orange@0.4:\n"
+    script += f"x=w-tw-10:y=10:fontsize=24:fontcolor=red:enable='between(t,{duration},{pauseDuration})';\n"
+    return script
+
     if myUtils.isImageFile(inputList[index]):
-        pauseDuration = pauseTime
+        pauseDuration = countdown
         if index == 0:
             script = f"[0:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s0];\n"
             script += "[s0]split=2[bg][s1];\n"
             script += "[bg]drawbox=color=black:t=fill[bg];\n"
-            script += f"[bg][s1]overlay=x='if(between(t,0,{pauseTime}),"
+            script += f"[bg][s1]overlay=x='if(between(t,0,{countdown}),"
         else:
             script = f"[0:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s0];\n"
             script += f"[1:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s1];\n"
-            script += f"color=white:864x504[bg];\n"
+            script += f"color=white:{width}x{height}[bg];\n"
             script += f"[bg][s0]overlay=x=0-w*t[bg];\n"
-            script += f"[bg][s1]overlay=x='if(between(t,0,{pauseTime}),"
-        script += f"max(W-w*t,0),max(0-w*(t-{pauseTime}),0-W))'[s3],\n"
+            script += f"[bg][s1]overlay=x='if(between(t,0,{countdown}),"
+        script += f"max(W-w*t,0),max(0-w*(t-{countdown}),0-W))'[s3],\n"
     else:
-        pauseDuration =  pauseTime + duration
+        pauseDuration =  countdown + duration
         if index == 0:
             script = f"[0:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s0];\n"
             script += "[s0]split=2[bg][s1];\n"
             script += f"[bg]drawbox=color=black:t=fill[bg];\n"
             script += f"[bg][s1]overlay=y='if(between(t,0,{pauseDuration}),"
             script += f"max(H-h*t,0),max(0-h*(t-{pauseDuration}),0-H))'[s2],\n"
-            script += f"[s2]tpad=stop_mode=clone:stop_duration={pauseTime}[s3];\n"
+            script += f"[s2]tpad=stop_mode=clone:stop_duration={countdown}[s3];\n"
         else:
             script = f"[0:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s0];\n"
             script += f"[1:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s1];\n"
-            script += f"color=white:864x504[bg];\n"
+            script += f"color=white:{width}x{height}[bg];\n"
             script += f"[bg][s0]overlay=y=0-h*t[bg];\n"
             script += f"[bg][s1]overlay=y='if(between(t,0,{pauseDuration}),"
             script += f"max(H-h*t,0),max(0-h*(t-{pauseDuration}),0-H))'[s2],\n"
@@ -52,7 +91,7 @@ def createSlideScript(inputList, index, pauseTime=10, duration=0, width=864, hei
     return script
 
 ################################################################################################
-def createSlideCommand(inputList, index, pauseTime=10, duration=0):
+def createSlideCommandNew(inputList, index, countdown=10, duration=0):
     cmd = f'@echo off\nffmpeg -hide_banner -loglevel fatal {myUtils.keepOneLineChar()}\n'
     if myUtils.isImageFile(inputList[index]):
         if index > 0:
@@ -65,9 +104,65 @@ def createSlideCommand(inputList, index, pauseTime=10, duration=0):
             cmd += f'\t-hide_banner -loglevel fatal -i - {myUtils.keepOneLineChar()}\n'
         cmd += f'\t-i "{inputList[index]}" {myUtils.keepOneLineChar()}\n'
     cmd += f'\t-filter_complex_script script-{index:02}.txt {myUtils.keepOneLineChar()}\n'
-    cmd += f'\t-t {pauseTime+duration} -y v{index:02}.mp4\n'
+    cmd += f'\t-t {countdown+duration} -y v{index:02}.mp4\n'
     return cmd
 
+################################################################################################
+def createSlideScript(inputList, index, countdown=10, duration=0, width=864, height=504, fontPath='/WINDOWS/Fonts/Arial.ttf'):
+    if myUtils.isImageFile(inputList[index]):
+        pauseDuration = countdown
+        if index == 0:
+            script = f"[0:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s0];\n"
+            script += f"[s0]split=2[bg][s1];\n"
+            script += f"[bg]drawbox=color=black:t=fill[bg];\n"
+            script += f"[bg][s1]overlay=x='if(between(t,0,{countdown}),"
+        else:
+            script = f"[0:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s0];\n"
+            script += f"[1:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s1];\n"
+            script += f"color=white:{width}x{height}[bg];\n"
+            script += f"[bg][s0]overlay=x=0-w*t[bg];\n"
+            script += f"[bg][s1]overlay=x='if(between(t,0,{countdown}),"
+        script += f"max(W-w*t,0),max(0-w*(t-{countdown}),0-W))'[s3],\n"
+    else:
+        pauseDuration =  countdown + duration
+        if index == 0:
+            script = f"[0:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s0];\n"
+            script += f"[s0]split=2[bg][s1];\n"
+            script += f"[bg]drawbox=color=black:t=fill[bg];\n"
+            script += f"[bg][s1]overlay=y='if(between(t,0,{pauseDuration}),"
+            script += f"max(H-h*t,0),max(0-h*(t-{pauseDuration}),0-H))'[s2],\n"
+            script += f"[s2]tpad=stop_mode=clone:stop_duration={countdown}[s3];\n"
+        else:
+            script = f"[0:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s0];\n"
+            script += f"[1:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:-1:-1,setsar=1[s1];\n"
+            script += f"color=white:{width}x{height}[bg];\n"
+            script += f"[bg][s0]overlay=y=0-h*t[bg];\n"
+            script += f"[bg][s1]overlay=y='if(between(t,0,{pauseDuration}),"
+            script += f"max(H-h*t,0),max(0-h*(t-{pauseDuration}),0-H))'[s2],\n"
+            script += f"[s2]tpad=stop_mode=clone:stop_duration={pauseDuration}[s3];\n"
+    script += f"[s3]drawtext=fontfile='{fontPath}':text='%{{eif\\:{pauseDuration}-t\\:d}}':\n"
+    script += f"box=1:boxborderw=10:boxcolor=orange@0.4:\n"
+    script += f"x=w-tw-10:y=10:fontsize=24:fontcolor=red:enable='between(t,{duration},{pauseDuration})';\n"
+    return script
+
+################################################################################################
+def createSlideCommand(inputList, index, countdown=10, duration=0):
+    cmd = f'@echo off\nffmpeg -hide_banner -loglevel fatal {myUtils.keepOneLineChar()}\n'
+    if myUtils.isImageFile(inputList[index]):
+        if index > 0:
+            cmd += f'\t-framerate 20 -loop 1 -i "{inputList[index - 1]}" {myUtils.keepOneLineChar()}\n'
+        cmd += f'\t-framerate 20 -loop 1 -i "{inputList[index]}" {myUtils.keepOneLineChar()}\n'
+    else:
+        if index > 0:
+            cmd += f'\t-sseof -0.05 -i "{inputList[index - 1]}" {myUtils.keepOneLineChar()}\n'
+            cmd += f'\t-vframes 1 -c:v png -f image2pipe - | ffmpeg  {myUtils.keepOneLineChar()}\n'
+            cmd += f'\t-hide_banner -loglevel fatal -i - {myUtils.keepOneLineChar()}\n'
+        cmd += f'\t-i "{inputList[index]}" {myUtils.keepOneLineChar()}\n'
+    cmd += f'\t-filter_complex_script script-{index:02}.txt {myUtils.keepOneLineChar()}\n'
+    cmd += f'\t-t {countdown+duration} -r 20 -y v{index:02}.mp4\n'
+    return cmd
+
+################################################################################################
 def change2WorkFolder(outputFileInfo):
     os.system('chcp 65001')
     os.chdir(outputFileInfo.folderName)
@@ -105,23 +200,25 @@ def createMusicScript(musicList):
     return script
 
 ################################################################################################
-def mergeMusicVideo(lineNo, inputFilename):
+def mergeMusicToVideo(lineNo, inputFilename):
     myUtils.setStartTime()
     musicFilename = f'mergelist/{os.path.basename(inputFilename).replace(".mp4", ".txt")}'
-    musicList = readMusicListFile(musicFilename, lineNo)
+    musicList = [os.path.abspath(image) for image in readMusicListFile(musicFilename, lineNo)]
     inputFileInfo = myUtils.parseFileInfo(inputFilename)
     tmpFolder = change2WorkFolder(inputFileInfo)
     inputVideoFile = inputFileInfo.baseName
     outputVideoFile = f'{inputVideoFile.replace('.mp4', '-music.mp4')}'
 
-    if len(musicList) == 1:
-        cmd = createMusicCommand(inputFileInfo, outputVideoFile, musicList[0])
-        myUtils.saveTextFile('script-99.bat', cmd, openFile=False, noSound=True, showMsg=False)
-    else:
-        script = createMusicScript(musicList)
-        myUtils.saveTextFile('script-99.txt', script, openFile=False, noSound=True, showMsg=False)
-        cmd = createMusicCommand(inputFileInfo, outputVideoFile)
-        myUtils.saveTextFile('script-99.bat', cmd, openFile=False, noSound=True, showMsg=False)
+    # if len(musicList) == 1:
+    #     cmd = createMusicCommand(inputFileInfo, outputVideoFile, musicList[0])
+    #     myUtils.saveTextFile('script-99.bat', cmd, openFile=False, noSound=True, showMsg=False)
+    # else:
+    script = createMusicScript(musicList)
+    myUtils.saveTextFile('script-99.txt', script, openFile=False, noSound=True, showMsg=False)
+    cmd = createMusicCommand(inputFileInfo, outputVideoFile)
+    myUtils.saveTextFile('script-99.bat', cmd, openFile=False, noSound=True, showMsg=False)
+    msg = '\n'.join([os.path.basename(m) for m in musicList])
+    print(f'Adding\n{msg}\nto {outputVideoFile}...')
     subprocess.run('script-99.bat')
 
     deleteTmpFolder(inputFileInfo, outputVideoFile, tmpFolder)
@@ -129,28 +226,34 @@ def mergeMusicVideo(lineNo, inputFilename):
     myUtils.playSound()
 
 ################################################################################################
-def mergeSlideVideo(inputList, outputFilename, pauseTime=10, width=864, height=504, fontPath='/WINDOWS/Fonts/Arial.ttf'):
+def mergeSlideToVideo(inputList, outputFilename, slide=None, countdown=10, width=864, height=504, fontPath='/WINDOWS/Fonts/Arial.ttf'):
     myUtils.setStartTime()
     inputList = [os.path.abspath(image) for image in inputList]
     outputFileInfo = myUtils.parseFileInfo(outputFilename)
     tmpFolder = change2WorkFolder(outputFileInfo)
     videoFile = f'{outputFileInfo.baseName}'
-    videoFullFile = f'{outputFileInfo.absFolder}\\{videoFile}'.replace("\\", "\\\\")
     videoText = ''
 
     for index, _ in enumerate(inputList):
-        duration = 0 if myUtils.isImageFile(inputList[index]) else int(myPlot.getFileDuration(inputList[index]))
-        videoText += f'file v{index:02}.mp4\n'
-        script = createSlideScript(inputList, index, pauseTime, duration, width, height, fontPath)
-        myUtils.saveTextFile(f'script-{index:02}.txt', script, False, True, False)
-        cmd = createSlideCommand(inputList, index, pauseTime, duration)
-        myUtils.saveTextFile(f'script-{index:02}.bat', cmd, False, True, False)
-        print(f'Creating {index:02}.mp4 from {os.path.basename(inputList[index])}...')
-        os.system(f'script-{index:02}.bat')
+        if slide or countdown > 0:
+            videoText += f'file v{index:02}.mp4\n'
+            duration = 0 if myUtils.isImageFile(inputList[index]) else int(myPlot.getFileDuration(inputList[index]))
+            script = createSlideScript(inputList, index, countdown, duration, width, height, fontPath)
+            myUtils.saveTextFile(f'script-{index:02}.txt', script, False, True, False)
+            cmd = createSlideCommand(inputList, index, countdown, duration)
+            myUtils.saveTextFile(f'script-{index:02}.bat', cmd, False, True, False)
+            print(f'Creating {index:02}.mp4 from {os.path.basename(inputList[index])}...')
+            os.system(f'script-{index:02}.bat')
+        else:
+            videoText += f'file {inputList[index].replace('\\', '\\\\')}\n'
 
     print(f'Merging\n{videoText}to {videoFile}...')
-    myUtils.saveTextFile('script-99.txt', videoText, False, True)
-    cmd = f'@echo off\nffmpeg -loglevel fatal -f concat -safe 0 -i script-99.txt -codec copy -y {videoFile}\n'
+    myUtils.saveTextFile('script-99.txt', videoText, False, True, False)
+    if slide or countdown > 0:
+        cmd = f'@echo off\nffmpeg -loglevel fatal -f concat -safe 0 -i script-99.txt -codec copy -y {videoFile}\n'
+    else:
+        cmd = f'@echo off\nffmpeg -loglevel fatal -f concat -safe 0 -i script-99.txt -y {videoFile}\n'
+
     myUtils.saveTextFile('script-99.bat', cmd, False, True, False)
     subprocess.run('script-99.bat')
 
@@ -165,6 +268,24 @@ def readMusicListFile(filename, lineNo):
     return musicList
 
 ################################################################################################
+def parseInputFile(inputList):
+    inputListNew = []
+    slide = None
+    countdown = 10
+
+    for line in inputList:
+        if line[0] != '#':
+            inputListNew.append(line)
+        else:
+            lineTrim = line.strip()
+            if 'slide=' in lineTrim:
+                slide = lineTrim.split('=')[1] 
+            elif 'countdown=' in lineTrim:
+                countdown = lineTrim.split('=')[1]
+                countdown = int(countdown) if countdown.isdigit() else 0
+    return inputListNew, slide, countdown
+
+################################################################################################
 def main():
     # logFilename = f"temp/{time.strftime('%Y%m%d-%H%M%S')}.log"
     # myUtils.setLogging(logFilename)
@@ -175,12 +296,13 @@ def main():
         if argv[1].isdigit():
             lineNo = int(argv[1])       # 012
             outputFilename = argv[2]    # outputFilename.mp4
-            mergeMusicVideo(lineNo, outputFilename)
+            mergeMusicToVideo(lineNo, outputFilename)
         else:
             inputListFilename = argv[1] # inputList.txt
             outputFilename = argv[2]    # outputFilename.mp4
             inputList = myUtils.readTextFile(inputListFilename, True)
-            mergeSlideVideo(inputList, outputFilename)
+            inputList, slide, countdown = parseInputFile(inputList)
+            mergeSlideToVideo(inputList, outputFilename, slide, countdown)
         return
 
     # sg.main_sdk_help()

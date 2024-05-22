@@ -581,7 +581,7 @@ def kml2ShapelyLine(geom):
 
 ################################################################################################
 def countRocketWide(df, columnRocket, rocket, startYear, endYear, seriesDict, use_pinyin=False):
-    if rocket == '全部' or rocket == '系列':
+    if rocket == '' or rocket == '全部' or rocket == '系列':
         if rocket == '系列':
             df = ChangeToSeriesName(df, columnRocket, seriesDict)
         cond1 = df[columnRocket].str.startswith('长征')

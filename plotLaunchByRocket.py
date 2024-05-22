@@ -190,7 +190,7 @@ def plotByRocket(cn_font, df, title, path, startYear):
     myPlot.saveFig(fig, f'./images/{path}{title}.png') # Save the plot to a file
 
 ################################################################################################
-def plotGraphByRocket(cn_font, df, title, startYear=None, endYear=None, series=None):
+def plotGraphByRocket(cn_font, df, title, startYear=None, endYear=None, seriesList=None):
     retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
     df = myPlot.parseToDataFrame(df, columnYear='日期', columnNotNull='结果', startYear=startYear, endYear=endYear)
     df1, df2, dfCz1, dfCz2, dfNcz1, dfNcz2 = countDataFrameByRocket(df, retiredRocketsDict)
@@ -200,19 +200,33 @@ def plotGraphByRocket(cn_font, df, title, startYear=None, endYear=None, series=N
     path2 = '' if startYear == None else '火箭年发射率统计/'
 
     if path1 == '':
-        plotByRocket(cn_font, df1, title1.replace('中国', '中国全部'), path1, startYear)
-        plotByRocket(cn_font, dfCz1, title1.replace('中国', '中国长征'), path1, startYear)
-        plotByRocket(cn_font, dfNcz1, title1.replace('中国', '中国其他'), path1, startYear)
-        plotByRocket(cn_font, df2, title2.replace('中国', '中国全部'), path1, startYear)
-        plotByRocket(cn_font, dfCz2, title2.replace('中国', '中国长征'), path1, startYear)
-        plotByRocket(cn_font, dfNcz2, title2.replace('中国', '中国其他'), path1, startYear)
+        for series in seriesList:
+            if series not in '全部,长征,其他':
+                continue
+            title1New = title1.replace('中国', f'中国{series}')
+            title2New = title2.replace('中国', f'中国{series}')
+            if series == '长征':
+                df1New = dfCz1
+                df2New = dfCz2
+            elif series == '其他':
+                df1New = dfNcz1
+                df2New = dfNcz2
+            else:
+                df1New = df1
+                df2New = df2
+            plotByRocket(cn_font, df1New, title1New, path1, startYear)
+            plotByRocket(cn_font, df2New, title2New, path1, startYear)
+            # plotByRocket(cn_font, dfCz1, title1.replace('中国', '中国长征'), path1, startYear)
+            # plotByRocket(cn_font, dfCz2, title2.replace('中国', '中国长征'), path1, startYear)
+            # plotByRocket(cn_font, dfNcz1, title1.replace('中国', '中国其他'), path1, startYear)
+            # plotByRocket(cn_font, dfNcz2, title2.replace('中国', '中国其他'), path1, startYear)
     else:
         plotByRocket(cn_font, df1, title1, path1, startYear)
         plotByRocket(cn_font, df2, title2, path2, startYear)
 
 ################################################################################################
-def plot1(cn_font, df, startYear=None, series=None):
-    plotGraphByRocket(cn_font, df, '中国运载火箭发射统计', startYear, series=series)
+def plot1(cn_font, df, startYear=None, seriesList=None):
+    plotGraphByRocket(cn_font, df, '中国运载火箭发射统计', startYear, seriesList=seriesList)
 
 ################################################################################################
 def main():
