@@ -181,11 +181,6 @@ def getWindow(years, rockets, series, retired, privates, locations, categories, 
     lastLocation = lastLaunch[5]
     lastResult = lastLaunch[6]
 
-    # Green & tan color scheme      
-    myPlot.make_dpi_aware()
-    sg.theme('Python')
-    sg.set_options(text_justification='right')      
-
     layout = []
     layout.append(getYearsFrame(years, lastYear))  
     layout.append(getRocketsFrame(rockets, retired, lastRocket))  
@@ -478,6 +473,8 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
 
 ################################################################################################
 def main():
+    myPlot.setScreenDpiAware()
+
     # TODO read 退役，民营数据 from excel file not from config.ini
     excelFile, sheetNames, years, rockets, retired, series, privates, locations, categories, payloads = myUtils.readConfig()
     df = myPlot.readDataFromSheetNew(excelFile, sheetNames[0])

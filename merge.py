@@ -171,9 +171,11 @@ def change2WorkFolder(outputFileInfo):
     os.chdir(tmpFolder)
     return tmpFolder
 
-def deleteTmpFolder(inputFileInfo, outputVideoFile, tmpFolder):
+def moveFile(inputFileInfo, outputVideoFile, ):
     outputPath = f'{inputFileInfo.absFolder}\\{outputVideoFile}'.replace('\\', '\\\\')
     shutil.move(outputVideoFile, outputPath)
+
+def deleteTmpFolder(tmpFolder):
     os.chdir('../')
     shutil.rmtree(tmpFolder)
 
@@ -200,11 +202,8 @@ def createMusicScript(musicList):
     return script
 
 ################################################################################################
-def mergeMusicToVideo(lineNo, inputFilename):
-    myUtils.setStartTime()
-    musicFilename = f'mergelist/{os.path.basename(inputFilename).replace(".mp4", ".txt")}'
-    musicList = [os.path.abspath(image) for image in readMusicListFile(musicFilename, lineNo)]
-    inputFileInfo = myUtils.parseFileInfo(inputFilename)
+def mergeMusicToVideo(musicList, outputFilename):
+    inputFileInfo = myUtils.parseFileInfo(outputFilename)
     tmpFolder = change2WorkFolder(inputFileInfo)
     inputVideoFile = inputFileInfo.baseName
     outputVideoFile = f'{inputVideoFile.replace('.mp4', '-music.mp4')}'
@@ -221,18 +220,18 @@ def mergeMusicToVideo(lineNo, inputFilename):
     print(f'Adding\n{msg}\nto {outputVideoFile}...')
     subprocess.run('script-99.bat')
 
-    deleteTmpFolder(inputFileInfo, outputVideoFile, tmpFolder)
-    myUtils.showRunTime()
-    myUtils.playSound()
+    moveFile(inputFileInfo, outputVideoFile)
+    deleteTmpFolder(tmpFolder)
 
 ################################################################################################
 def mergeSlideToVideo(inputList, outputFilename, slide=None, countdown=10, width=864, height=504, fontPath='/WINDOWS/Fonts/Arial.ttf'):
-    myUtils.setStartTime()
+    # myUtils.setStartTime()
     inputList = [os.path.abspath(image) for image in inputList]
     outputFileInfo = myUtils.parseFileInfo(outputFilename)
     tmpFolder = change2WorkFolder(outputFileInfo)
     videoFile = f'{outputFileInfo.baseName}'
     videoText = ''
+    msg = ''
 
     for index, _ in enumerate(inputList):
         if slide or countdown > 0:
@@ -244,10 +243,11 @@ def mergeSlideToVideo(inputList, outputFilename, slide=None, countdown=10, width
             myUtils.saveTextFile(f'script-{index:02}.bat', cmd, False, True, False)
             print(f'Creating {index:02}.mp4 from {os.path.basename(inputList[index])}...')
             os.system(f'script-{index:02}.bat')
+            msg = videoText
         else:
             videoText += f'file {inputList[index].replace('\\', '\\\\')}\n'
+            msg += f'{inputList[index].split('\\')[-1]}\n'
 
-    print(f'Merging\n{videoText}to {videoFile}...')
     myUtils.saveTextFile('script-99.txt', videoText, False, True, False)
     if slide or countdown > 0:
         cmd = f'@echo off\nffmpeg -loglevel fatal -f concat -safe 0 -i script-99.txt -codec copy -y {videoFile}\n'
@@ -255,11 +255,13 @@ def mergeSlideToVideo(inputList, outputFilename, slide=None, countdown=10, width
         cmd = f'@echo off\nffmpeg -loglevel fatal -f concat -safe 0 -i script-99.txt -y {videoFile}\n'
 
     myUtils.saveTextFile('script-99.bat', cmd, False, True, False)
+    print(f'Merging\n{msg}to {videoFile}...')
     subprocess.run('script-99.bat')
 
-    deleteTmpFolder(outputFileInfo, videoFile, tmpFolder)
-    myUtils.showRunTime()
-    myUtils.playSound()
+    moveFile(outputFileInfo, videoFile)
+    deleteTmpFolder(tmpFolder)
+    # myUtils.showRunTime()
+    # myUtils.playSound()
 
 ################################################################################################
 def readMusicListFile(filename, lineNo):
@@ -286,26 +288,52 @@ def parseInputFile(inputList):
     return inputListNew, slide, countdown
 
 ################################################################################################
+def showUsage():
+    print('Merge images/Videos to Video with/without slide and countodown')
+    print(f'python {argv[0]} imageList/videoList videoName')
+    print('Usage:')
+    print('  imageList/videoList: image or video List')
+    print('  videoName: Video filename\n')
+    print('Add music to Video')
+    print(f'python {argv[0]} msuicListIndex videoName')
+    print('Usage:')
+    print('  music list index number')
+    print('  videoName: Video filename')
+
+################################################################################################
 def main():
-    # logFilename = f"temp/{time.strftime('%Y%m%d-%H%M%S')}.log"
-    # myUtils.setLogging(logFilename)
-    # myLogger = logging.getLogger('main')
-    # myLogger.info(f'Start: *****************************')
+    myUtils.setStartTime()
 
-    if len(argv) > 2:
-        if argv[1].isdigit():
-            lineNo = int(argv[1])       # 012
-            outputFilename = argv[2]    # outputFilename.mp4
-            mergeMusicToVideo(lineNo, outputFilename)
-        else:
-            inputListFilename = argv[1] # inputList.txt
-            outputFilename = argv[2]    # outputFilename.mp4
-            inputList = myUtils.readTextFile(inputListFilename, True)
-            inputList, slide, countdown = parseInputFile(inputList)
-            mergeSlideToVideo(inputList, outputFilename, slide, countdown)
+    if len(argv) <= 1:
+        showUsage()
         return
+    
+    if argv[1].isdigit():
+        lineNo = int(argv[1])       # 012
+        outputFilename = argv[2]    # outputFilename.mp4
+        musicFilename = f'mergelist/{os.path.basename(outputFilename).replace(".mp4", ".txt")}'
 
-    # sg.main_sdk_help()
+        if not myUtils.isTextFile(musicFilename):
+            showUsage()
+            return
+        
+        musicList = [os.path.abspath(image) for image in readMusicListFile(musicFilename, lineNo)]
+        mergeMusicToVideo(musicList, outputFilename)
+    else:
+        inputListFilename = argv[1] # inputList.txt
+        
+        if not myUtils.isTextFile(inputListFilename):
+            showUsage()
+            return
+            
+        outputFilename = argv[2]    # outputFilename.mp4
+        inputList = myUtils.readTextFile(inputListFilename, True)
+        inputList, slide, countdown = parseInputFile(inputList)
+        mergeSlideToVideo(inputList, outputFilename, slide, countdown)
+    myUtils.showRunTime()
+    myUtils.playSound()
+    return
+
     window, subfolders = getWindow()
     myPlot.moveWindow(window, y=0)
     selectedFiles = []
@@ -318,7 +346,6 @@ def main():
         subfolders, selectedFiles, selectedFileTimes = handleEvents(window, event, values, subfolders, selectedFiles, selectedFileTimes)
         window.Normal()
     window.close()
-    # myLogger.info(f'End: *******************************')
 
 ################################################################################################
 def getWindow():

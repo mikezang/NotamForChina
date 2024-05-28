@@ -1,5 +1,4 @@
 import sys
-import geodatasets
 import geopandas as gpd
 import PySimpleGUI as sg
 import matplotlib.pyplot as plt
@@ -7,8 +6,6 @@ from os import path, remove
 from sys import argv
 from timeit import timeit
 from datetime import timedelta
-from shapely.geometry import Polygon
-from matplotlib.lines import Line2D
 
 sys.path.append("")
 
@@ -17,108 +14,7 @@ import myUtils
 import myPlot
 import notam
 
-def plotNotam(axs, polys, color=None, legend=None, lables=None):
-    if isinstance(polys, gpd.GeoDataFrame):
-        polys.exterior.plot(ax=axs, facecolor=color, color=color, label=legend, zorder=3)
-    elif isinstance(polys, Polygon):
-        x, y = polys.exterior.xy
-        plt.plot(x, y, color=color, zorder=3)
-
-    if lables != None:
-        for i, iloc in enumerate(polys.geometry.iloc):
-            if isinstance(iloc, Polygon):
-                x, y = iloc.centroid.coords[0]
-                label = lables[i]
-                axs.annotate(label, xy=(x, y), xytext=(x + 0.5, y + 0.1), fontsize=14, arrowprops=dict(arrowstyle='->'))
-
-def plotIOUs(fig, axs, newPolys, oldPolys):
-    newIndex = 0
-    # oldNames, newNames = [], []
-    ious = []
-
-    for i, newGeom in enumerate(newPolys.geometry):
-        if isinstance(newGeom, Polygon):
-            oldIndex = 0
-            newIndex += 1
-            newName = newPolys.iloc[i]["Name"]
-            # newNames.append(newName)
-
-            for j, oldGeom in enumerate(oldPolys.geometry):
-                if isinstance(oldGeom, Polygon):
-                    oldIndex += 1
-                    oldName = oldPolys.iloc[j]["Name"]
-                    # oldNames.append(oldName)
-                    geomName = f'{newName} vs {oldName}'
-
-                    newPoly = myPlot.kml2ShapelyPolygon(newGeom)
-                    oldPoly = myPlot.kml2ShapelyPolygon(oldGeom)
-                    iou = 0.0
-
-                    if newPoly.intersects(oldPoly):
-                        try:
-                            intersection = newPoly.intersection(oldPoly)
-                            union = newPoly.union(oldPoly)
-                            iou = 0.0 if union.area == 0.0 else intersection.area / union.area
-                        except Exception as e:
-                            pass
-                    if iou > 0.01:
-                        text = f'{geomName} JSI: {iou:.1%}'
-                        ious.append(text)
-                        # print(text)
-                        plotNotam(axs, gpd.GeoDataFrame(geometry=[intersection]), 'orange', text)
-    return ious
-
-def plotNotam1(fig, axs, cn_font, newPolys, oldPolys):
-    # plot title, axis and NOTAM drop zones
-    # plotTitleXYLabels(fig, axs, cn_font, f'{newTitle}\n{oldTitle}', '纬度Latitude', '经度Longitude')
-
-    # plot NOATM drop zones to set scale
-    plotNotam(axs, newPolys, 'blue')
-    plotNotam(axs, oldPolys, 'green')
-
-def plotNotam2(fig, axs, cn_font, newPolys, oldPolys, newTitle, oldTitle):
-    # Load the world map data
-    worldmap = gpd.read_file(geodatasets.get_path("naturalearth.land"))
-
-    # Plot the world map data
-    # worldmap.plot(color="lightgrey", ax=axs[1])
-    worldmap["geometry"].boundary.plot(facecolor="lightgrey", color="grey", ax=axs, zorder=1)
-    # worldmap["geometry"].boundary.plot(color="lightgrey", ax=axs[1])
-
-    # Adjust the spacing between the subplots
-    plt.subplots_adjust(left=0, right=1, wspace=0, hspace=0)
-
-    # Calculate NOTAM drop zones Jaccard Similarity Index and plot intersection polygons
-    ious = plotIOUs(fig, axs, newPolys, oldPolys)
-
-    # plot title, axis and NOTAM drop zones
-    title = f'{newTitle}\n{oldTitle}'
-    for ios in ious:
-        title += f'\n{ios}'
-    plotTitleXYLabels(fig, axs, cn_font, title, '纬度Latitude', '经度Longitude')
-    return ious
-
 ################################################################################################
-def getTitle(filename):
-    title = path.basename(filename)  # Get the filename from the path
-    title = title.split('.')[0]  # Remove the extension
-    title = title.split('\\')[-1]  # Get the last portion of the path
-    return title
-
-def plotTitleXYLabels(fig, axs, cn_font, title, xLabel, yLabel):
-    axs.set_title(title, fontproperties=cn_font, fontsize=18, loc='left') # plot title
-    # axs[0].axis('off') # Hide the border of the subplot
-    axs.set_xlabel(xLabel, fontproperties=cn_font)  # Add an x-label to the axes.
-    axs.set_ylabel(yLabel, fontproperties=cn_font)  # Add a y-label to the axes.
-
-    handles = [
-        Line2D([0], [0], linestyle='none', mfc='blue', mec='blue', marker='s', label='New Drop Zone'),
-        Line2D([0], [0], linestyle='none', mfc='green', mec='green', marker='s', label='Old Drop Zone'),
-        Line2D([0], [0], linestyle='none', mfc='orange', mec='orange', marker='s', label='Intersection Drop Zone')
-    ]
-    
-    fig.legend(handles=handles, bbox_to_anchor=(0.1, 0), loc='outside upper left', ncol=3) # add legend
-
 def plotLaunchCenter(axs):
     cities = ('酒泉', '太原', '西昌', '文昌')
     names = ('酒泉卫星发射中心', '太原卫星发射中心', '西昌卫星发射中心', '文昌航天发射场')
@@ -140,25 +36,7 @@ def plotLaunchCenter(axs):
         # lons, lats = map(lon, lat)
         # axs.plot(lon, lat, marker = 'o', color='r', zorder=5)
 
-def adjustLim(axs, lon1, lon2, lat1, lat2):
-    lon21 = lon2 - lon1
-    lat21 = lat2 - lat1
-    ratio1 = lat21 / lon21
-
-    if lon21 < lat21:
-        dLon = lon21 * (ratio1 - 1) / 2
-        axs.set_xlim(lon1 - dLon, lon2 + dLon)
-        axs.set_ylim(lat1, lat2)
-    else:
-        dLat = lat21 * (1 - ratio1) / ratio1 / 2
-        axs.set_xlim(lon1, lon2)
-        axs.set_ylim(lat1 - dLat, lat2 + dLat)
-
-    lon1, lon2 = axs.get_xlim()
-    lat1, lat2 = axs.get_ylim()
-    ratio2 = (lat2 - lat1) / (lon2 - lon1)
-    # print(f'Ratio1: {ratio1:0.2f}, Ratio2: {ratio2:0.2f}')
-
+################################################################################################
 def compareNotam(newFile, cn_font):
     # Use geopandas to read new NOTAM kml file
     location, locations = myUtils.getLocation(newFile)
@@ -177,25 +55,23 @@ def compareNotam(newFile, cn_font):
 
     # List all kml files in specific foder except newFile
     oldFiles = myUtils.listFiles(folder, extension=".kml", excludeFile=filename)
-
+    savePath = f'./temp/match/{filename[:-4]}'
+    
     for oldFile in oldFiles:
         if '\\old\\' in oldFile:
             continue
         try:
-            # Use geopandas to read old NOTAM kml file to shapely.geometry
-            oldPolys = gpd.read_file(oldFile, driver='KML')
-
-            # Create a figure with a single row and two columns
-            # fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(10, 8), gridspec_kw={'height_ratios': [1, 10]})
-            # fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(10, 8))
             if plt:
                 plt.close()
+
+            # Use geopandas to read old NOTAM kml file to shapely.geometry
+            oldPolys = gpd.read_file(oldFile, driver='KML')
             # fig, axs = plt.subplots(nrows=1, ncols=1)
             fig, axs = myPlot.getFigure()
             axs.set_aspect('equal')
 
             # Plot NOTAM
-            plotNotam1(fig, axs, cn_font, newPolys, oldPolys)
+            myPlot.plotNotam1(fig, axs, cn_font, newPolys, oldPolys)
 
             # Plot Launch center 
             # plotLaunchCenter(axs)
@@ -205,40 +81,46 @@ def compareNotam(newFile, cn_font):
             lat1, lat2 = axs.get_ylim()
 
             # Plot wordl map
-            ious = plotNotam2(fig, axs, cn_font, newPolys, oldPolys, getTitle(newFile), getTitle(oldFile))
+            ious = myPlot.plotNotam2(fig, axs, cn_font, newPolys, myUtils.getTitle(newFile), oldPolys, myUtils.getTitle(oldFile))
 
             # Plot Launch center 
             # plotLaunchCenter(axs)
 
             # Set the extent of the axis object to the desired latitude and longitude ranges
-            adjustLim(axs, lon1, lon2, lat1, lat2)
+            myPlot.adjustLim(axs, lon1, lon2, lat1, lat2)
             
             # Show the plot
             myPlot.showBackend()
 
             # Save the plot to a file
-            filename = path.basename(oldFile).replace(".kml", ".png")
+            basename = path.basename(oldFile)
+            filename = basename.replace(".kml", ".png")
+
             if ious:
                 for iou in ious:
                     print(iou) 
-                myPlot.saveFig(fig, f'./temp/match/{filename}')
+                myPlot.saveFig(fig, f'{savePath}/{filename}')
                 print('')
             else:
-                myPlot.saveFig(fig, f'./temp/unmatch/{filename}', False)
+                myPlot.saveFig(fig, f'./temp/unmatch/{filename}', False, False)
         except Exception as e:
             print(f"{oldFile} No Data!")
             print(f'Exception: {e}\n')
             pass
     print('\nFnished comparing!')
 
+################################################################################################
 def main():
+    myPlot.setScreenDpiAware()
     cn_font = myPlot.init()
 
     if len(sys.argv) == 1:
         window = sg.Window('Select file to process...',
                         [[sg.Text('file to open')],
                         [sg.In(), sg.FileBrowse()],
-                        [sg.Open(), sg.Exit()]])
+                        [sg.Open(), sg.Exit()],
+                        # [sg.Image(key="-IMAGE-", size=(600, 600))],
+                        ])
         while True:
             event, values = window.read()
 
@@ -248,7 +130,7 @@ def main():
             newFile = values[0]
             if newFile != '':
                 window.minimize()
-                proceeFile(cn_font, newFile)
+                proceeFile(window, cn_font, newFile)
                 window.Normal()
                 newFile = ''
     else:
@@ -257,12 +139,14 @@ def main():
 
     window.close()
 
-def proceeFile(cn_font, newFile):
+################################################################################################
+def proceeFile(window, cn_font, newFile):
     if not newFile:
         print("No filename supplied")
     elif '.xls' in newFile:
         print('The filename you chose was: ', newFile)
         myUtils.createShipTrackLinesKmlFile(newFile)
+        myUtils.playSound()
     elif '.kml' in newFile:
         print('The filename you chose was: ', newFile)
         print('Comapre to other KML files...')

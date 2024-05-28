@@ -1,3 +1,4 @@
+import base64
 import io
 import os
 import random
@@ -7,6 +8,7 @@ from PIL import Image
 import ffmpeg
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
@@ -23,6 +25,9 @@ import PySimpleGUI as sg
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import geodatasets
+from shapely.geometry import Polygon
+from matplotlib.lines import Line2D
 
 import constants
 import myUtils
@@ -33,8 +38,8 @@ def calcDurationByFrames(frames, framerate):
 
 ################################################################################################
 def getFileFrameRate(filename: str) -> float:
-    if not os.path.isfile(filename):
-        print(f'{filename} not found!')
+    if not myUtils.isVideoFile(filename):
+        print(f'{filename} not video file!')
         return 0
     cmd = f"ffprobe.exe -v error -show_entries stream=avg_frame_rate -of default=nw=1:nk=1 {filename}"
     result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -42,8 +47,8 @@ def getFileFrameRate(filename: str) -> float:
 
 ################################################################################################
 def getFileDuration(filename: str) -> float:
-    if not os.path.isfile(filename):
-        print(f'{filename} not found!')
+    if not myUtils.isVideoFile(filename) and not myUtils.isAudioFile(filename):
+        print(f'{filename} is not Audio/Video file!')
         return 0
     cmd = f"ffprobe -v fatal -show_entries format=duration -of default=nw=1:nk=1 {filename}"
     result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -230,17 +235,201 @@ def getFigure(nrows=1, ncols=1, figsize=(18, 10.5)):
     return fig, ax
 
 ################################################################################################
-def saveFig(fig, filename, isPrint=True, resizeToEven=True):
+def plotNotam(axs, polys, color=None, legend=None, lables=None):
+    try:
+        if isinstance(polys, gpd.GeoDataFrame):
+            polys.exterior.plot(ax=axs, facecolor=color, color=color, label=legend, zorder=3)
+        elif isinstance(polys, Polygon):
+            x, y = polys.exterior.xy
+            plt.plot(x, y, color=color, zorder=3)
+
+        if lables != None:
+            for i, iloc in enumerate(polys.geometry.iloc):
+                if isinstance(iloc, Polygon):
+                    x, y = iloc.centroid.coords[0]
+                    label = lables[i]
+                    axs.annotate(label, xy=(x, y), xytext=(x + 0.5, y + 0.1), fontsize=14, arrowprops=dict(arrowstyle='->'))
+    except:
+        myUtils.pritnExceptionTrace()
+        pass
+
+################################################################################################
+def plotIOUs(fig, axs, newPolys, oldPolys):
+    newIndex = 0
+    # oldNames, newNames = [], []
+    ious = []
+
+    for i, newGeom in enumerate(newPolys.geometry):
+        if isinstance(newGeom, Polygon):
+            oldIndex = 0
+            newIndex += 1
+            newName = newPolys.iloc[i]["Name"]
+            # newNames.append(newName)
+
+            for j, oldGeom in enumerate(oldPolys.geometry):
+                if isinstance(oldGeom, Polygon):
+                    oldIndex += 1
+                    oldName = oldPolys.iloc[j]["Name"]
+                    # oldNames.append(oldName)
+                    geomName = f'{newName} vs {oldName}'
+
+                    newPoly = kml2ShapelyPolygon(newGeom)
+                    oldPoly = kml2ShapelyPolygon(oldGeom)
+                    iou = 0.0
+
+                    if newPoly.intersects(oldPoly):
+                        try:
+                            intersection = newPoly.intersection(oldPoly)
+                            union = newPoly.union(oldPoly)
+                            iou = 0.0 if union.area == 0.0 else intersection.area / union.area
+                        except Exception as e:
+                            pass
+                    if iou > 0.01:
+                        text = f'{geomName} JSI: {iou:.1%}'
+                        ious.append(text)
+                        # print(text)
+                        plotNotam(axs, gpd.GeoDataFrame(geometry=[intersection]), 'orange', text)
+    return ious
+
+################################################################################################
+def plotNotam1(fig, axs, cn_font, newPolys, oldPolys=None):
+    # plot title, axis and NOTAM drop zones
+    # plotTitleXYLabels(fig, axs, cn_font, f'{newTitle}\n{oldTitle}', '纬度Latitude', '经度Longitude')
+    # plot NOATM drop zones to set scale
+    plotNotam(axs, newPolys, 'blue')
+    if oldPolys is not None:
+        plotNotam(axs, oldPolys, 'green')
+
+################################################################################################
+def plotTitleXYLabels(fig, axs, cn_font, title, xLabel, yLabel):
+    axs.set_title(title, fontproperties=cn_font, fontsize=18, loc='left') # plot title
+    # axs[0].axis('off') # Hide the border of the subplot
+    axs.set_xlabel(xLabel, fontproperties=cn_font)  # Add an x-label to the axes.
+    axs.set_ylabel(yLabel, fontproperties=cn_font)  # Add a y-label to the axes.
+
+    handles = [
+        Line2D([0], [0], linestyle='none', mfc='blue', mec='blue', marker='s', label='New Drop Zone'),
+        Line2D([0], [0], linestyle='none', mfc='green', mec='green', marker='s', label='Old Drop Zone'),
+        Line2D([0], [0], linestyle='none', mfc='orange', mec='orange', marker='s', label='Intersection Drop Zone')
+    ]
+    
+    # fig.legend(handles=handles, bbox_to_anchor=(0.1, 0), ncol=3) # add legend
+    fig.legend(handles=handles, loc='lower center', ncol=3, fontsize=12)
+
+def plotNotam2(fig, axs, cn_font, newPolys, newTitle, oldPolys=None, oldTitle=None):
+    # Load the world map data
+    worldmap = gpd.read_file(geodatasets.get_path("naturalearth.land"))
+
+    # Plot the world map data
+    # worldmap.plot(color="lightgrey", ax=axs[1])
+    worldmap["geometry"].boundary.plot(facecolor="lightgrey", color="grey", ax=axs, zorder=1)
+    # worldmap["geometry"].boundary.plot(color="lightgrey", ax=axs[1])
+
+    # Adjust the spacing between the subplots
+    plt.subplots_adjust(left=0, right=1, wspace=0, hspace=0)
+
+    # Calculate NOTAM drop zones Jaccard Similarity Index and plot intersection polygons
+    if oldPolys is not None:
+        ious = plotIOUs(fig, axs, newPolys, oldPolys)
+        # plot title, axis and NOTAM drop zones
+        title = f'{newTitle}\n{oldTitle}'
+        for ios in ious:
+            title += f'\n{ios}'
+    else:
+        ious = 0
+        title = newTitle
+    plotTitleXYLabels(fig, axs, cn_font, title, '纬度Latitude', '经度Longitude')
+    return ious
+
+################################################################################################
+def adjustLim(axs, lon1, lon2, lat1, lat2):
+    lon21 = lon2 - lon1
+    lat21 = lat2 - lat1
+    ratio1 = lat21 / lon21
+
+    if lon21 < lat21:
+        dLon = lon21 * (ratio1 - 1) / 2
+        axs.set_xlim(lon1 - dLon, lon2 + dLon)
+        axs.set_ylim(lat1, lat2)
+    else:
+        dLat = lat21 * (1 - ratio1) / ratio1 / 2
+        axs.set_xlim(lon1, lon2)
+        axs.set_ylim(lat1 - dLat, lat2 + dLat)
+
+    lon1, lon2 = axs.get_xlim()
+    lat1, lat2 = axs.get_ylim()
+    ratio2 = (lat2 - lat1) / (lon2 - lon1)
+    # print(f'Ratio1: {ratio1:0.2f}, Ratio2: {ratio2:0.2f}')
+
+################################################################################################
+def getImageInMemoryFromKml(fig, dpi=80, resizeToEven=False, size=(600, 600)):
+    buf = io.BytesIO()
+    fig.savefig(buf, bbox_inches='tight', dpi=dpi, format='png')
+    if resizeToEven:
+        buf.seek(0)
+        img = Image.open(buf)
+        img_resize = img.resize(size, Image.LANCZOS)
+        with io.BytesIO() as buf1:
+            img_resize.save(buf1, format='PNG')
+            imagePng = buf1.getvalue()
+    else:
+        imagePng = buf.getvalue()
+    buf.close()
+    # graphic = base64.b64encode(imagePng)
+    # graphic = graphic.decode('utf-8')
+    return imagePng
+
+################################################################################################
+def getImage(filename, size=(600, 600)):
+    im = Image.open(filename)
+    new_im = im.resize(size, Image.LANCZOS)
+    with io.BytesIO() as buffer:
+        new_im.save(buffer, format='PNG')
+        image = buffer.getvalue()
+    return image
+
+################################################################################################
+def getImageFromKml(newFile, cn_font, size=(600, 600)):
+    if plt:
+        plt.close()
+
+    newPolys = gpd.read_file(os.path.abspath(newFile), driver='KML')
+    fig, axs = getFigure()
+    axs.set_aspect('equal')
+    plotNotam1(fig, axs, cn_font, newPolys)
+
+    # Get the current latitude and longitude ranges of axs[1]
+    lon1, lon2 = axs.get_xlim()
+    lat1, lat2 = axs.get_ylim()
+
+    # Plot wordl map
+    plotNotam2(fig, axs, cn_font, newPolys, myUtils.getTitle(newFile))
+
+    # Set the extent of the axis object to the desired latitude and longitude ranges
+    adjustLim(axs, lon1, lon2, lat1, lat2)
+            
+    # Show the plot
+    image = getImageInMemoryFromKml(fig, resizeToEven=True, size=size)
+    return image
+
+################################################################################################
+def setScreenDpiAware():
+    make_dpi_aware()
+    sg.theme('Python')
+    sg.set_options(text_justification='right')      
+
+################################################################################################
+def saveFig(fig, filename, dpi=300, isPrint=True, resizeToEven=True):
     myUtils.createFolder(filename)
     if resizeToEven:
         buf = io.BytesIO()
         # fig.savefig(buf, bbox_inches='tight')
-        fig.savefig(buf, bbox_inches='tight', dpi=300)
+        fig.savefig(buf, bbox_inches='tight', dpi=dpi)
         plt.close(fig)
         buf.seek(0)
         img = Image.open(buf)
         figsize = fig.get_size_inches()
-        size = figsize * 300 # size in pixels
+        size = figsize * dpi # size in pixels
         img_resize = img.resize(size.astype(int))
         img_resize.save(filename)
     else:
@@ -543,9 +732,9 @@ def plotVLineBetweenYearsMonths(ax, xDataList, dx=0.5, yMin=-0.24, yMax=0.8, mus
             if date.year != xDataList[-1].year:
                 if i > 0 and date.year != xDataList[i - 1].year:
                     ax.axvline(i + 1 - dx, ymin=yMin, ymax=yMax, linestyle='--', clip_on=False)
-            elif xDataList[0].year == xDataList[-1].year:
-                if i > 0 and date.month != xDataList[i - 1].month:
-                    ax.axvline(i + 1 - dx, ymin=yMin, ymax=yMax, linestyle='--', clip_on=False)
+            # elif xDataList[0].year == xDataList[-1].year:
+            #     if i > 0 and date.month != xDataList[i - 1].month:
+            #         ax.axvline(i + 1 - dx, ymin=yMin, ymax=yMax, linestyle='--', clip_on=False)
             else:
                 ax.axvline(i + 1 - dx, ymin=yMin, ymax=yMax, linestyle='--', clip_on=False)
                 break
@@ -1088,7 +1277,7 @@ def getEndRow(row):
 ################################################################################################
 def convertDataFrame2TimeSeries(df, use_pinyin=False):
     # myUtils.setStartTime()
-    removeColumns = ['发射日期', '着陆日期', '在轨日数', '载人飞船', 'Ship']  
+    removeColumns = ['发射日期', '着陆日期', '在轨日数', '载人飞船', 'Ship', '备注']  
     removeColumns += ['出生日期', '年龄', '入选年', '批次', 'Gap']
     removeColumns.append('航天员') if use_pinyin else removeColumns.append('Pinyin')
 
@@ -1097,7 +1286,6 @@ def convertDataFrame2TimeSeries(df, use_pinyin=False):
     df = (df.drop(columns=removeColumns).explode('日期', ignore_index=True)
           .sort_values(by=['日期', 'Rank']).reset_index(drop=True))
     df.columns = ['航天员', 'Rank', '日期']
-    # myUtils.showRunTime()
     return df
 
 ################################################################################################

@@ -11,6 +11,7 @@ import os
 import socket
 import subprocess
 import time
+import unicodedata
 import pytz
 import inspect
 import zipfile
@@ -20,7 +21,7 @@ import configparser
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from time import localtime, sleep, strftime
-from re import compile, findall, finditer, match, search#, sub, IGNORECASE
+from re import compile, findall, finditer, match, search, sub#, IGNORECASE
 from pathlib import Path
 from numpy import zeros
 from pprint import pprint
@@ -72,14 +73,35 @@ startTime = 0
 FILE_ATTRIBUTE_HIDDEN = 0x02
 
 ################################################################################################
+def getDateAfterDays(startDate, days: int):
+    if isinstance(startDate, str):
+        startDate1 = datetime.strptime(startDate.replace('-', '/'), "%Y/%m/%d")
+    endDate = startDate1 + timedelta(days=days)
+    if isinstance(startDate, str):
+        endDate = endDate.strftime('%Y/%m/%d')
+    return endDate
+
+################################################################################################
 def listFilesByGlob(partOfFilename):
     return glob(partOfFilename)
 
-# if __name__ == '__main__':
-#     # parseFileInfo('videos/pngsMerged.mp4')
-#     videoName = 'videos/pngsMerged.mp4'
-#     musicList = listFilesByGlob('music/momoe/*.mp3')
-#     matchMusics2Video(videoName, musicList)
+################################################################################################
+def convertToDiacritic(text, mode="NFC"):
+    """
+    基底文字と濁点・半濁点を結合
+    """
+    bytes_text = text.encode()  # str -> bytes
+
+    # 濁点Unicode結合文字置換
+    bytes_text = sub(b"\xe3\x82\x9b", b'\xe3\x82\x99', bytes_text)
+    bytes_text = sub(b"\xef\xbe\x9e", b'\xe3\x82\x99', bytes_text)
+
+    # 半濁点Unicode結合文字置換
+    bytes_text = sub(b"\xe3\x82\x9c", b'\xe3\x82\x9a', bytes_text)
+    bytes_text = sub(b"\xef\xbe\x9f", b'\xe3\x82\x9a', bytes_text)
+    text = bytes_text.decode() # bytet -> str
+    text = unicodedata.normalize(mode, text) # 正規化
+    return text
 
 ################################################################################################
 def mergeSmallVideos(videoList, mergedVideoFile, skipHeader=False, msg=None, tsFile=True):
@@ -144,7 +166,7 @@ def removeItemsFromTwoLists(list1: list, list2: list, list1Remove: list):
 def readTextFile(filename, tripLinefeed=False):
     with open(filename, encoding='utf-8') as f:
         lines = [line.rstrip('\n') for line in f.readlines()] if tripLinefeed else f.readlines()
-        return lines
+        return [convertToDiacritic(line) for line in lines]
     
 ################################################################################################
 def setStartTime():
@@ -192,6 +214,15 @@ def saveDictToTextFile(filename, dataDict):
     with open(filename, 'w', encoding="utf-8") as f:
         for i, (key, value) in enumerate(dataDict.items(), 1):
             lines += f'{i:02} {key}: {value}\n'
+        f.write(lines)
+        print(f'Save dict to "{os.path.abspath(filename)}"')
+
+################################################################################################
+def saveListToTextFile(filename, dataList):
+    lines = ''
+    with open(filename, 'w', encoding="utf-8") as f:
+        for line in dataList:
+            lines += f'{line}\n'
         f.write(lines)
         print(f'Save dict to "{os.path.abspath(filename)}"')
 
@@ -265,6 +296,13 @@ def removeFile(folderWithWildcard):
         except:
             #print("Error while deleting file : ", filePath)
             pass
+
+################################################################################################
+def getTitle(filename):
+    title = path.basename(filename)  # Get the filename from the path
+    title = title.split('.')[0]  # Remove the extension
+    title = title.split('\\')[-1]  # Get the last portion of the path
+    return title
 
 ################################################################################################
 def setLogging(filename):
@@ -658,18 +696,21 @@ def createMsaDropZonesKmlFile(oldFile):
             if line != '' and line[0:1] != '#':
                 content += line
         location, number, startDates, endDates, areas = notam.parseMsa(content)
+        lastStart = ''
+        lastEnd = ''
+        kml = Kml()
+        notams = {}
 
-        # for startDate, endDate, area in zip(startDates, endDates, areas):
         for i, area in enumerate(areas):
-            kml = Kml()
-            notams = {}
-            startDate = startDates[i] if i < len(startDates) else getUTCTime()[:-3]
-            endDate = endDate[i] if i < len(endDates) else getUTCTime()[:-3]
+            startDate = startDates[i] if i < len(startDates) else lastStart
+            endDate = endDates[i] if i < len(endDates) else lastEnd
+            startDate = startDate if startDate else getUTCTime()[:-3]
+            endDate = endDate if endDates else getUTCTime()[:-3]
             title = f"{oldFile.replace('.txt', '').split('/')[-1]}"
             title = convertTitle(startDate, endDate, title)
+
             if area:
                 area = nsf.formatMSALatitudeLongitude([area])[0]
-            # for area in areas:
                 coords = area.split('|')
                 coordsList = [convertDMS2DD(c) for c in coords]
                 if len(coordsList) == 1:
@@ -677,7 +718,9 @@ def createMsaDropZonesKmlFile(oldFile):
                 else:
                     drawPolygon(kml, coordsList, f'{location}/{number}')
                 notams = notam.getNoatmDict(notams, number, startDate, endDate, location, area)
-            updateKmlFile(kml, title, KML_PATH, notams)
+                lastStart = startDate
+                lastEnd = endDate
+        updateKmlFile(kml, title, KML_PATH, notams)
 
 ################################################################################################
 def getNotamNumbers(content) -> tuple:
@@ -697,8 +740,8 @@ def createKmlFile(notams, title1='', city1='') -> None:
 
     for number, item in notams.items():
         itemArray = item.split(';')
-        if itemArray[2] == 'RJJJ' and number.startswith('Q'):
-            continue
+        # if itemArray[2] == 'RJJJ' and number.startswith('Q'):
+        #     continue
         startDate = itemArray[0]
         endDate = itemArray[1]
         loc = itemArray[2]
@@ -800,24 +843,40 @@ def getYYYYMMDD(year):
 ################################################################################################
 def getMsaDates(content: str) -> tuple:
     startDates, endDates = [], []
-    startEndDates1 = finditer(constants.MSA_PATTERN_DATE_CHINA1, content)
-    startEndDates2 = finditer(constants.MSA_PATTERN_DATE_CHINA2, content)
+    startEndDates1 = [m for m in finditer(constants.MSA_PATTERN_DATE_CHINA1, content)]
+    startEndDates2 = [m for m in finditer(constants.MSA_PATTERN_DATE_CHINA2, content)]
+    startEndDates3 = [m for m in finditer(constants.MSA_PATTERN_DATE, content)]
     startEndDates = startEndDates1 if startEndDates1 else startEndDates2
-    for m in startEndDates:
-        startMonth = m.group(1)
-        startDay = m.group(2)
-        startTime = convertTime(m.group(3))
-        startYear = getJapanDate()[:4] #if m.group(4) == '' else getYYYYMMDD(m.group(4))
-        endDay = startDay
-        endTime = convertTime(m.group(4))
-        endMonth = startMonth
-        endYear = startYear
-        # startMonth = endMonth if startMonth == '' else convertMonthToNumber(startMonth)
-        # endTime = endTime if endTime != '00:00' else '23:59'
-        startDate = f'{startYear}/{startMonth}/{startDay.zfill(2)} {startTime}'
-        endDate = f'{endYear}/{endMonth}/{endDay.zfill(2)} {endTime}'
-        startDates.append(startDate)
-        endDates.append(endDate)
+    if startEndDates1 or startEndDates2:
+        for m in startEndDates:
+            startYear = getJapanDate()[:4]
+            startMonth = int(m.group(1)) if m.group(1) else ''
+            startDay = int(m.group(2)) if m.group(2) else ''
+            startTime = convertTime(m.group(3)) if m.group(3) else ''
+            endYear = startYear
+            endMonth = int(m.group(4)) if m.group(4) else startMonth
+            endDay = int(m.group(5)) if m.group(5) else startDay
+            endTime = convertTime(m.group(6)) if m.group(6) else ''
+            if startYear and startMonth and startDay and startTime:
+                startDate = f'{startYear}/{startMonth:02}/{int(startDay):02} {startTime}'
+            if endYear and endMonth and endDay and endTime:
+                endDate = f'{endYear}/{endMonth:02}/{endDay:02} {endTime}'
+            startDates.append(startDate)
+            endDates.append(endDate)
+    elif startEndDates3:
+        for m in startEndDates3:
+            startDay = m.group(1) #convert to UTC+()
+            startTime = convertTime(m.group(2)) #convert to UTC+()
+            startMonth = m.group(3)
+            startYear = m.group(4) if m.group(4) else getThisYear()
+            endDay = m.group(5) #convert to UTC+()
+            endTime = convertTime(m.group(6)) #convert to UTC+()
+            endMonth = m.group(7)
+            endYear = m.group(4) if m.group(4) else getThisYear()
+            startDate = f'{startYear}/{startMonth:02}/{startDay:02} {startTime}'
+            endDate = f'{endYear}/{endMonth:02}/{endDay:02} {endTime}'
+            startDates.append(startDate)
+            endDates.append(endDate)
     return startDates, endDates
 
 ################################################################################################
@@ -950,10 +1009,11 @@ def drawStages(kml, coords, city, location) -> None:
 
 ################################################################################################
 # distance in kilo metres
-def drawCircle(kml, coords, location, color=constants.COLOR_SEA, radius=5):
+def drawCircle(kml, coords, location, color=constants.COLOR_SEA, radius=3):
     circle = circleByPoint(coords[0][1], coords[0][0], radius)
     # circle = [(lon, lat) for lat, lon in buffer]
-    drawPolygon(kml, circle, location, color)
+    drawLine(kml, circle, location, color)
+    # drawPolygon(kml, circle, location, color)
 
 ################################################################################################
 def drawPoint(kml, coords, location) -> None:
@@ -1371,10 +1431,10 @@ def sortDictByKey(d: dict):
     return  {k : v for k, v in sorted(d.items(), key=lambda x: x[0])}
 
 ################################################################################################
-def exceptPrint():
-    exc_type, _, exc_tb = exc_info()
-    fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-    print(exc_type, fname, exc_tb.tb_lineno)
+# def exceptPrint():
+#     exc_type, _, exc_tb = exc_info()
+#     fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+#     print(exc_type, fname, exc_tb.tb_lineno)
 
 ################################################################################################
 def scrollBottom(driver: webdriver.Firefox):
@@ -1401,6 +1461,10 @@ def findElementsByClass(driver: webdriver.Firefox, className: str):
 ################################################################################################
 def findElementsByXPath(driver: webdriver.Firefox, xPath: str):
     return driver.find_elements(By.XPATH, xPath)
+
+################################################################################################
+def findElementsByLinkText(driver: webdriver.Firefox, linkText: str):
+    return driver.find_elements(By.LINK_TEXT, linkText)
 
 ################################################################################################
 def findElementsByTag(driver, tagName):
@@ -1457,34 +1521,30 @@ def second2Time(floatTime: float) -> str:
     return time
 
 ################################################################################################
-def isImageFile(fileName):
+def getMimeTyoe(filename):
     import mimetypes
-    mimestart = mimetypes.guess_type(fileName)[0]
-    if mimestart != None:
-        mimestart = mimestart.split('/')[0]
-        if mimestart in ['image']:
-            return True
-    return False
+    mime = mimetypes.guess_type(filename)
+    return mime
 
 ################################################################################################
-def isAudioFile(fileName):
-    import mimetypes
-    mimestart = mimetypes.guess_type(fileName)[0]
-    if mimestart != None:
-        mimestart = mimestart.split('/')[0]
-        if mimestart in ['audio']:
-            return True
-    return False
+def isTextFile(filename):
+    mime = getMimeTyoe(filename)
+    return mime[0] == 'text/plain'
 
 ################################################################################################
-def isVideoFile(fileName):
-    import mimetypes
-    mimestart = mimetypes.guess_type(fileName)[0]
-    if mimestart != None:
-        mimestart = mimestart.split('/')[0]
-        if mimestart in ['video']:
-            return True
-    return False
+def isImageFile(filename):
+    mime = getMimeTyoe(filename)
+    return 'image' in mime[0] 
+
+################################################################################################
+def isAudioFile(filename):
+    mime = getMimeTyoe(filename)
+    return 'audio' in mime[0] 
+
+################################################################################################
+def isVideoFile(filename):
+    mime = getMimeTyoe(filename)
+    return 'video' in mime[0] 
 
 ################################################################################################
 def isMediaFile(fileName):
@@ -1887,14 +1947,18 @@ def convertPattern7(s):
         if '.' in s:
             nSecond = str(int(s[6:8]) * 6 / pow(10, len(s[6:8]) - 1))[:2]
             eSecond = str(int(s[16:18]) * 6 / pow(10, len(s[16:18]) - 1))[:2]
-            return f"{s[8:9]}{s[0:2]}°{s[3:5]}'{nSecond}\",{s[18:19]}{s[9:12]}°{s[13:15]}'{eSecond}\""
+            ret = f"{s[8:9]}{s[0:2]}°{s[3:5]}'{nSecond}\",{s[18:19]}{s[9:12]}°{s[13:15]}'{eSecond}\""
         else:
-            return f"{s[8:9]}{s[0:2]}°{s[3:5]}'{s[6:8]}\",{s[18:19]}{s[9:12]}°{s[13:15]}'{s[16:18]}\""
+            ret =  f"{s[8:9]}{s[0:2]}°{s[3:5]}'{s[6:8]}\",{s[18:19]}{s[9:12]}°{s[13:15]}'{s[16:18]}\""
     elif len(s) == 21:
         nSecond = str(int(s[6:9]) * 6 / pow(10, len(s[6:9]) - 1))[:2]
         eSecond = str(int(s[17:20]) * 6 / pow(10, len(s[17:20]) - 1))[:2]
-        return f"{s[9]}{s[0:2]}°{s[3:5]}'{nSecond}\",{s[20]}{s[10:13]}°{s[14:16]}'{eSecond}\""
-    return f"{s[7:8]}{s[0:2]}°{s[3:5]}',{s[16:17]}{s[8:11]}°{s[12:14]}'"
+        ret =  f"{s[9]}{s[0:2]}°{s[3:5]}'{nSecond}\",{s[20]}{s[10:13]}°{s[14:16]}'{eSecond}\""
+    elif len(s) == 13:
+        ret =  f"{s[5:6]}{s[0:2]}°{s[3:5]}',{s[12:13]}{s[6:9]}°{s[10:12]}'"
+    else:
+        ret = f"{s[7:8]}{s[0:2]}°{s[3:5]}',{s[16:17]}{s[8:11]}°{s[12:14]}'"
+    return ret
 
 ################################################################################################
 def kanji2int(kanjis: str, error="raise", style="auto") -> int:
