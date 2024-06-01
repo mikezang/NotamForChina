@@ -1,3 +1,4 @@
+from re import finditer
 import sys
 import geopandas as gpd
 import PySimpleGUI as sg
@@ -38,9 +39,7 @@ def plotLaunchCenter(axs):
 
 ################################################################################################
 def compareNotam(newFile, cn_font):
-    # Use geopandas to read new NOTAM kml file
     location, locations = myUtils.getLocation(newFile)
-    # location = newFile.split('/')[-1][11:13]
     if location is None:
         print(f'{newFile} not included {locations}')
         return
@@ -60,46 +59,31 @@ def compareNotam(newFile, cn_font):
     for oldFile in oldFiles:
         if '\\old\\' in oldFile:
             continue
+
         try:
             if plt:
                 plt.close()
 
             # Use geopandas to read old NOTAM kml file to shapely.geometry
             oldPolys = gpd.read_file(oldFile, driver='KML')
-            # fig, axs = plt.subplots(nrows=1, ncols=1)
-            fig, axs = myPlot.getFigure()
-            axs.set_aspect('equal')
+            fig, ax = myPlot.getFigure(setAspectEqual=True)
 
-            # Plot NOTAM
-            myPlot.plotNotam1(fig, axs, cn_font, newPolys, oldPolys)
-
-            # Plot Launch center 
-            # plotLaunchCenter(axs)
-
-            # Get the current latitude and longitude ranges of axs[1]
-            lon1, lon2 = axs.get_xlim()
-            lat1, lat2 = axs.get_ylim()
-
-            # Plot wordl map
-            ious = myPlot.plotNotam2(fig, axs, cn_font, newPolys, myUtils.getTitle(newFile), oldPolys, myUtils.getTitle(oldFile))
-
-            # Plot Launch center 
-            # plotLaunchCenter(axs)
-
-            # Set the extent of the axis object to the desired latitude and longitude ranges
-            myPlot.adjustLim(axs, lon1, lon2, lat1, lat2)
-            
-            # Show the plot
-            myPlot.showBackend()
+            myPlot.plot2Noatms(fig, ax, newPolys, oldPolys)
+            newTitle = myUtils.getTitle(newFile)
+            newTitle = newTitle if '时' in newTitle else newTitle.replace('日', '日??时??分')
+            oldTitle = myUtils.getTitle(oldFile)
+            ious = myPlot.plotPolygonsIntersection(fig, ax, cn_font, newPolys, newTitle, oldPolys, oldTitle)
+            # myPlot.showBackend()
 
             # Save the plot to a file
             basename = path.basename(oldFile)
             filename = basename.replace(".kml", ".png")
 
             if ious:
+                print(f'{newTitle} vs {oldTitle}')
                 for iou in ious:
-                    print(iou) 
-                myPlot.saveFig(fig, f'{savePath}/{filename}')
+                    print(f'    {iou}') 
+                myPlot.saveFig(fig, f'{savePath}/{filename}', False, False)
                 print('')
             else:
                 myPlot.saveFig(fig, f'./temp/unmatch/{filename}', False, False)
@@ -111,6 +95,25 @@ def compareNotam(newFile, cn_font):
 
 ################################################################################################
 def main():
+    # chineseDate1 = '5月28日至31日'
+    # chineseDate2 = '5月28日15时至31日17时'
+    # chineseDate3 = '5月28日15时至6月1日17时'
+    # patternMyOriginal = r'(\d{1,2})月(\d{1,2})日(\d{0,4})时?至(\d{0,2})月?(\d{1,2})日(\d{0,4})时?'
+    # patternByChatGPT = r'(?:(\d{1,2})月)?(\d{1,2})日(?:(\d{1,4})时)?至(?:(\d{1,2})月)?(\d{1,2})日(?:(\d{1,4})时)?'
+    # matchesMyOriginal1 = [m.groups() for m in finditer(patternMyOriginal , chineseDate1)]
+    # matchesMyOriginal2 = [m.groups() for m in finditer(patternMyOriginal , chineseDate2)]
+    # matchesMyOriginal3 = [m.groups() for m in finditer(patternMyOriginal , chineseDate3)]
+    # matchesByChatGPT1 = [m.groups() for m in finditer(patternByChatGPT , chineseDate1)]
+    # matchesByChatGPT2 = [m.groups() for m in finditer(patternByChatGPT , chineseDate2)]
+    # matchesByChatGPT3 = [m.groups() for m in finditer(patternByChatGPT , chineseDate3)]
+
+    # print(f'\n{matchesMyOriginal1 = }')
+    # print(f'{matchesMyOriginal2 = }')
+    # print(f'{matchesMyOriginal3 = }')
+    # print(f'{matchesByChatGPT1 = }')
+    # print(f'{matchesByChatGPT2 = }')
+    # print(f'{matchesByChatGPT3 = }')
+
     myPlot.setScreenDpiAware()
     cn_font = myPlot.init()
 

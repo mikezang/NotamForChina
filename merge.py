@@ -1,15 +1,11 @@
 from datetime import timedelta
-# import logging
-# from pathlib import Path
 import shutil
 import subprocess
 from sys import argv
-# import time
 from timeit import timeit
 import PySimpleGUI as sg
 import os
 
-# import constants
 import myUtils
 import myPlot
 

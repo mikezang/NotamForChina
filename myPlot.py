@@ -1,8 +1,9 @@
-import base64
 import io
 import os
 import random
-# import shutil
+import warnings
+import cartopy.feature as cfeature
+import cartopy.crs as ccrs
 import subprocess
 from PIL import Image
 import ffmpeg
@@ -28,6 +29,7 @@ import matplotlib.image as mpimg
 import geodatasets
 from shapely.geometry import Polygon
 from matplotlib.lines import Line2D
+import geoplot
 
 import constants
 import myUtils
@@ -222,41 +224,58 @@ def init(setDefaultFont=False):
 ################################################################################################
 def showBackend():
     # print(plt.get_backend())
-    if plt.get_backend() not in ['agg', 'TkAgg', 'GTK3Agg', 'MacOSX']:
+    if plt.get_backend().lower() not in ['agg', 'tkagg', 'gtk3agg', 'macosx']:
         plt.show()
 
 ################################################################################################
-# def getFigure(nrows=1, ncols=1, figsize=(18, 10.5), layout="constrained"):
-def getFigure(nrows=1, ncols=1, figsize=(18, 10.5)):
-    # layout="constrained"
-    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize) 
-    # fig = figure.Figure(figsize, dpi)
-    # ax = fig.add_subplot(pos)
+def getFigure(nrows=1, ncols=1, figsize=(18, 10.5), subplot_kw=None, setAspectEqual=False):
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, subplot_kw=subplot_kw) 
+    # Adjust the spacing between the subplots
+    # plt.subplots_adjust(left=0, right=1, wspace=0, hspace=0)
+
+    if setAspectEqual:
+        ax.set_aspect('equal')
     return fig, ax
 
 ################################################################################################
-def plotNotam(axs, polys, color=None, legend=None, lables=None):
+def plotGeometry(ax, polys, color=None, legend=None, lables=None, plotAll=False, orthographic=False):
     try:
         if isinstance(polys, gpd.GeoDataFrame):
-            polys.exterior.plot(ax=axs, facecolor=color, color=color, label=legend, zorder=3)
+            polys1 = polys[polys['geometry'].apply(lambda x: isinstance(x, Polygon))]
+            lines1 = polys[polys['geometry'].apply(lambda x: isinstance(x, LineString))]
+            if  orthographic:
+                import matplotlib.ticker as mticker
+                gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True) # 経度線・緯度線ラベルを無効
+                # ax.axes.tick_params(top=True, right=True, labeltop=True, labelright=False)
+                # gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=False) # 経度線・緯度線ラベルを無効
+                # gl.xlocator = mticker.FixedLocator(np.arange(-180, 180, 5)) # 経度線
+                # gl.ylocator = mticker.FixedLocator(np.arange(-90, 90.1, 5)) # 緯度線
+                # ax.set_xticks(np.arange(0, 360.1, 20), crs=ccrs.PlateCarree()) # 経度線ラベル
+                # ax.set_yticks(np.arange(-90, 90.1, 20), crs=ccrs.PlateCarree()) # 緯度線ラベル
+                geoplot.polyplot(polys1, ax=ax, facecolor="blue", zorder=2)
+                if plotAll and not lines1.empty:
+                    geoplot.polyplot(lines1, ax=ax, color="blue", zorder=3)
+            else:
+                polys1.plot(ax=ax, facecolor=color, color=color, label=legend, zorder=2)
+                if plotAll and not lines1.empty:
+                    lines1.plot(ax=ax, color=color, label=legend, zorder=3)
         elif isinstance(polys, Polygon):
             x, y = polys.exterior.xy
             plt.plot(x, y, color=color, zorder=3)
 
-        if lables != None:
+        if lables != None and polys.geometry.any() is not None:
             for i, iloc in enumerate(polys.geometry.iloc):
                 if isinstance(iloc, Polygon):
                     x, y = iloc.centroid.coords[0]
                     label = lables[i]
-                    axs.annotate(label, xy=(x, y), xytext=(x + 0.5, y + 0.1), fontsize=14, arrowprops=dict(arrowstyle='->'))
+                    ax.annotate(label, xy=(x, y), xytext=(x + 0.5, y + 0.1), fontsize=14, arrowprops=dict(arrowstyle='->'))
     except:
         myUtils.pritnExceptionTrace()
         pass
 
 ################################################################################################
-def plotIOUs(fig, axs, newPolys, oldPolys):
+def plotIntersection(fig, ax, newPolys, oldPolys):
     newIndex = 0
-    # oldNames, newNames = [], []
     ious = []
 
     for i, newGeom in enumerate(newPolys.geometry):
@@ -264,13 +283,11 @@ def plotIOUs(fig, axs, newPolys, oldPolys):
             oldIndex = 0
             newIndex += 1
             newName = newPolys.iloc[i]["Name"]
-            # newNames.append(newName)
 
             for j, oldGeom in enumerate(oldPolys.geometry):
                 if isinstance(oldGeom, Polygon):
                     oldIndex += 1
                     oldName = oldPolys.iloc[j]["Name"]
-                    # oldNames.append(oldName)
                     geomName = f'{newName} vs {oldName}'
 
                     newPoly = kml2ShapelyPolygon(newGeom)
@@ -287,25 +304,50 @@ def plotIOUs(fig, axs, newPolys, oldPolys):
                     if iou > 0.01:
                         text = f'{geomName} JSI: {iou:.1%}'
                         ious.append(text)
-                        # print(text)
-                        plotNotam(axs, gpd.GeoDataFrame(geometry=[intersection]), 'orange', text)
+                        plotGeometry(ax, gpd.GeoDataFrame(geometry=[intersection]), 'orange', text)
     return ious
 
 ################################################################################################
-def plotNotam1(fig, axs, cn_font, newPolys, oldPolys=None):
-    # plot title, axis and NOTAM drop zones
-    # plotTitleXYLabels(fig, axs, cn_font, f'{newTitle}\n{oldTitle}', '纬度Latitude', '经度Longitude')
-    # plot NOATM drop zones to set scale
-    plotNotam(axs, newPolys, 'blue')
+def plot2Noatms(fig, ax, newPolys, oldPolys=None, plotAll=False, plotWorldMap=True, adjustLimit=True, orthographic=False):
+    plotGeometry(ax, newPolys, 'blue', plotAll=plotAll, orthographic=orthographic)
     if oldPolys is not None:
-        plotNotam(axs, oldPolys, 'green')
+        plotGeometry(ax, oldPolys, 'green', plotAll=plotAll, orthographic=orthographic)
+
+    if adjustLimit:
+        lon1, lon2 = ax.get_xlim()
+        lat1, lat2 = ax.get_ylim()
+
+    if plotWorldMap:
+        if  orthographic:
+            ax.coastlines()
+            # ax.stock_img()
+            ax.add_feature(cfeature.LAND) # 陸に色を付ける
+            # ax.add_feature(cfeature.OCEAN) # 海に色を付ける
+        else:
+            worldmap = gpd.read_file(geodatasets.get_path("naturalearth.land"))
+            worldmap["geometry"].boundary.plot(facecolor="lightgrey", color="grey", ax=ax, zorder=1)
+
+    if adjustLimit:
+        # Set the extent of the axis object to the desired latitude and longitude ranges
+        adjustLim(ax, lon1, lat1, lon2, lat2)
 
 ################################################################################################
-def plotTitleXYLabels(fig, axs, cn_font, title, xLabel, yLabel):
-    axs.set_title(title, fontproperties=cn_font, fontsize=18, loc='left') # plot title
-    # axs[0].axis('off') # Hide the border of the subplot
-    axs.set_xlabel(xLabel, fontproperties=cn_font)  # Add an x-label to the axes.
-    axs.set_ylabel(yLabel, fontproperties=cn_font)  # Add a y-label to the axes.
+def plotPolygonsIntersection(fig, ax, cn_font, newPolys, newTitle, oldPolys=None, oldTitle=None):
+    # Calculate NOTAM drop zones Jaccard Similarity Index and plot intersection polygons
+    ious = plotIntersection(fig, ax, newPolys, oldPolys)
+    # plot title, axis and NOTAM drop zones
+    title = f'{newTitle}\n{oldTitle}'
+    for ios in ious:
+        title += f'\n{ios}'
+    plotTitleXYLabels(fig, ax, cn_font, title, 'Latitude（纬度）', 'Longitude（经度）')
+    return ious
+
+################################################################################################
+def plotTitleXYLabels(fig, ax, cn_font, title, xLabel, yLabel):
+    ax.set_title(title, fontproperties=cn_font, fontsize=18, loc='center') # plot title
+    # ax[0].axis('off') # Hide the border of the subplot
+    ax.set_xlabel(xLabel, fontproperties=cn_font)  # Add an x-label to the axes.
+    ax.set_ylabel(yLabel, fontproperties=cn_font)  # Add a y-label to the axes.
 
     handles = [
         Line2D([0], [0], linestyle='none', mfc='blue', mec='blue', marker='s', label='New Drop Zone'),
@@ -316,56 +358,31 @@ def plotTitleXYLabels(fig, axs, cn_font, title, xLabel, yLabel):
     # fig.legend(handles=handles, bbox_to_anchor=(0.1, 0), ncol=3) # add legend
     fig.legend(handles=handles, loc='lower center', ncol=3, fontsize=12)
 
-def plotNotam2(fig, axs, cn_font, newPolys, newTitle, oldPolys=None, oldTitle=None):
-    # Load the world map data
-    worldmap = gpd.read_file(geodatasets.get_path("naturalearth.land"))
-
-    # Plot the world map data
-    # worldmap.plot(color="lightgrey", ax=axs[1])
-    worldmap["geometry"].boundary.plot(facecolor="lightgrey", color="grey", ax=axs, zorder=1)
-    # worldmap["geometry"].boundary.plot(color="lightgrey", ax=axs[1])
-
-    # Adjust the spacing between the subplots
-    plt.subplots_adjust(left=0, right=1, wspace=0, hspace=0)
-
-    # Calculate NOTAM drop zones Jaccard Similarity Index and plot intersection polygons
-    if oldPolys is not None:
-        ious = plotIOUs(fig, axs, newPolys, oldPolys)
-        # plot title, axis and NOTAM drop zones
-        title = f'{newTitle}\n{oldTitle}'
-        for ios in ious:
-            title += f'\n{ios}'
-    else:
-        ious = 0
-        title = newTitle
-    plotTitleXYLabels(fig, axs, cn_font, title, '纬度Latitude', '经度Longitude')
-    return ious
-
 ################################################################################################
-def adjustLim(axs, lon1, lon2, lat1, lat2):
+def adjustLim(ax, lon1, lat1, lon2, lat2):
     lon21 = lon2 - lon1
     lat21 = lat2 - lat1
     ratio1 = lat21 / lon21
 
     if lon21 < lat21:
         dLon = lon21 * (ratio1 - 1) / 2
-        axs.set_xlim(lon1 - dLon, lon2 + dLon)
-        axs.set_ylim(lat1, lat2)
+        ax.set_xlim(lon1 - dLon, lon2 + dLon)
+        ax.set_ylim(lat1, lat2)
     else:
         dLat = lat21 * (1 - ratio1) / ratio1 / 2
-        axs.set_xlim(lon1, lon2)
-        axs.set_ylim(lat1 - dLat, lat2 + dLat)
+        ax.set_xlim(lon1, lon2)
+        ax.set_ylim(lat1 - dLat, lat2 + dLat)
 
-    lon1, lon2 = axs.get_xlim()
-    lat1, lat2 = axs.get_ylim()
+    lon1, lon2 = ax.get_xlim()
+    lat1, lat2 = ax.get_ylim()
     ratio2 = (lat2 - lat1) / (lon2 - lon1)
     # print(f'Ratio1: {ratio1:0.2f}, Ratio2: {ratio2:0.2f}')
 
 ################################################################################################
-def getImageInMemoryFromKml(fig, dpi=80, resizeToEven=False, size=(600, 600)):
+def getImageInMemoryFromFig(fig, dpi=80, resize=False, size=(900, 900)):
     buf = io.BytesIO()
     fig.savefig(buf, bbox_inches='tight', dpi=dpi, format='png')
-    if resizeToEven:
+    if resize:
         buf.seek(0)
         img = Image.open(buf)
         img_resize = img.resize(size, Image.LANCZOS)
@@ -380,36 +397,43 @@ def getImageInMemoryFromKml(fig, dpi=80, resizeToEven=False, size=(600, 600)):
     return imagePng
 
 ################################################################################################
-def getImage(filename, size=(600, 600)):
-    im = Image.open(filename)
-    new_im = im.resize(size, Image.LANCZOS)
-    with io.BytesIO() as buffer:
-        new_im.save(buffer, format='PNG')
-        image = buffer.getvalue()
-    return image
-
-################################################################################################
-def getImageFromKml(newFile, cn_font, size=(600, 600)):
+def getImageFromKml(newFile, cn_font, size=(900, 900), orthographic=False, plotAll=False):
     if plt:
         plt.close()
 
     newPolys = gpd.read_file(os.path.abspath(newFile), driver='KML')
-    fig, axs = getFigure()
-    axs.set_aspect('equal')
-    plotNotam1(fig, axs, cn_font, newPolys)
 
-    # Get the current latitude and longitude ranges of axs[1]
-    lon1, lon2 = axs.get_xlim()
-    lat1, lat2 = axs.get_ylim()
+    if orthographic:
+        warnings.filterwarnings('ignore', message='Geometry is in a geographic CRS')
+        lonMean, LagMean = newPolys.centroid.get_coordinates().mean()
+        proj = geoplot.crs.Orthographic(central_longitude=lonMean, central_latitude=LagMean)
+        # xMean, yMean = newPolys.to_crs(4328).centroid.get_coordinates().mean()
+        # proj = ccrs.Orthographic(central_longitude=lonMean, central_latitude=LagMean)
+        fig, ax = getFigure(setAspectEqual=True, subplot_kw={"projection": proj})
+    else:
+        fig, ax = getFigure(setAspectEqual=True)
 
-    # Plot wordl map
-    plotNotam2(fig, axs, cn_font, newPolys, myUtils.getTitle(newFile))
+    plot2Noatms(fig, ax, newPolys, plotAll=plotAll, orthographic=orthographic)
+    title = myUtils.getTitle(newFile)
+    plotTitleXYLabels(fig, ax, cn_font, title, 'Latitude（纬度）', 'Longitude（经度）')
+    image = getImageInMemoryFromFig(fig, resize=True, size=size)
+    return image
 
-    # Set the extent of the axis object to the desired latitude and longitude ranges
-    adjustLim(axs, lon1, lon2, lat1, lat2)
-            
-    # Show the plot
-    image = getImageInMemoryFromKml(fig, resizeToEven=True, size=size)
+################################################################################################
+def getImage(filename, resize=True, size=(900, 900)):
+    im = Image.open(filename)
+    if resize:
+        if im.size[0] > im.size[1]:
+            resize = [size[0], size[1] * im.size[1] / im.size[0]]
+        else:
+            resize = [size[0] * im.size[0] / im.size[1], size[1]]
+        resize = map(int, resize)
+        # ration = max(size[0]/im.size[0], size[1]/im.size[1])
+        # resize = (int(size[0] * ration), int(size[1] * ration))
+        im = im.resize(resize, Image.LANCZOS)
+    with io.BytesIO() as buffer:
+        im.save(buffer, format='PNG')
+        image = buffer.getvalue()
     return image
 
 ################################################################################################
@@ -419,9 +443,9 @@ def setScreenDpiAware():
     sg.set_options(text_justification='right')      
 
 ################################################################################################
-def saveFig(fig, filename, dpi=300, isPrint=True, resizeToEven=True):
+def saveFig(fig, filename, isPrint=True, resize=True, dpi=300):
     myUtils.createFolder(filename)
-    if resizeToEven:
+    if resize:
         buf = io.BytesIO()
         # fig.savefig(buf, bbox_inches='tight')
         fig.savefig(buf, bbox_inches='tight', dpi=dpi)
@@ -1278,7 +1302,7 @@ def getEndRow(row):
 def convertDataFrame2TimeSeries(df, use_pinyin=False):
     # myUtils.setStartTime()
     removeColumns = ['发射日期', '着陆日期', '在轨日数', '载人飞船', 'Ship', '备注']  
-    removeColumns += ['出生日期', '年龄', '入选年', '批次', 'Gap']
+    removeColumns += ['出生日期', '年龄', '入选年', '批次', '日差']
     removeColumns.append('航天员') if use_pinyin else removeColumns.append('Pinyin')
 
     df['日期'] = df.apply(lambda row: pd.date_range(row['发射日期'], 

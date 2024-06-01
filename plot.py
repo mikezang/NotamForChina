@@ -138,8 +138,10 @@ def getCategoriesFrame(categories, lastCategory):
     categoriesTitle = [sg.Checkbox('选择全运载火箭分类', key='category01', enable_events=True)]
     layout2 = [categoriesTitle]
     for i, subCategory in enumerate(subCategories):
+        # checkbox = [sg.Checkbox(item, key=f'category-{i * 10 + j + 1}', size=(10, 1), 
+        #             default=True if item in lastCategory else False) for j, item in enumerate(subCategory[:-1])]
         checkbox = [sg.Checkbox(item, key=f'category-{i * 10 + j + 1}', size=(10, 1), 
-                    default=True if item in lastCategory else False) for j, item in enumerate(subCategory[:-1])]
+                    default=True) for j, item in enumerate(subCategory[:-1])]
         checkbox.append(sg.Checkbox(subCategory[-1], key='category-6', size=(10, 1), default=True))
         layout2.append(checkbox)      
     return sg.Frame('运载火箭分类（动态条形图）', layout2)
@@ -456,14 +458,14 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
             sheetName = '中国航天员'
 
             for category in categoriesChecked:
-                if category in '民营,其他':
-                    plotLaunchBarChartRace.plot2(df, category)
-                elif category == '在轨航天员':
+                if category == '在轨航天员':
                     for year in yearsChecked:
                         plotLaunchBarChartRace.plot3(excelFile, sheetName, year)
                     else:
                         if not yearsChecked:
                             plotLaunchBarChartRace.plot3(excelFile, sheetName)
+                # elif category in '民营,其他':
+                #     plotLaunchBarChartRace.plot2(df, category)
                 else:
                     for year in yearsChecked:
                         plotLaunchBarChartRace.plot2(df, category, year)

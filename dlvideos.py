@@ -414,6 +414,10 @@ def parseUrlListWJYS(base: str, videoId: int, sId: int) -> list:
         link = base.format(videoId, sId, page)
         driver.get(link)
         tabs = myUtils.findElementsByXPath(driver, '//a[@class="module-tab-item tab-item"]')
+        href = ''
+        for i, tab in enumerate(tabs):
+            href += tab.get_property('href').split('-')[1]
+        print(f'sIds: {href}')
 
         while True:
             if not videoName:
@@ -429,28 +433,31 @@ def parseUrlListWJYS(base: str, videoId: int, sId: int) -> list:
             if not url:
                 break
 
-            if not 'vip.' in url:
+            if not 'vip' in url:
                 id = f'{page:02}'
                 urls[id] = url
-                print(f'{id}: {url}')
+                print(f'{sId}-{id}: {url}')
 
                 if not url_next:
                     break
 
                 id = f'{page+1:02}'
                 urls[id] = url_next
-                print(f'{id}: {url_next}')
+                print(f'{sId}-{id}: {url_next}')
 
                 page += 2
                 link = base.format(videoId, sId, page)
                 driver.get(link)
-            elif len(tabs) > tabIndex:
-                # loop to multiple tabls for not vip url
-                link = tabs[tabIndex].get_property('href')
-                links = link.split('-')
-                sId = links[1]
-                driver.get(link)
+            else:
                 tabIndex += 1
+                if len(tabs) > tabIndex:
+                    # loop to multiple tabls for not vip url
+                    link = tabs[tabIndex].get_property('href')
+                    links = link.split('-')
+                    sId = links[1]
+                    driver.get(link)
+                else:
+                    break
     except:
         myUtils.pritnExceptionTrace()
         # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
@@ -545,7 +552,7 @@ def parseUrlList(site:str, videoId: int, sId: int) -> list:
 ################################################################################################
 def main() -> None:
     site, videoNames, videoIds, sId, mergedFolder, filename = checkArgv()
-    videoId = videoIds if videoIds[0] != '-' else videoIds[1:]
+    videoId = videoIds if videoIds == '' or videoIds[0] != '-' else videoIds[1:]
     urls = {}
     
     if videoNames:

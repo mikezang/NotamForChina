@@ -29,7 +29,6 @@ from simplekml import Kml
 from json import dump, load
 from sys import argv, platform, exc_info
 from datetime import datetime, timedelta, date
-from os import path, remove, system, walk, mkdir
 import os
 from glob import glob
 from math import radians, cos, sin, asin, sqrt, atan2, degrees, pow
@@ -292,14 +291,14 @@ def removeFile(folderWithWildcard):
     # Iterate over the list of filepaths & remove each file.
     for filePath in fileList:
         try:
-            remove(filePath)
+            os.remove(filePath)
         except:
             #print("Error while deleting file : ", filePath)
             pass
 
 ################################################################################################
 def getTitle(filename):
-    title = path.basename(filename)  # Get the filename from the path
+    title = os.path.basename(filename)  # Get the filename from the path
     title = title.split('.')[0]  # Remove the extension
     title = title.split('\\')[-1]  # Get the last portion of the path
     return title
@@ -320,10 +319,10 @@ def setLogging(filename):
 
 ################################################################################################
 def createFolder(filePath):
-    folderPath = path.dirname(filePath)
+    folderPath = os.path.dirname(filePath)
     folder = Path(folderPath)
     if not folder.exists():
-        mkdir(folder)
+        os.makedirs(folder, exist_ok=True)
 
 ################################################################################################
 def getLastdayOfMonth(year, month):
@@ -388,11 +387,11 @@ def getChinaTime(d, fmt=''):
 #     return ret1
 
 ################################################################################################
-def convertTitle(utcStartDate, utcEndDate, loc, loc1=None) -> str:
+def convertTitle(utcStartDate, utcEndDate, loc, loc1=None, isLocalTime=False) -> str:
     loc = loc1 if loc == '' else loc
     if utcStartDate != '' and utcEndDate != '':
-        startTime = convertToLocalDate(utcStartDate, constants.TIMEZONE_BEIJING)
-        lastEndTime = convertToLocalDate(utcEndDate, constants.TIMEZONE_BEIJING)
+        startTime = convertToLocalDate(utcStartDate, constants.TIMEZONE_BEIJING, isLocalTime=isLocalTime)
+        lastEndTime = convertToLocalDate(utcEndDate, constants.TIMEZONE_BEIJING, isLocalTime=isLocalTime)
         endTime = datetime(startTime.year, startTime.month, startTime.day, lastEndTime.hour, lastEndTime.minute)
         endTime = endTime + timedelta(days=1) if str(endTime) < str(startTime) else endTime 
         endTime = pytz.timezone(constants.TIMEZONE_BEIJING).localize(endTime)
@@ -479,11 +478,15 @@ def getFirRegExPattern(fir:str):
     pattern = '(' + fir.replace(' ', '|') + ')'
     return pattern
 
+MSA_LOCATIONS = {'鲁航警': 'SD', '粤航警': 'GD', '琼航警': 'HN'}
 ################################################################################################
 def getMsaLocation(content) -> str:
-    location = finditer(constants.MSA_PATTERN_NUMBER, content)
-    for m in location:
-        return m.group()
+    locations = finditer(constants.MSA_PATTERN_NUMBER, content)
+    for m in locations:
+        if m.group(1) in MSA_LOCATIONS:
+            return f'{MSA_LOCATIONS[m.group(1)]}{m.group(2)}'
+        else:
+            return m.groups()
     else:
         return ''
 
@@ -707,14 +710,15 @@ def createMsaDropZonesKmlFile(oldFile):
             startDate = startDate if startDate else getUTCTime()[:-3]
             endDate = endDate if endDates else getUTCTime()[:-3]
             title = f"{oldFile.replace('.txt', '').split('/')[-1]}"
-            title = convertTitle(startDate, endDate, title)
+            title = convertTitle(startDate, endDate, title, isLocalTime=True)
 
             if area:
                 area = nsf.formatMSALatitudeLongitude([area])[0]
                 coords = area.split('|')
                 coordsList = [convertDMS2DD(c) for c in coords]
                 if len(coordsList) == 1:
-                    drawCircle(kml, coordsList, f'{location}/{number}')
+                    radius = parseRadius(content)
+                    drawCircle(kml, coordsList, f'{location}/{number}', radius=radius)
                 else:
                     drawPolygon(kml, coordsList, f'{location}/{number}')
                 notams = notam.getNoatmDict(notams, number, startDate, endDate, location, area)
@@ -722,6 +726,13 @@ def createMsaDropZonesKmlFile(oldFile):
                 lastEnd = endDate
         updateKmlFile(kml, title, KML_PATH, notams)
 
+MSA_RADIUS_PATTERN = r'为中心、半径(\d{1,2})公里'
+################################################################################################
+def parseRadius(content):
+    radiusMatch = findall(MSA_RADIUS_PATTERN, content)
+    for m in radiusMatch:
+        return int(m)
+    
 ################################################################################################
 def getNotamNumbers(content) -> tuple:
     numbers = finditer(constants.PATTERN_NOTAM_NUMBER_NEW, content)
@@ -818,8 +829,12 @@ def convertMonthToNumber(month:str):
     return monthDict[month.capitalize()]
 
 ################################################################################################
-def convertTime(time):
-    return '00:00' if time == '' else f'{time[:2]}:{time[2:]}'
+def convertTime(time, start=True):
+    if start:
+        t = '00:00' if not time else f'{time[:2]}:{time[2:]}'
+    else:
+        t = '23:59' if not time else f'{time[:2]}:{time[2:]}'
+    return t
 
 ################################################################################################
 def convertToDate(d: str):
@@ -843,28 +858,26 @@ def getYYYYMMDD(year):
 ################################################################################################
 def getMsaDates(content: str) -> tuple:
     startDates, endDates = [], []
-    startEndDates1 = [m for m in finditer(constants.MSA_PATTERN_DATE_CHINA1, content)]
-    startEndDates2 = [m for m in finditer(constants.MSA_PATTERN_DATE_CHINA2, content)]
-    startEndDates3 = [m for m in finditer(constants.MSA_PATTERN_DATE, content)]
-    startEndDates = startEndDates1 if startEndDates1 else startEndDates2
-    if startEndDates1 or startEndDates2:
-        for m in startEndDates:
+    startEndDates1 = [m for m in finditer(constants.MSA_PATTERN_DATE_CHINA, content)]
+    startEndDates2 = [m for m in finditer(constants.MSA_PATTERN_DATE, content)]
+    if startEndDates1:
+        for m in startEndDates1:
             startYear = getJapanDate()[:4]
             startMonth = int(m.group(1)) if m.group(1) else ''
             startDay = int(m.group(2)) if m.group(2) else ''
-            startTime = convertTime(m.group(3)) if m.group(3) else ''
+            startTime = convertTime(m.group(3))
             endYear = startYear
             endMonth = int(m.group(4)) if m.group(4) else startMonth
             endDay = int(m.group(5)) if m.group(5) else startDay
-            endTime = convertTime(m.group(6)) if m.group(6) else ''
+            endTime = convertTime(m.group(6) if len(m.groups()) == 6 else '', False)
             if startYear and startMonth and startDay and startTime:
                 startDate = f'{startYear}/{startMonth:02}/{int(startDay):02} {startTime}'
             if endYear and endMonth and endDay and endTime:
                 endDate = f'{endYear}/{endMonth:02}/{endDay:02} {endTime}'
             startDates.append(startDate)
             endDates.append(endDate)
-    elif startEndDates3:
-        for m in startEndDates3:
+    elif startEndDates2:
+        for m in startEndDates2:
             startDay = m.group(1) #convert to UTC+()
             startTime = convertTime(m.group(2)) #convert to UTC+()
             startMonth = m.group(3)
@@ -1292,7 +1305,7 @@ def getFirefoxDriver(headless=1, disableImage=True, log=False) -> webdriver:
         options.add_argument('--blink-settings=imagesEnabled=false')
         options.set_preference("permissions.default.image", 2)
     if log is False:
-        service = fs.Service(log_path=path.devnull)
+        service = fs.Service(log_path=os.path.devnull)
         driver = webdriver.Firefox(options=options, service=service)
     else:
         # options.log.level = "trace"
@@ -1610,7 +1623,7 @@ def isFloat(str):
 ################################################################################################
 def listFiles(folder: str='.', extension: str=None, excludeFile=None, onlyFilename=False, includeSubFolder=True, prefix: str=None):
     absPath = os.path.abspath(folder)
-    for root, dirs, files in walk(absPath):
+    for root, dirs, files in os.walk(absPath):
         if not includeSubFolder and root != absPath:
             continue
         for file in files:
@@ -1618,7 +1631,7 @@ def listFiles(folder: str='.', extension: str=None, excludeFile=None, onlyFilena
                 continue
             if extension == None or file.endswith(extension):
                 if file != excludeFile:
-                    filepath = file if onlyFilename else path.join(root, file) 
+                    filepath = file if onlyFilename else os.path.join(root, file) 
                     yield filepath
     
 ################################################################################################
@@ -1661,7 +1674,7 @@ def saveTextFile(filename: str, newText: str, openFile=True, noSound=False, show
 
     # Opening the text file in its default editor
     if isWindows() and openFile:
-            system(f'start {filename}')
+            os.system(f'start {filename}')
     if not noSound:
         if isWindows():
             playSound('Alarm03.wav')
@@ -1714,7 +1727,7 @@ def saveKmlFile(kml: Kml, title: str, filePath=''):
     kml.save('doc.kml') # this is for zip to kmz file
     with zipfile.ZipFile(f'{filePath}{title}.kmz', mode='w') as zf:
         zf.write('doc.kml')
-    remove('doc.kml')
+    os.remove('doc.kml')
 
 ################################################################################################
 def updateNsfNotamJsonFile(nsf_new, filename):
@@ -1876,9 +1889,12 @@ def isPastTime(utcDate):
         return False
 
 ################################################################################################
-def convertToLocalDate(utcDate, tz):
-    utcDate = datetime.strptime(utcDate, "%Y/%m/%d %H:%M").replace(tzinfo=pytz.UTC)
-    return utcDate.astimezone(pytz.timezone(tz))
+def convertToLocalDate(utcDate, tz, isLocalTime=False):
+    if not isLocalTime:
+        utcDate1 = datetime.strptime(utcDate, "%Y/%m/%d %H:%M").replace(tzinfo=pytz.UTC)
+    else:
+        utcDate1 = datetime.strptime(utcDate, "%Y/%m/%d %H:%M").replace(tzinfo=pytz.timezone(tz))
+    return utcDate1.astimezone(pytz.timezone(tz))
 
 ################################################################################################
 def convertPatterns(s, p) -> str:

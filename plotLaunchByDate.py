@@ -15,21 +15,19 @@ import constants
 import myPlot
 
 ################################################################################################
-def reverseLocation(loc, spot, nolocation=False):
-    if nolocation:
-        if loc == '海上':
-            return spot[:2]
-        else:
-            return ''
+def reverseLocation(loc, spot):
+    if '/' in loc:
+        tempLoc = loc.split('/')
+        tempSpot = spot.split('/')
+        tempLoc[0] = tempLoc[0].replace('海上', tempSpot[0][:2])
+        tempLoc[1] = tempLoc[1].replace('海上', tempSpot[1][:2])
+        return f'{tempLoc[1]}/{tempLoc[0]}'
     else:
-        if '/' in loc:
-            temp = loc.split('/')
-            return f'{temp[1]}/{temp[0]}'
-        else:
-            return loc
+        loc = loc.replace('海上', spot[:2])
+        return loc
     
 ################################################################################################
-def plotBarGraphByDate(cn_font, ax, df, colorDict=None, fontsize=12, nolocation=False, upperStage=None, isMaiden=False, plotPayload=False, payload=None, title=''):
+def plotBarGraphByDate(cn_font, ax, df, colorDict=None, fontsize=12, upperStage=None, isMaiden=False, plotPayload=False, payload=None, title=''):
     # Extract plot data
     xDataList = list(df[constants.EXCEL_COLUMN_DATE])
     yDataList = list(df['发射数'])
@@ -40,8 +38,9 @@ def plotBarGraphByDate(cn_font, ax, df, colorDict=None, fontsize=12, nolocation=
     locationList = list(df[constants.EXCEL_COLUMN_LOCATION])
     spotList = list(df[constants.EXCEL_COLUMN_SPOT])
     xTickList = list(range(1, len(xDataList) + 1))
-    xTicksLabelList = [f'{reverseLocation(l, s, nolocation)}{an2cn(str(d.month))}月{an2cn(str(d.day))}日' for d, l, s in zip(xDataList, locationList, spotList)]
+    xTicksLabelList = [f'{reverseLocation(l, s)}{an2cn(str(d.month))}月{an2cn(str(d.day))}日' for d, l, s in zip(xDataList, locationList, spotList)]
     colorDict = colorDict if colorDict else getColorDict(df, False)
+
     # Plot bar with the same color for the same rokect
     for i in range(len(xDataList)):
         bottom = 0
@@ -371,8 +370,7 @@ def plotGraphByLocationDate(cn_font, df, title, location, upperStage=None, plotL
             newTitle = myPlot.getPlotTitle(f'{title}{no}', retired=True, nodate=nodate)
             # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) 
             fig, axLeft =  myPlot.getFigure()
-            # plotBarGraphByDate(cn_font, axLeft, df, fontsize=12, nolocation=True, upperStage=upperStage, colorDict=colorDict)
-            plotBarGraphByDate(cn_font, axLeft, df, fontsize=12, nolocation=True, upperStage=upperStage)
+            plotBarGraphByDate(cn_font, axLeft, df, fontsize=12, upperStage=upperStage)
             plotTitleLegendByDate(cn_font, axLeft, newTitle, df, page=i)
 
             myPlot.showBackend()
@@ -506,7 +504,7 @@ def main():
     rockets = []
     if rockets:
         # plot2(cn_font, excelSheet, rockets, dictUpperStage, plotLast=False)
-        plot2(cn_font, df, rockets, dictUpperStage, plotLast=False)
+        plot2(cn_font, df, rockets, dictUpperStage, plotLast=True)
 
     # 现役火箭别发射日统计
     rockets = ['长征三号乙', '长征二号丁', '长征二号丙', '长征四号丙', '长征四号乙', '长征二号己', '长征十一号']
