@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="3675">
+        <Style id="3682">
+            <PolyStyle id="3683">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="3690">
+            <PolyStyle id="3691">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="3698">
+            <PolyStyle id="3699">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="3706">
+            <PolyStyle id="3707">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="3714">
+            <PolyStyle id="3715">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="3718">
+            <LineStyle id="3719">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>206-2021年06月17日09時22分酒泉長征二号己</name>
+        <Placemark id="3677">
+            <name>ZBPE/ZLHW/ZSHA</name>
+            <styleUrl>#3682</styleUrl>
+            <Polygon id="3676">
+                <outerBoundaryIs>
+                    <LinearRing id="3680">
+                        <coordinates>100.4,41.4,0.0 100.16666666666667,40.516666666666666,0.0 106.08333333333333,39.083333333333336,0.0 115.48333333333333,36.766666666666666,0.0 120.48333333333333,35.55,0.0 120.96666666666667,36.46666666666667,0.0 116.31666666666666,37.6,0.0 106.25,40.016666666666666,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="3685">
+            <name>ZSHA</name>
+            <styleUrl>#3690</styleUrl>
+            <Polygon id="3684">
+                <outerBoundaryIs>
+                    <LinearRing id="3688">
+                        <coordinates>121.51666666666667,36.78333333333333,0.0 124.0,35.85,0.0 124.0,33.666666666666664,0.0 120.55,35.05,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="3693">
+            <name>ZLHW</name>
+            <styleUrl>#3698</styleUrl>
+            <Polygon id="3692">
+                <outerBoundaryIs>
+                    <LinearRing id="3696">
+                        <coordinates>108.21666666666667,39.583333333333336,0.0 108.13333333333334,39.31666666666667,0.0 107.8,39.36666666666667,0.0 107.0,39.516666666666666,0.0 107.11666666666666,39.86666666666667,0.0 107.91666666666667,39.7,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="3701">
+            <name>ZBPE</name>
+            <styleUrl>#3706</styleUrl>
+            <Polygon id="3700">
+                <outerBoundaryIs>
+                    <LinearRing id="3704">
+                        <coordinates>110.33333333333333,38.78333333333333,0.0 110.43333333333334,39.03333333333333,0.0 109.86666666666666,39.166666666666664,0.0 109.76666666666667,38.9,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="3709">
+            <name>ZGZU/ZHWH/ZSHA</name>
+            <styleUrl>#3714</styleUrl>
+            <Polygon id="3708">
+                <outerBoundaryIs>
+                    <LinearRing id="3712">
+                        <coordinates>111.75,30.716666666666665,0.0 114.9,29.05,0.0 114.51666666666667,28.566666666666666,0.0 116.76666666666667,27.283333333333335,0.0 115.36666666666666,25.316666666666666,0.0 110.06666666666666,28.383333333333333,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="3717">
+            <name>Route</name>
+            <styleUrl>#3718</styleUrl>
+            <LineString id="3716">
+                <coordinates>100.3,40.96666666666667,0.0 113.89444444444443,28.219444444444445,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

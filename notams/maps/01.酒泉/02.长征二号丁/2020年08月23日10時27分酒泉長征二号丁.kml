@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="3125">
+        <Style id="3132">
+            <PolyStyle id="3133">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="3136">
+            <LineStyle id="3137">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>172-2020年08月23日10時27分酒泉長征二号丁</name>
+        <Placemark id="3127">
+            <name>ZLHW</name>
+            <styleUrl>#3132</styleUrl>
+            <Polygon id="3126">
+                <outerBoundaryIs>
+                    <LinearRing id="3130">
+                        <coordinates>98.85,35.11666666666667,0.0 98.51666666666667,35.18333333333333,0.0 98.63333333333334,35.583333333333336,0.0 99.05,35.5,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="3135">
+            <name>Route</name>
+            <styleUrl>#3136</styleUrl>
+            <LineString id="3134">
+                <coordinates>100.3,40.96666666666667,0.0 98.7625,35.34583333333333,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

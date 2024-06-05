@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1547">
+        <Style id="1554">
+            <PolyStyle id="1555">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1562">
+            <PolyStyle id="1563">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1570">
+            <PolyStyle id="1571">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1574">
+            <LineStyle id="1575">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>084-2018年03月17日15時10分酒泉長征二号丁</name>
+        <Placemark id="1549">
+            <name>ZLHW</name>
+            <styleUrl>#1554</styleUrl>
+            <Polygon id="1548">
+                <outerBoundaryIs>
+                    <LinearRing id="1552">
+                        <coordinates>97.63333333333334,36.15,0.0 99.0,32.6,0.0 96.5,35.05,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1557">
+            <name>ZLHW</name>
+            <styleUrl>#1562</styleUrl>
+            <Polygon id="1556">
+                <outerBoundaryIs>
+                    <LinearRing id="1560">
+                        <coordinates>98.75,35.15,0.0 98.41666666666667,35.2,0.0 98.55,35.68333333333333,0.0 98.98333333333333,35.61666666666667,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1565">
+            <name>ZLHW</name>
+            <styleUrl>#1570</styleUrl>
+            <Polygon id="1564">
+                <outerBoundaryIs>
+                    <LinearRing id="1568">
+                        <coordinates>98.21666666666667,33.11666666666667,0.0 97.8,33.2,0.0 98.03333333333333,34.06666666666667,0.0 98.46666666666667,34.0,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1573">
+            <name>Route</name>
+            <styleUrl>#1574</styleUrl>
+            <LineString id="1572">
+                <coordinates>100.3,40.96666666666667,0.0 98.12916666666666,33.59583333333333,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

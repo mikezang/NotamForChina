@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>2021年10月16日酒泉长征二号己</name>
+    <Style id="poly-A52714-1-255-normal">
+      <LineStyle>
+        <color>ff1427a5</color>
+        <width>0.001</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff1427a5</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-A52714-1-255-highlight">
+      <LineStyle>
+        <color>ff1427a5</color>
+        <width>0.0015</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff1427a5</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-A52714-1-255">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-A52714-1-255-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-A52714-1-255-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>ZBPE/ZLHW/ZSHA/A2622/21</name>
+      <description><![CDATA[说明: <br>名前: ZBPE/ZLHW/ZSHA/A2622/21]]></description>
+      <styleUrl>#poly-A52714-1-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value>ZBPE/ZLHW/ZSHA/A2622/21</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              100.4,41.41,0
+              100.18,40.52,0
+              106.1,39.09,0
+              115.49,36.78,0
+              120.49,35.56,0
+              120.98,36.48,0
+              116.32,37.6,0
+              106.26,40.02,0
+              100.4,41.41,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>ZSHA/A2623/21</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-A52714-1-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              121.52,36.79,0
+              120.55,35.05,0
+              124,33.6666667,0
+              124,35.85,0
+              121.52,36.79,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>ZGZU/ZHWH/ZSHA/A2624/21</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-A52714-1-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              111.75,30.72,0
+              110.07,28.39,0
+              114.53,28.57,0
+              115.38,25.33,0
+              116.77,27.29,0
+              114.9,29.05,0
+              111.75,30.72,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>

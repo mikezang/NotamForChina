@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="5215">
+        <Style id="5222">
+            <PolyStyle id="5223">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="5230">
+            <PolyStyle id="5231">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="5238">
+            <PolyStyle id="5239">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="5246">
+            <PolyStyle id="5247">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="5250">
+            <LineStyle id="5251">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>262-2022年06月05日10時44分酒泉長征二号己</name>
+        <Placemark id="5217">
+            <name>ZLHW/ZBPE/ZSHA</name>
+            <styleUrl>#5222</styleUrl>
+            <Polygon id="5216">
+                <outerBoundaryIs>
+                    <LinearRing id="5220">
+                        <coordinates>100.4,41.4,0.0 106.25,40.016666666666666,0.0 116.31666666666666,37.6,0.0 120.96666666666667,36.46666666666667,0.0 120.48333333333333,35.55,0.0 115.48333333333333,36.766666666666666,0.0 106.1,39.083333333333336,0.0 100.16666666666667,40.516666666666666,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="5225">
+            <name>ZSHA</name>
+            <styleUrl>#5230</styleUrl>
+            <Polygon id="5224">
+                <outerBoundaryIs>
+                    <LinearRing id="5228">
+                        <coordinates>121.51666666666667,36.78333333333333,0.0 124.0,35.85,0.0 124.0,33.666666666666664,0.0 120.55,35.05,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="5233">
+            <name>ZLHW</name>
+            <styleUrl>#5238</styleUrl>
+            <Polygon id="5232">
+                <outerBoundaryIs>
+                    <LinearRing id="5236">
+                        <coordinates>107.81666666666666,39.36666666666667,0.0 107.93333333333334,39.71666666666667,0.0 107.13333333333334,39.86666666666667,0.0 107.01666666666667,39.516666666666666,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="5241">
+            <name>ZHWH/ZGZU/ZSHA</name>
+            <styleUrl>#5246</styleUrl>
+            <Polygon id="5240">
+                <outerBoundaryIs>
+                    <LinearRing id="5244">
+                        <coordinates>111.75,30.716666666666665,0.0 114.9,29.05,0.0 114.51666666666667,28.566666666666666,0.0 116.76666666666667,27.283333333333335,0.0 115.36666666666666,25.316666666666666,0.0 110.06666666666666,28.383333333333333,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="5249">
+            <name>Route</name>
+            <styleUrl>#5250</styleUrl>
+            <LineString id="5248">
+                <coordinates>100.3,40.96666666666667,0.0 113.89444444444443,28.219444444444445,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>
