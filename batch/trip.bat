@@ -1,5 +1,5 @@
 @echo off
 call p
-python main.py ctrip
+python trip.py 
 
 exit /b
