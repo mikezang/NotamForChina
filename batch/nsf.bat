@@ -1,1 +1,3 @@
-python main.py nsfurls
+cd \zang\python\rock*
+
+python nsf.py

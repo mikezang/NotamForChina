@@ -1,0 +1,2 @@
+ffmpeg -loop 1 -i "C:\zang\python\RocketLaunch\images\中国长征运载火箭发射率统计.png" -loop 1 -i "C:\zang\python\RocketLaunch\images\中国长征运载火箭发射数统计.png" -loop 1 -i "C:\zang\python\RocketLaunch\images\中国全部运载火箭发射率统计.png" -loop 1 -i "C:\zang\python\RocketLaunch\images\中国全部运载火箭发射数统计.png" -loop 1 -i "C:\zang\python\RocketLaunch\images\中国长征运载火箭发射年统计.png" -loop 1 -i "C:\zang\python\RocketLaunch\images\中国全部运载火箭发射年统计.png" -loop 1 -i "C:\zang\python\RocketLaunch\images\中国其他运载火箭发射率统计.png" -filter_complex_script slide.txt -map [v6] -cq 20 -t 32 -y slide.mp4 -hide_banner
+

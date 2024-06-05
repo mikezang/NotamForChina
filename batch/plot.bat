@@ -2,4 +2,4 @@
 
 cd \zang\python\RocketLaunch
 
-python plotLaunchGui.py
+python plot.py

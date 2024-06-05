@@ -3,7 +3,7 @@
 SETLOCAL
 if not exist %1 goto :EOF1
 
-for /F "delims=" %%I in ('ffprobe.exe -v error -show_entries format^=duration -of default^=noprint_wrappers^=1:nokey^=1 %1 2^>^&1') do set "duration=%%I"
+for /F "delims=" %%I in ('ffprobe.exe -v error -show_entries format^=duration -of default^=nw^=1:nk^=1 %1 2^>^&1') do set "duration=%%I"
 rem echo Duration is(s): %duration%
 
 
@@ -23,7 +23,7 @@ IF NOT "%TEMP%"=="" (
 rem SET /a "VALUE_U=%VALUE_U%+100"
 rem SET /a "VALUE_U=%VALUE_U%-100"
 
-echo length is %VALUE_U% (s) of %1 
+echo The %duration%(s) is duration of %1
 
 goto EOF
 

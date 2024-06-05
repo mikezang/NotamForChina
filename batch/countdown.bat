@@ -1,4 +1,4 @@
-@ECHO OFF
+rem @ECHO OFF
 
 rem CHCP 65001
 
@@ -24,11 +24,11 @@ echo Create %1-%2s-last.mp4 (countdown %2 seconds to %1-%2s.mp4)
 
 goto :EOF
 
-
 :usage
-@echo Create countdown video
+@echo Create countdown video from image
 @echo Usage: %0 videoName 
-@echo   videoName withuut extension
+@echo   image without extension
+@echo   time to countdown
 goto :EOF
 exit /B 1
 

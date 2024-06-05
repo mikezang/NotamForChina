@@ -14,13 +14,14 @@ rem   set line=%%G
 rem   echo %line:~0,1%
 rem  echo %CD%\%%G\%%H.png to %CD%\%%I\%%H.mp4
 	echo Create %CD%\%%I\%%H.mp4
-	call img2mp4 %CD%\%%G\%%H.png 10 %CD%\%%I\%%H
+	rem call img2mp4 %CD%\%%G\%%H.png 10 %CD%\%%I\%%H
+	call slideLeft2Center %CD%\%%G\%%H.png 10 %CD%\%%I\%%H
 	call :duration %CD%\%%I\%%H.mp4
 	rem set /a x=%x%+%errorlevel%
 	rem echo total length: %x%
 	rem echo file '%CD%\%%I\%%H.mp4' >> videolist.txt
 	echo Create %CD%\%%I\%%H-countdown.mp4
-	call addCountdown %CD%\%%I\%%H 10
+	call addCountdown %CD%\%%I\%%H 10 96
 	call :duration %CD%\%%I\%%H.mp4
 	rem set /a x=%x%+%errorlevel%
 	rem echo total length: %x%

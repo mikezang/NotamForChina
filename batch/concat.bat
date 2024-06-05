@@ -21,3 +21,6 @@ GOTO :eof
 @echo        file_list_file:	Old video Filenames list
 @echo        newFilenameExt:	New video Filename with extension
 exit /B 1
+
+:EOF
+

@@ -1,5 +1,7 @@
-@echo off
+rem @echo off
 chcp 65001
+
+cd C:\zang\python\RocketLaunch
 
 call countdown videos\民营-last 10
 call :duration videos\民营.mp4
@@ -115,7 +117,7 @@ del videos\其他-last-10s-countdown.mp4
 del videos\长征-last-10s-countdown.mp4
 del videos\系列-last-10s-countdown.mp4
 del videos\全部-last-10s-countdown.mp4
-rem del videos\merge-types.mp4
+del videos\merge-types.mp4
 echo.
 
 echo Create Convert to 12800 tbn

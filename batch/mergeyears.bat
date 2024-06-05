@@ -282,11 +282,12 @@ del videos\2024全部-last-10s-countdown.mp4
 rem del videos\merge-years.mp4
 echo.
 
-echo Create Convert to 12800 tbn
+echo Convert to 12800 tbn
 move videos\merge-years.mp4 videos\merge-years-10240.mp4
 ffmpeg -loglevel quiet -i videos\merge-years-10240.mp4 -c copy -video_track_timescale 12800 videos\merge-years.mp4
 echo.
 
+echo Add music 
 call addmp32mp4 music\歌唱祖国-6m videos\merge-years
 
 goto :eof

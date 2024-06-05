@@ -1,4 +1,4 @@
 call p
-python main.py "Location"
+python notam.py
 
 exit /b
