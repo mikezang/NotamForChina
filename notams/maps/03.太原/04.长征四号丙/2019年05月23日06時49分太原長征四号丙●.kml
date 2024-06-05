@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="2241">
+        <Style id="2248">
+            <PolyStyle id="2249">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="2252">
+            <LineStyle id="2253">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>124-2019年05月23日06時49分太原長征四号丙●</name>
+        <Placemark id="2243">
+            <name>VVHM</name>
+            <styleUrl>#2248</styleUrl>
+            <Polygon id="2242">
+                <outerBoundaryIs>
+                    <LinearRing id="2246">
+                        <coordinates>105.86666666666666,15.15,0.0 106.6,15.016666666666667,0.0 106.38333333333334,13.816666666666666,0.0 105.65,13.95,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="2251">
+            <name>Route</name>
+            <styleUrl>#2252</styleUrl>
+            <LineString id="2250">
+                <coordinates>111.604815,38.84257,0.0 106.125,14.483333333333334,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

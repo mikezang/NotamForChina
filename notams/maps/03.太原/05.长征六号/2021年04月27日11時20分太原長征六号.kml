@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="3537">
+        <Style id="3544">
+            <PolyStyle id="3545">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="3548">
+            <LineStyle id="3549">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>198-2021年04月27日11時20分太原長征六号</name>
+        <Placemark id="3539">
+            <name>ZLHW/ZHWH/ZPKM</name>
+            <styleUrl>#3544</styleUrl>
+            <Polygon id="3538">
+                <outerBoundaryIs>
+                    <LinearRing id="3542">
+                        <coordinates>110.21666666666667,32.18333333333333,0.0 109.8,32.25,0.0 109.63333333333334,31.616666666666667,0.0 109.45,30.733333333333334,0.0 109.8,30.683333333333334,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="3547">
+            <name>Route</name>
+            <styleUrl>#3548</styleUrl>
+            <LineString id="3546">
+                <coordinates>111.604815,38.84257,0.0 109.78,31.493333333333332,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

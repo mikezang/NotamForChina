@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="2521">
+        <Style id="2528">
+            <PolyStyle id="2529">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="2532">
+            <LineStyle id="2533">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>141-2019年11月13日14時35分太原長征六号</name>
+        <Placemark id="2523">
+            <name>ZSHA</name>
+            <styleUrl>#2528</styleUrl>
+            <Polygon id="2522">
+                <outerBoundaryIs>
+                    <LinearRing id="2526">
+                        <coordinates>121.36666666666666,34.21666666666667,0.0 122.25,33.7,0.0 122.01666666666667,33.4,0.0 121.11666666666666,33.916666666666664,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="2531">
+            <name>Route</name>
+            <styleUrl>#2532</styleUrl>
+            <LineString id="2530">
+                <coordinates>111.604815,38.84257,0.0 121.6875,33.80833333333333,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

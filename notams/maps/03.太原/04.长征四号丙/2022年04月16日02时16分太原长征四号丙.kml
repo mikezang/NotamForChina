@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>2022年04月16日太原长征四号丙</name>
+    <Style id="icon-1569-E65100-labelson">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-1.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="line-000000-1200-normal">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.2</width>
+      </LineStyle>
+    </Style>
+    <Style id="line-000000-1200-highlight">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.8</width>
+      </LineStyle>
+    </Style>
+    <StyleMap id="line-000000-1200">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#line-000000-1200-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#line-000000-1200-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-E65100-1200-77-normal">
+      <LineStyle>
+        <color>ff0051e6</color>
+        <width>1.2</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4d0051e6</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-E65100-1200-77-highlight">
+      <LineStyle>
+        <color>ff0051e6</color>
+        <width>1.8</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4d0051e6</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-E65100-1200-77">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-E65100-1200-77-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-E65100-1200-77-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>Route</name>
+      <description><![CDATA[説明: <br>名称: ]]></description>
+      <styleUrl>#line-000000-1200</styleUrl>
+      <ExtendedData>
+        <Data name="説明">
+          <value/>
+        </Data>
+        <Data name="名称">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          111.604815,38.84257,0
+          108.3687525,-10.6850412,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>1st Stage</name>
+      <description><![CDATA[説明: <br>名称: ]]></description>
+      <styleUrl>#poly-E65100-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="説明">
+          <value/>
+        </Data>
+        <Data name="名称">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              110.9666667,33.3333333,0
+              110.95,32.9833333,0
+              111.15,32.9666667,0
+              111.1833333,33.3166667,0
+              110.9666667,33.3333333,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>2nd Stage</name>
+      <description><![CDATA[説明: <br>名称: ]]></description>
+      <styleUrl>#poly-E65100-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="説明">
+          <value/>
+        </Data>
+        <Data name="名称">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              109.635,15.2186667,0
+              109.5836667,14.3168333,0
+              110.1373333,14.2855,0
+              110.1891667,15.1866667,0
+              109.635,15.2186667,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S02°47.05,E179°52.05</name>
+      <description><![CDATA[説明: <br>名称: ]]></description>
+      <styleUrl>#icon-1569-E65100-labelson</styleUrl>
+      <ExtendedData>
+        <Data name="説明">
+          <value/>
+        </Data>
+        <Data name="名称">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          179.8675,-2.78416666666667,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>S27°24.08,E94°26.00</name>
+      <description><![CDATA[説明: <br>名称: ]]></description>
+      <styleUrl>#icon-1569-E65100-labelson</styleUrl>
+      <ExtendedData>
+        <Data name="説明">
+          <value/>
+        </Data>
+        <Data name="名称">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          94.4333333333333,-27.4013333333333,0
+        </coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>

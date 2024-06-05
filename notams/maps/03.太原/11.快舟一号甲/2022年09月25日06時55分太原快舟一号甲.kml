@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="5869">
+        <Style id="5876">
+            <PolyStyle id="5877">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="5884">
+            <PolyStyle id="5885">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="5892">
+            <PolyStyle id="5893">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="5900">
+            <PolyStyle id="5901">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="5904">
+            <LineStyle id="5905">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>283-2022年09月25日06時55分太原快舟一号甲</name>
+        <Placemark id="5871">
+            <name>YMMM</name>
+            <styleUrl>#5876</styleUrl>
+            <Polygon id="5870">
+                <outerBoundaryIs>
+                    <LinearRing id="5874">
+                        <coordinates>94.91666666666667,-40.18333333333333,0.0 94.0,-40.016666666666666,0.0 94.38333333333334,-38.833333333333336,0.0 95.28333333333333,-39.0,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="5879">
+            <name>ZBPE</name>
+            <styleUrl>#5884</styleUrl>
+            <Polygon id="5878">
+                <outerBoundaryIs>
+                    <LinearRing id="5882">
+                        <coordinates>111.31666666666666,37.833333333333336,0.0 111.45,37.81666666666667,0.0 111.4,37.56666666666667,0.0 111.26666666666667,37.583333333333336,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="5887">
+            <name>ZGZU</name>
+            <styleUrl>#5892</styleUrl>
+            <Polygon id="5886">
+                <outerBoundaryIs>
+                    <LinearRing id="5890">
+                        <coordinates>109.63333333333334,29.466666666666665,0.0 109.85,29.433333333333334,0.0 109.71666666666667,28.833333333333332,0.0 109.5,28.866666666666667,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="5895">
+            <name>YMMM</name>
+            <styleUrl>#5900</styleUrl>
+            <Polygon id="5894">
+                <outerBoundaryIs>
+                    <LinearRing id="5898">
+                        <coordinates>94.38333333333334,-40.88333333333333,0.0 94.86666666666666,-40.96666666666667,0.0 94.6,-41.86666666666667,0.0 94.11666666666666,-41.78333333333333,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="5903">
+            <name>Route</name>
+            <styleUrl>#5904</styleUrl>
+            <LineString id="5902">
+                <coordinates>111.604815,38.84257,0.0 94.49166666666667,-41.375,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

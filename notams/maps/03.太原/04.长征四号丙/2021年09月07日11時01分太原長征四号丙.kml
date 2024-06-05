@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="4025">
+        <Style id="4032">
+            <PolyStyle id="4033">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="4036">
+            <LineStyle id="4037">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>220-2021年09月07日11時01分太原長征四号丙</name>
+        <Placemark id="4027">
+            <name>VVHM</name>
+            <styleUrl>#4032</styleUrl>
+            <Polygon id="4026">
+                <outerBoundaryIs>
+                    <LinearRing id="4030">
+                        <coordinates>109.76666666666667,14.983333333333333,0.0 110.41666666666667,14.95,0.0 110.35,13.716666666666667,0.0 109.61666666666666,13.766666666666667,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="4035">
+            <name>Route</name>
+            <styleUrl>#4036</styleUrl>
+            <LineString id="4034">
+                <coordinates>111.604815,38.84257,0.0 110.0375,14.354166666666666,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

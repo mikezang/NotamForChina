@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="899">
+        <Style id="906">
+            <PolyStyle id="907">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="910">
+            <LineStyle id="911">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>048-2016年08月10日06時55分太原長征四号丙</name>
+        <Placemark id="901">
+            <name>ZPKM</name>
+            <styleUrl>#906</styleUrl>
+            <Polygon id="900">
+                <outerBoundaryIs>
+                    <LinearRing id="904">
+                        <coordinates>109.16666666666667,30.833333333333332,0.0 109.76666666666667,30.716666666666665,0.0 109.55,29.833333333333332,0.0 108.95,29.95,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="909">
+            <name>Route</name>
+            <styleUrl>#910</styleUrl>
+            <LineString id="908">
+                <coordinates>111.604815,38.84257,0.0 109.35833333333333,30.333333333333332,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

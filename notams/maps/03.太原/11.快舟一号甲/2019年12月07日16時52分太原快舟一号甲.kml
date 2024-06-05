@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="2631">
+        <Style id="2638">
+            <PolyStyle id="2639">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="2646">
+            <PolyStyle id="2647">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="2654">
+            <PolyStyle id="2655">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="2658">
+            <LineStyle id="2659">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>146-2019年12月07日16時52分太原快舟一号甲</name>
+        <Placemark id="2633">
+            <name>ZBPE</name>
+            <styleUrl>#2638</styleUrl>
+            <Polygon id="2632">
+                <outerBoundaryIs>
+                    <LinearRing id="2636">
+                        <coordinates>111.33333333333333,37.78333333333333,0.0 111.45,37.766666666666666,0.0 111.41666666666667,37.53333333333333,0.0 111.3,37.55,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="2641">
+            <name>ZGZU</name>
+            <styleUrl>#2646</styleUrl>
+            <Polygon id="2640">
+                <outerBoundaryIs>
+                    <LinearRing id="2644">
+                        <coordinates>109.63333333333334,29.466666666666665,0.0 109.83333333333333,29.433333333333334,0.0 109.7,28.816666666666666,0.0 109.5,28.85,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="2649">
+            <name>YMMM</name>
+            <styleUrl>#2654</styleUrl>
+            <Polygon id="2648">
+                <outerBoundaryIs>
+                    <LinearRing id="2652">
+                        <coordinates>99.66666666666667,-18.916666666666668,0.0 100.03333333333333,-19.0,0.0 99.81666666666666,-19.883333333333333,0.0 99.45,-19.8,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="2657">
+            <name>Route</name>
+            <styleUrl>#2658</styleUrl>
+            <LineString id="2656">
+                <coordinates>111.604815,38.84257,0.0 99.74166666666666,-19.400000000000002,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

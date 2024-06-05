@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="4835">
+        <Style id="4842">
+            <PolyStyle id="4843">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="4850">
+            <PolyStyle id="4851">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="4858">
+            <PolyStyle id="4859">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="4862">
+            <LineStyle id="4863">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>250-2022年03月29日17時50分太原長征六号甲</name>
+        <Placemark id="4837">
+            <name>VVHN</name>
+            <styleUrl>#4842</styleUrl>
+            <Polygon id="4836">
+                <outerBoundaryIs>
+                    <LinearRing id="4840">
+                        <coordinates>107.45,18.766666666666666,0.0 107.11666666666666,18.816666666666666,0.0 107.2,19.233333333333334,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="4845">
+            <name>VVHN</name>
+            <styleUrl>#4850</styleUrl>
+            <Polygon id="4844">
+                <outerBoundaryIs>
+                    <LinearRing id="4848">
+                        <coordinates>107.2,19.283333333333335,0.0 107.33333333333333,20.016666666666666,0.0 107.9,19.933333333333334,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="4853">
+            <name>ZHWH</name>
+            <styleUrl>#4858</styleUrl>
+            <Polygon id="4852">
+                <outerBoundaryIs>
+                    <LinearRing id="4856">
+                        <coordinates>109.83333333333333,32.166666666666664,0.0 110.25,32.11666666666667,0.0 110.13333333333334,31.483333333333334,0.0 109.71666666666667,31.55,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="4861">
+            <name>Route</name>
+            <styleUrl>#4862</styleUrl>
+            <LineString id="4860">
+                <coordinates>111.604815,38.84257,0.0 107.25555555555555,18.938888888888886,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>
