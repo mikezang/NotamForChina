@@ -11,9 +11,9 @@ from matplotlib.lines import Line2D
 
 path.append('./')
 
-import constants
-import myUtils
-import myPlot
+from myModules import constants
+from myModules import myUtils
+from myModules import myPlot
 
 def parseExcelSheetToDataFrame(excelSheet, headers, startYear=None, endYear=None):
     # Convert data to list of lists
@@ -251,10 +251,10 @@ def plotGraphByLocations(cn_font, df, title, startYear=None, rocket=None):
     myPlot.showBackend()
     myPlot.saveFig(fig, path)
 
-def plot1(cn_font, excelSheet, startYears):
-    for startYear in startYears:
-        title = f'{startYear}中国运载火箭发射地统计'
-        plotGraphByMonthLocations(cn_font, excelSheet, title, int(startYear))
+# def plot1(cn_font, excelSheet, startYears):
+#     for startYear in startYears:
+#         title = f'{startYear}中国运载火箭发射地统计'
+#         plotGraphByMonthLocations(cn_font, excelSheet, title, int(startYear))
 
 def plot2(cn_font, df, startYear=None, seriesList=None):
     if startYear:
@@ -262,7 +262,7 @@ def plot2(cn_font, df, startYear=None, seriesList=None):
         plotGraphByLocations(cn_font, df, title, startYear, rocket='')
     else:
         for rocket in seriesList:
-            if rocket not in '全部,长征,其他':
+            if rocket not in '全部':
                 continue
             title = f'中国{rocket}运载火箭发射地统计'
             plotGraphByLocations(cn_font, df, title, rocket=rocket)

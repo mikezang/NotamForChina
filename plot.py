@@ -8,9 +8,9 @@ import PySimpleGUI as sg
 
 path.append('./')
 
-import constants
-import myUtils
-import myPlot
+from myModules import constants
+from myModules import myUtils
+from myModules import myPlot
 import plotLaunchByDate
 import plotLaunchByRocket
 import plotLaunchByLocation

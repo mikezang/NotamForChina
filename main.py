@@ -17,11 +17,11 @@ warnings.filterwarnings("ignore", message="invalid value encountered in exp2")
 
 path.append("")
 
-import myUtils
+from myModules import myUtils
+from myModules import constants
 import notam
 import nsf
 import trip
-import constants
 
 ################################################################################################
 def main():
@@ -88,7 +88,7 @@ def main():
             trip_data = trip.getCTrip(driver)
             trip.printTrip(trip_data)
             if trip_data:
-                print('\n./temp/LaunchTravels.html created!')
+                print('\nSaved to temp/LaunchTravels.html!')
 
         except:
             print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')

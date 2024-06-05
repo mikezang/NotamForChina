@@ -5,20 +5,16 @@
 """
 # pylint: disable=W0703,C0103,C0116,C0301
 
-# import os
 import os
 from time import sleep
 from re import findall
 from datetime import date, datetime, timedelta
 from timeit import timeit
 import traceback
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.support import expected_conditions as EC
 
-import constants
-import myUtils
+from myModules import constants
+from myModules import myUtils
+from myModules import myNet
 
 BASE_CTRIP_URL = "https://m.ctrip.com/webapp/vacations/tour/detail?productid="
 CTRIP_URL = "https://m.ctrip.com/webapp/vacations/shop/home?productid=31375689&brandId=77691&detailId=31375689&proId=1292581&saleMode=R"
@@ -83,14 +79,14 @@ def getCTrip(driver):
 
 ################################################################################################
 def selectCity(driver, city):
-    myUtils.elementClick(driver, 30, "//div[@class='suppliers_search_destination_starting']")
-    myUtils.elementInput(driver, 30, "//input[@class='search_text']", city)
-    myUtils.elementClick(driver, 30, "//input[@class='search_text']")
+    myNet.elementClick(driver, 30, "//div[@class='suppliers_search_destination_starting']")
+    myNet.elementInput(driver, 30, "//input[@class='search_text']", city)
+    myNet.elementClick(driver, 30, "//input[@class='search_text']")
     sleep(2)
 
     # select input first city
-    myUtils.elementClass(driver, 10, "search_cn")
-    liList = driver.find_elements(By.CLASS_NAME, "search_cn")
+    myNet.elementClass(driver, 10, "search_cn")
+    liList = myNet.findElementsByClass(driver, "search_cn")
     liList[0].click()
 
 ################################################################################################
@@ -109,19 +105,14 @@ def getCTripList(driver):
                 sleep(2)
 
                 # show list page
-                myUtils.elementId(driver, 30, "grp-10650014575-list-tab-产品").click()
+                myNet.elementId(driver, 30, "grp-10650014575-list-tab-产品").click()
                 sleep(2)
 
-                # if i < len(tripCity) - 1:
-                #     print(f'{city}', end=',', flush=True)
-                # else:
-                #     print(f'{city}\n')
-
-                myUtils.scrollBottom(driver)
+                myNet.scrollBottom(driver)
                 sleep(2)
 
-                div1 = driver.find_elements(By.CLASS_NAME, "shop_list_item")
-                div2 = driver.find_elements(By.CLASS_NAME, 'shop_tour_content')
+                div1 = myNet.findElementsByClass(driver, "shop_list_item")
+                div2 = myNet.findElementsByClass(driver, 'shop_tour_content')
                 urls, titles, locations = parseUrls(div1, div2)
             print('\n')
             break
@@ -137,7 +128,8 @@ def getCTripList(driver):
 def parseUrls(div1, div2):
     urls, titles, locations = [], [], []
     for pid, link in zip(div1, div2):
-        title = link.find_element(By.TAG_NAME, 'h3').text
+        title = myNet.findElementByTag(link, 'h3').text
+
         if '观礼' in title:
             url = pid.get_attribute("data-pid")
             if url not in urls:
@@ -154,16 +146,26 @@ def parseUrls(div1, div2):
 
 ################################################################################################
 def parseTripDate(driver, this_city, day_diff):
+    launchData = {}
+    html = driver.page_source
+    thisYear = myUtils.getThisYear()
+    nextYear = int(thisYear) + 1
+    pattern = rf'(({thisYear}|{nextYear})\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01]))'
+    matches = findall(pattern, html)
+    for match in matches:
+        launchDay = myUtils.getDateAfterDays(match[0], day_diff)
+        launchData[launchDay.replace('-', '/')] = this_city
+    return launchData
+
+################################################################################################
+def parseTripDateOld(driver, this_city, day_diff):
     today = date.today()
     launch_temp = {}
     last_day = 0
     html = driver.page_source
-    # myUtils.elementXPath(driver, 30, '//span[@class="_1wqbaeb10 _1wqbaeb6 _1wqbaeb6s"]')
-    # matches = findall(r'星期.*?(\d{2}-\d{2})', html)
-    # matches = findall(r'(0[1-9]-[0-2][0-9]|1[02]-[0-2][0-9]|0[1-9]-3[01]|1[02]-3[01])', html)
-    matches = findall(r'(0[1-9]|1[1,2])-(0[1-9]|[12][0-9]|3[01])', html)
+    pattern = rf'{myUtils.getThisYear()}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])'
+    matches = findall(pattern, html)
     for match in matches:
-        # month_int, day_int = map(int, match.split("-"))
         month_int, day_int = int(match[0].replace(',', '')), int(match[1])
         day_int += day_diff
 
@@ -174,8 +176,8 @@ def parseTripDate(driver, this_city, day_diff):
                 month_int += 1
 
             m1 = (today.month == month_int) & (day_int > today.day)
-            m2 = (today.month + 1 == month_int) | (today.month + 2 == month_int)
-            m3 = today.month == 12 and (month_int == 1 or month_int == 1)
+            m2 = (today.month + 1 == month_int) | (today.month + 2 == month_int) | (today.month + 3 == month_int)
+            m3 = today.month == 12 & (month_int == 1 | month_int == 2 | month_int == 3)
             if m1 or m2 or m3:
                 month_text = f'{month_int:02}'
                 day_text = f'{day_int:02}'
@@ -199,7 +201,7 @@ def getCTripDetail(driver, urls, titles):
             print(f'Title{j + 1:02}: {title_text}')
             print(f' Link{j + 1:02}: {real_url}', end='', flush=True)
 
-            myUtils.setTimeout(driver, 20)
+            myNet.setTimeout(driver, 20)
             try:
                 driver.get(real_url)
                 print('\n')
@@ -234,14 +236,14 @@ def getENiuTripList(driver):
 
     try:
         driver.get(ENIUTRIP_URL)
-        myUtils.checkVPN(driver)
+        myNet.checkVPN(driver)
 
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME, "tpl-text-feed-item-content")))
+        myNet.elementClass(driver, 30, "tpl-text-feed-item-content")
         driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
-        links = driver.find_elements(By.CLASS_NAME, "tpl-text-feed-item-content")
+        links = myNet.findElementsByClass(driver, "tpl-text-feed-item-content")
 
         for i, link in enumerate(links):
-            title = link.find_element(By.CLASS_NAME, "item-text-content-title")
+            title = myNet.findElementByClass(link, "item-text-content-title")
 
             if '火箭观礼' in title.text:
                 url = links[i].get_attribute("href")
@@ -249,9 +251,6 @@ def getENiuTripList(driver):
 
                 if not title.text in urls:
                     urls[title.text] = url
-
-    except NoSuchElementException:
-        print("No ENiuTrip Data!")
     except:
         myUtils.pritnExceptionTrace()
         pass
@@ -325,7 +324,7 @@ def createHtmlpage(urls, titles, locations) -> None:
 
 def main():
     try:
-        driver = myUtils.getFirefoxDriver(disableImage=False)
+        driver = myNet.getFirefoxDriver(disableImage=False)
         getCTrip(driver)
     except:
         print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')

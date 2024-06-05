@@ -2,7 +2,7 @@ from timeit import timeit
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from cn2an import an2cn
-from sys import path #, exit
+from sys import path
 from datetime import timedelta
 from openpyxl import load_workbook as loadXLSX
 from sortedcontainers import SortedDict
@@ -10,9 +10,8 @@ import pandas as pd
 
 path.append("")
 
-import constants
-# import myUtils
-import myPlot
+from myModules import constants
+from myModules import myPlot
 
 ################################################################################################
 def reverseLocation(loc, spot):

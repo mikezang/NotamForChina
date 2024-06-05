@@ -1,19 +1,18 @@
-from re import finditer
 import sys
 import geopandas as gpd
 import PySimpleGUI as sg
 import matplotlib.pyplot as plt
-from os import path, remove
-from sys import argv
+from os import path
 from timeit import timeit
 from datetime import timedelta
 
 sys.path.append("")
 
-import constants
-import myUtils
-import myPlot
+from myModules import constants
+from myModules import myUtils
+from myModules import myPlot
 import notam
+import nsf
 
 ################################################################################################
 def plotLaunchCenter(axs):
@@ -22,20 +21,6 @@ def plotLaunchCenter(axs):
     for i, lc in enumerate(cities):
         _, lonlat, color = constants.CITIES[lc].split('|')
         lon, lat = lonlat.split(',')
-        
-        # color=myUtils.getColorFromKml(color)
-        # from matplotlib.patches import Polygon
-        # from matplotlib import patches
-        # circle = Polygon(myUtils.circleByPoint(lat, lon, 50), facecolor=myUtils.getColorFromKml(color), closed=True)
-        # circle = patches.Circle(xy=(lon, lat), radius=5)
-        # axs.add_patch(circle)
-        # Convert [(lat1, lon1), (lat2, lon2), ...] to [(lon1, lon2, ...), (lat1, lat2, ...)]
-        # lons, lats = zip(*circle)
-        # coordinates = list(zip(lons, lats))
-
-        # axs.plot(lon, lat, 'ro')
-        # lons, lats = map(lon, lat)
-        # axs.plot(lon, lat, marker = 'o', color='r', zorder=5)
 
 ################################################################################################
 def compareNotam(newFile, cn_font):
@@ -44,7 +29,12 @@ def compareNotam(newFile, cn_font):
         print(f'{newFile} not included {locations}')
         return
     
-    newPolys = gpd.read_file(newFile, driver='KML')
+    newGdf = gpd.read_file(newFile, driver='KML')
+    if newGdf.empty:
+        print(f"No Data in {newFile}!")
+        return 
+
+    newGdf = newGdf[(newGdf.geometry.type=='Polygon') | (newGdf.geometry.type=='LineString')]    
     folder = path.abspath(constants.KML_FOLDERS[location])
     filename = path.basename(newFile)
 
@@ -65,14 +55,22 @@ def compareNotam(newFile, cn_font):
                 plt.close()
 
             # Use geopandas to read old NOTAM kml file to shapely.geometry
-            oldPolys = gpd.read_file(oldFile, driver='KML')
-            fig, ax = myPlot.getFigure(setAspectEqual=True)
+            try:
+                oldGdf = gpd.read_file(oldFile, driver='KML')
+                if oldGdf.empty:
+                    continue
 
-            myPlot.plot2Noatms(fig, ax, newPolys, oldPolys)
+                oldGdf = oldGdf[(oldGdf.geometry.type=='Polygon') | (oldGdf.geometry.type=='LineString')]
+                fig, ax = myPlot.getFigure(setAspectEqual=True)
+            except Exception as e:
+                print(f"No Data in {oldFile}!")
+                print(f'Exception: {e}\n')
+
+            myPlot.plotTwoNoatms(ax, newGdf, oldGdf)
             newTitle = myUtils.getTitle(newFile)
             newTitle = newTitle if '时' in newTitle else newTitle.replace('日', '日??时??分')
             oldTitle = myUtils.getTitle(oldFile)
-            ious = myPlot.plotPolygonsIntersection(fig, ax, cn_font, newPolys, newTitle, oldPolys, oldTitle)
+            ious = myPlot.plotPolygonsIntersection(fig, ax, cn_font, newGdf, newTitle, oldGdf, oldTitle)
             # myPlot.showBackend()
 
             # Save the plot to a file
@@ -88,32 +86,11 @@ def compareNotam(newFile, cn_font):
             else:
                 myPlot.saveFig(fig, f'./temp/unmatch/{filename}', False, False)
         except Exception as e:
-            print(f"{oldFile} No Data!")
             print(f'Exception: {e}\n')
-            pass
     print('\nFnished comparing!')
 
 ################################################################################################
 def main():
-    # chineseDate1 = '5月28日至31日'
-    # chineseDate2 = '5月28日15时至31日17时'
-    # chineseDate3 = '5月28日15时至6月1日17时'
-    # patternMyOriginal = r'(\d{1,2})月(\d{1,2})日(\d{0,4})时?至(\d{0,2})月?(\d{1,2})日(\d{0,4})时?'
-    # patternByChatGPT = r'(?:(\d{1,2})月)?(\d{1,2})日(?:(\d{1,4})时)?至(?:(\d{1,2})月)?(\d{1,2})日(?:(\d{1,4})时)?'
-    # matchesMyOriginal1 = [m.groups() for m in finditer(patternMyOriginal , chineseDate1)]
-    # matchesMyOriginal2 = [m.groups() for m in finditer(patternMyOriginal , chineseDate2)]
-    # matchesMyOriginal3 = [m.groups() for m in finditer(patternMyOriginal , chineseDate3)]
-    # matchesByChatGPT1 = [m.groups() for m in finditer(patternByChatGPT , chineseDate1)]
-    # matchesByChatGPT2 = [m.groups() for m in finditer(patternByChatGPT , chineseDate2)]
-    # matchesByChatGPT3 = [m.groups() for m in finditer(patternByChatGPT , chineseDate3)]
-
-    # print(f'\n{matchesMyOriginal1 = }')
-    # print(f'{matchesMyOriginal2 = }')
-    # print(f'{matchesMyOriginal3 = }')
-    # print(f'{matchesByChatGPT1 = }')
-    # print(f'{matchesByChatGPT2 = }')
-    # print(f'{matchesByChatGPT3 = }')
-
     myPlot.setScreenDpiAware()
     cn_font = myPlot.init()
 
@@ -122,7 +99,6 @@ def main():
                         [[sg.Text('file to open')],
                         [sg.In(), sg.FileBrowse()],
                         [sg.Open(), sg.Exit()],
-                        # [sg.Image(key="-IMAGE-", size=(600, 600))],
                         ])
         while True:
             event, values = window.read()
@@ -147,7 +123,7 @@ def proceeFile(window, cn_font, newFile):
     if not newFile:
         print("No filename supplied")
     elif '.xls' in newFile:
-        print('The filename you chose was: ', newFile)
+        print('Filename: ', newFile)
         myUtils.createShipTrackLinesKmlFile(newFile)
         myUtils.playSound()
     elif '.kml' in newFile:
@@ -164,6 +140,45 @@ def proceeFile(window, cn_font, newFile):
             myUtils.createKmlFile(notamDict)
     else:
         print("Unknown type filename supplied")
+
+################################################################################################
+def createMsaDropZonesKmlFile(oldFile):
+    with open(oldFile, encoding='utf-8') as f:
+        content = f.read()
+
+    if content:
+        lines = content.split('\n')
+        content = ''
+        for line in lines:
+            if line != '' and line[0:1] != '#':
+                content += line
+        location, number, startDates, endDates, areas = notam.parseMsa(content)
+        lastStart = ''
+        lastEnd = ''
+        kml = kml()
+        notams = {}
+
+        for i, area in enumerate(areas):
+            startDate = startDates[i] if i < len(startDates) else lastStart
+            endDate = endDates[i] if i < len(endDates) else lastEnd
+            startDate = startDate if startDate else myUtils.getUTCTime()[:-3]
+            endDate = endDate if endDates else myUtils.getUTCTime()[:-3]
+            title = f"{oldFile.replace('.txt', '').split('/')[-1]}"
+            title = myUtils.convertTitle(startDate, endDate, title, isLocalTime=True)
+
+            if area:
+                area = nsf.formatMSALatitudeLongitude([area])[0]
+                coords = area.split('|')
+                coordsList = [myUtils.convertDMS2DD(c) for c in coords]
+                if len(coordsList) == 1:
+                    radius = myUtils.parseRadius(content)
+                    myUtils.drawCircle(kml, coordsList, f'{location}/{number}', radius=radius)
+                else:
+                    myUtils.drawPolygon(kml, coordsList, f'{location}/{number}')
+                notams = notam.getNoatmDict(notams, number, startDate, endDate, location, area)
+                lastStart = startDate
+                lastEnd = endDate
+        myUtils.updateKmlFile(kml, title, myUtils.KML_PATH, notams)
 
 ################################################################################################
 def showRunTime(func):

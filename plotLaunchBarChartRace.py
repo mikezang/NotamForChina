@@ -4,13 +4,13 @@ import time
 import numpy as np
 import bar_chart_race as bcr
 import pandas as pd
-from datetime import timedelta, datetime
+from datetime import timedelta
 from timeit import timeit
 from openpyxl import load_workbook as loadXLSX
 
 # import constants
-import myUtils
-import myPlot
+from myModules import myUtils
+from myModules import myPlot
 
 ################################################################################################
 def sumLabel(rocket, All, Ok, startYear=''):
@@ -121,7 +121,7 @@ def plotRocketChartRaceAnimation(df, rocket, startYear=None, endYear=None, no=''
 
     bcr.bar_chart_race(dfAll, dfFormat, 
         save_last_frame_image=True, plot_last_frames=False, last_frames_count=100,
-        save_frames_csv=True, incremental_plot=False,
+        save_frames_csv=False, incremental_plot=False,
         title=title, filename=filename,interpolate_period=True, #steps_per_period=stepsPerPeriod,  
         tick_template=tickFunc, period_summary_func=sumFunc, bar_texttemplate=barFunc, 
         period_template=periodTemplate, filter_column_colors=True, 
@@ -144,7 +144,8 @@ def plot2(df, rocket, plotStartYear=None):
 
 ################################################################################################
 def plot3(excelFile, sheetName, plotStartYear=None, use_pinyin=False):
-    df = pd.read_excel(excelFile, sheetName)
+    df = pd.read_excel(excelFile, sheetName, usecols='A:N', ).query('在轨日数 > 0')
+    # df = pd.read_excel(excelFile, sheetName)
     # df['发射日期'] = df['发射日期'].apply(lambda d: d.replace(hour=0, minute=0, second=0))
     # df['着陆日期'] = df['着陆日期'].apply(lambda d: d.replace(hour=23, minute=23, second=59))
     plotShenzhouChartRaceAnimation(df, plotStartYear, use_pinyin)
@@ -273,7 +274,7 @@ def plotShenzhouChartRaceAnimation(df, plotStartYear='', use_pinyin=False):
 
     bcr.bar_chart_race(dfWide, dfRank, 
                        save_last_frame_image=True, plot_last_frames=False, last_frames_count=100,
-                       save_frames_csv=True, incremental_plot=False,
+                       save_frames_csv=False, incremental_plot=False,
                        title=title, filename=filename,interpolate_period=True, steps_per_period=10,  
                        tick_template=tickFunc, period_summary_func=sumFunc, bar_texttemplate=barFunc, 
                        period_template=periodTemplate, filter_column_colors=True)

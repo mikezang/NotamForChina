@@ -5,14 +5,13 @@
 # pylint: disable=W0105,W0511,W0703,C0103,C0116,C0301
 
 from re import findall, finditer, search, sub, IGNORECASE
-import inspect
-from datetime import date, datetime
-import lxml.html
+from datetime import date, datetime, timedelta
+from timeit import timeit
 import pytz
-from selenium.webdriver.common.by import By
 
-import constants
-import myUtils
+from myModules import constants
+from myModules import myUtils
+from myModules import myNet
 
 ################################################################################################
 def splitTitle(item: list) -> str:
@@ -71,11 +70,12 @@ def printNsf(launch_date) -> None:
 ################################################################################################
 def getNsfUrl(driver, page) -> dict:
     urls = {}
-    table = driver.find_element(By.CLASS_NAME, "table_grid")
-    rows = table.find_elements(By.TAG_NAME, "tr")
+    myNet.elementClass(driver, 30, "table_grid")
+    table = myNet.findElementByClass(driver, "table_grid")
+    rows = myNet.findElementsByTag(table, "tr")
 
     for row in rows:
-        cols = row.find_elements(By.TAG_NAME, "td")
+        cols = myNet.findElementsByTag(row, "td")
 
         for col in cols:
             className = col.get_attribute("class")
@@ -83,69 +83,12 @@ def getNsfUrl(driver, page) -> dict:
                 continue
 
             if "subject" in className:
-                ahref = row.find_element(By.TAG_NAME, "a")
+                ahref = myNet.findElementByTag(row, "a")
                 href = ahref.get_attribute("href") + ';all'
                 href = sub(r'PHPSESSID\=[a-z0-9]+\&', '', href)
                 title = ahref.text
                 urls[href] = f'Page{page:02}: {title}'
     return urls
-
-################################################################################################
-def getNsfUrlOld(driver, page) -> dict:
-    invalidUrls = {}
-    urls = {}
-    table = driver.find_element(By.CLASS_NAME, "table_grid")
-    rows = table.find_elements(By.TAG_NAME, "tr")
-
-    for row in rows:
-        cols = row.find_elements(By.TAG_NAME, "td")
-
-        for col in cols:
-            className = col.get_attribute("class")
-            if 'stickybg' in className or 'lockedbg' in className:
-                continue
-
-            if "subject" in className:
-                ahref = row.find_element(By.TAG_NAME, "a")
-                href = ahref.get_attribute("href") + ';all'
-                href = sub(r'PHPSESSID\=[a-z0-9]+\&', '', href)
-                title = ahref.text
-
-                if '?' in title and constants.NSF_FAILURE.lower() not in title.lower():
-                    print(title)
-                    invalidUrls[href] = f'Page{page};{title}'
-                    continue
-
-                titleDate = getDateFromTitle(title)
-
-                try:
-                    localDate = convertNsfDate(titleDate, constants.TIMEZONE_BEIJING)
-                    if localDate is None:
-                        m = search(constants.NSF_DATE_FORMAT, title)
-                        d = m.group() if m else ''
-                        index = title.index(d)
-                        titleDate = myUtils.removeAllSpaces(title[index:])
-                        localDate = convertNsfDate(titleDate, constants.TIMEZONE_BEIJING)
-
-                    if localDate is not None:
-                        if isPastDate(localDate):
-                            rocket = getRocketName(title)
-                            if rocket == '':
-                                rocket = f'({title})'
-                            city = getNsfCity(title)
-                            if city == '未知' and rocket == '長征三号乙':
-                                city = '西昌'
-                            localDateStr = localDate.strftime("%Y年%m月%d日%H時%M分") + city + rocket
-                            if constants.NSF_FAILURE.lower() in title.lower():
-                                localDateStr += '●'
-                            urls[localDateStr] = f'Page{page},{href}'
-                    else:
-                        print(title)
-                        invalidUrls[href] = f'Page{page};{title}'
-                except Exception as e:
-                    invalidUrls[href] = f'Page{page};{title}'
-                    print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-    return urls, invalidUrls
 
 ################################################################################################
 def getDateFromTitle(title) -> str:
@@ -161,7 +104,7 @@ def getNsfUrlList(driver, p='1') -> dict:
     urls = {}
     invalidUrls = {}
     driver.get(constants.NSF_URL_CHINA)
-    myUtils.checkVPN(driver)
+    # myNet.checkVPN(driver)
 
     if p == 'all' or p == 'url':
         lastPage = getNsfPages(driver)
@@ -177,12 +120,8 @@ def getNsfUrlList(driver, p='1') -> dict:
         if page > 1:
             driver.get(href)
 
-        myUtils.elementClass(driver, 30, "pagesection")
         nsfUrls = getNsfUrl(driver, page)
         urls.update(nsfUrls)
-        # invalidUrls.update(invalidNsfUrls)
-
-    # myUtils.updateDictToJsonFile(myUtils.sortDictByKey(invalidUrls), 'InvalidNsfTitle')
     return urls
 
 ################################################################################################
@@ -213,11 +152,9 @@ def parseNsfContent(driver, i, title, basePage, baseUrl) -> None:
             driver.get(url)
             html += driver.page_source
 
-    html = lxml.html.document_fromstring(html).text_content()
+    html = myNet.getXmlTextContent(html)
     html = myUtils.removeAllSpaces(html)
     html = html.replace(r'\n', '').replace(r'\r', '').replace(r'\t', '')
-    # html = html.replace('MEPEP', constants.MEPEP).replace('MUMAN', constants.MUMAN).replace('LUVAR', constants.LUVAR)
-    # html = html.replace('TUNTO', constants.TUNTO).replace('GURAG', constants.GURAG)
     html = sub(r'sSessionId.+|Read\d{0,10}times', '', html)
     header = findall(constants.NSF_PAGE_HEADER, html)
     if header and len(header) == 1:
@@ -265,7 +202,7 @@ def getNsfDetail(driver, i, title, baseUrl) -> dict:
 
     url = baseUrl #+ ';all'
     driver.get(url)
-    myUtils.checkVPN(driver)
+    # myNet.checkVPN(driver)
 
     lastPage = getNsfPages(driver)
     printTitlePages(title, lastPage, i)
@@ -280,7 +217,7 @@ def getNsfDetail(driver, i, title, baseUrl) -> dict:
             driver.get(url)
             html += driver.page_source
 
-    html = lxml.html.document_fromstring(html).text_content()
+    html = myNet.getXmlTextContent(html)
     html = html.replace('MEPEP', constants.MEPEP).replace('MUMAN', constants.MUMAN).replace('LUVAR', constants.LUVAR)
     html = myUtils.removeAllSpaces(html)
     # html = html.replace('\n', '').replace("\r", "")
@@ -767,9 +704,11 @@ def findConvertLatitudeLongitude(latlon):
 
 ################################################################################################
 def getNsfPages(driver) -> int:
-    myUtils.elementClass(driver, 30, "pagesection")
-    pagesection = driver.find_element(By.CLASS_NAME, "pagesection")
-    pages = pagesection.find_elements(By.CLASS_NAME, "navPages")
+    myNet.elementClass(driver, 30, "pagesection")
+    # pagesection = driver.find_element(By.CLASS_NAME, "pagesection")
+    # pages = pagesection.find_elements(By.CLASS_NAME, "navPages")
+    pagesection = myNet.findElementByClass(driver, "pagesection")
+    pages = myNet.findElementsByClass(pagesection, "navPages")
     return int(pages[-2].text) if len(pages) > 0 and 'Next' == pages[-1].text else 1
 
 ################################################################################################
@@ -807,3 +746,24 @@ def printTitlePages(title, lastPage, i) -> None:
 # D°M.M' ⇒ D°M'S":  D + M + round(.M * 60)
 # D.D° ⇒ D°M.M':    int(D) = D°, (D - Int(D)) * 60 = M.M'
 # D.D° ⇒ D°M'S":    Int(D) = D°, Int((D - Int(D)) * 60) = M', (((D - Int(D)) * 60) - Int((D - Int(D)) * 60)) * 60 = S"
+
+################################################################################################
+def main():
+    try:
+        driver = myNet.getFirefoxDriver()
+        print('Create all NSF launched urls from site...')
+        page = 'url'
+        nsfDict = getNsfUrlList(driver, page)
+        writeNsfToFile(nsfDict)
+    except:
+        myUtils.pritnExceptionTrace()
+        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+
+################################################################################################
+def showRunTime(func):
+    result = timeit(func, number=1, globals=globals())
+    print(f'\nFinished in {timedelta(seconds=result)}')
+
+if __name__ == "__main__":
+    showRunTime("main()")
+

@@ -1,13 +1,22 @@
 from datetime import timedelta
-import shutil
-import subprocess
-from sys import argv
 from timeit import timeit
 import PySimpleGUI as sg
 import os
 
-import myUtils
-import myPlot
+# sys.path.append("myModues")
+from myModules import myUtils
+from myModules import myPlot
+
+BUTTON_SAVE = 'Save'
+BUTTON_DISPLAY_MODE = 'Display Mode'
+BUTTON_SHOW_LINES = 'Show Lines'
+BUTTON_COMPARE = 'Compare KML'
+BUTTON_EXIT = 'Exit'
+
+NEW_FOLDER = 'NewFolder'
+NEW_SUBFOLDERS = 'NewSubfolders'
+OLD_FOLDER = 'OldFolder'
+OLD_SUBFOLDERS = 'OldSubfolders'
 
 size = (900, 900)
 
@@ -17,20 +26,22 @@ def main():
     myPlot.setScreenDpiAware()    
     cn_font = myPlot.init()
 
-    window, subfolders = getWindow()
+    window, newSubfolders, oldSubfolders = getWindow()
     myPlot.moveWindow(window, y=0)
-    window['Folder'].bind("<Return>", "_Enter")
+    window[NEW_FOLDER].bind("<Return>", "_Enter")
+    window[OLD_FOLDER].bind("<Return>", "_Enter")
 
-    selectedFiles = []
-    selectedFileTimes = []
-    orthographic = False
+    newSelectedFile = ''
+    oldSelectedFile = ''
+    projection = False
     plotAll = False
 
     while True:
         event, values = window.read(timeout=0)
         if event == sg.WIN_CLOSED or event == BUTTON_EXIT:
             break
-        subfolders, selectedFiles, selectedFileTimes, orthographic, plotAll = handleEvents(window, event, values, cn_font, subfolders, selectedFiles, selectedFileTimes, orthographic, plotAll)
+        newSubfolders, newSelectedFile, oldSubfolders, oldSelectedFile, projection, plotAll = \
+            handleEvents(window, event, values, cn_font, newSubfolders, newSelectedFile, oldSubfolders, oldSelectedFile, projection=projection, plotAll=plotAll)
         window.Normal()
     window.close()
 
@@ -38,32 +49,16 @@ def main():
 def getWindow():
     myPlot.make_dpi_aware()
     sg.theme('Python')
-    sg.set_options(text_justification='right')      
-    subfolders, extList = myUtils.listFoldersFiles('notams/maps')
+    sg.set_options(text_justification='right')
+    newPath = 'c:/users/w802479/downloads'
+    oldPath = './notams/maps'
+    newSubfolders, newExtList = myUtils.listFoldersFiles(newPath)
+    oldSubfolders, oldExtList = myUtils.listFoldersFiles(oldPath)
+    # subfolders, extList = myUtils.listFoldersFiles('notams/maps')
     layout = []
-    layout.append(getMiddleFrame(subfolders, extList))
-    # layout.append(getButton())  
-    window = sg.Window('Show KML file in Image', layout, finalize=True, font=("Helvetica", 12))      
-    return window, subfolders
-
-################################################################################################
-def getWindow1():
-    myPlot.make_dpi_aware()
-    sg.theme('Python')
-    sg.set_options(text_justification='right')      
-    subfolders, extList = myUtils.listFoldersFiles()
-    layout = []
-    layout.append([getTopFrame()])  
-    layout.append(getMiddleFrame(subfolders, extList))
-    layout.append([getBottomFrame()])  
-    layout.append(getButton())  
-    window = sg.Window('Merge pictures/videos to video', layout, finalize=True, font=("Helvetica", 12))      
-    return window, subfolders
-
-BUTTON_SAVE = 'Save'
-BUTTON_DISPLAY_MODE = 'Display Mode'
-BUTTON_SHOW_LINES = 'Show Lines'
-BUTTON_EXIT = 'Exit'
+    layout.append(getMiddleFrame(newSubfolders, newPath, oldSubfolders, oldPath))
+    window = sg.Window('Show KML/Image file and Compare KML files', layout, finalize=True, font=("Helvetica", 12))      
+    return window, newSubfolders, oldSubfolders
 
 ################################################################################################
 def getButton():
@@ -72,6 +67,7 @@ def getButton():
         sg.Push(), 
         sg.Button(BUTTON_DISPLAY_MODE, font=("Helvetica", 14), disabled=True), 
         sg.Button(BUTTON_SHOW_LINES, font=("Helvetica", 14), disabled=True), 
+        # sg.Button(BUTTON_COMPARE, font=("Helvetica", 14), disabled=True), 
         sg.Push(), 
         sg.Button(BUTTON_EXIT, font=("Helvetica", 14))
     ]
@@ -79,10 +75,6 @@ def getButton():
 
 ################################################################################################
 def getTopFrame():
-    # lastYear = '2024'
-    # subYears = ['20232024']
-    # yearsTitle = [sg.Checkbox('选择合成类型', key='fileType', enable_events=True)]
-    # for i, subYear in enumerate(subYears):
     checkbox = [sg.Radio('合成图像视频', 'siwtchLayout', key='fileType101', enable_events=True, default=True),
                 sg.Radio('配乐视频', 'siwtchLayout', key='fileType102', enable_events=True),
                 sg.Radio('显示图像', 'siwtchLayout', key='fileType103', enable_events=True),
@@ -91,83 +83,39 @@ def getTopFrame():
     return sg.Frame('选择任务类型', layout)
 
 ################################################################################################
-def getBottomFrame():
-    lastYear = '2024'
-    subYears = ['2023', '2024']
-    yearsTitle = [sg.Checkbox('选择全发射期间', key='year01', enable_events=True)]
-    layout = [yearsTitle]
-    # for i, subYear in enumerate(subYears):
-    #     checkbox = [sg.Checkbox(item, key=f'year-{i * 10 + j + 1}', default=True if item == lastYear else False) for j, item in enumerate(subYear)]
-    #     layout.append(checkbox)
-    return sg.Frame('Bttom Frame', layout)
-
-################################################################################################
-def getMiddleFrame(subfolders, extList, curPath: str='.', ):
-    columnSubFolders = [
-        [sg.Input(os.path.abspath(curPath), readonly=False, justification='left',
-            key='Folder', enable_events=True, size=60,
+def getMiddleFrame(newSubFolders, newPath, oldSubFolder, oldPath):
+    newFolders = [
+        [sg.Input(os.path.abspath(newPath), readonly=False, justification='left',
+            key=NEW_FOLDER, enable_events=True, size=60,
             disabled_readonly_background_color=sg.theme_input_background_color()),
         ],
-        [sg.Listbox(subfolders, size=(60, 30), key='Subfolders', enable_events=True,
+        [sg.Listbox(newSubFolders, size=(60, 15), key=NEW_SUBFOLDERS, enable_events=True,
             select_mode=sg.LISTBOX_SELECT_MODE_SINGLE, bind_return_key=True,
-            highlight_background_color='blue', highlight_text_color='white')],
-        getButton(),
+            highlight_background_color='blue', highlight_text_color='white')]
     ]
+    oldFolders = [
+        [sg.Input(os.path.abspath(oldPath), readonly=True, justification='left',
+            key=OLD_FOLDER, enable_events=True, size=60,
+            disabled_readonly_text_color='#A3A3A3',
+            disabled_readonly_background_color=sg.theme_input_background_color()),
+        ],
+        [sg.Listbox(oldSubFolder, size=(60, 15), key=OLD_SUBFOLDERS, enable_events=True,
+            select_mode=sg.LISTBOX_SELECT_MODE_SINGLE, bind_return_key=True, disabled=True,
+            highlight_background_color='blue', highlight_text_color='white')]
+    ]
+
+    columnFolders = [
+        [sg.Frame('New File', newFolders)],
+        [sg.Frame('Old File', oldFolders)],
+        getButton()
+    ]
+
     imageBorder = [[sg.Image(key="-IMAGE-", size=size)]]
     layout = [[
-            sg.Column(columnSubFolders), 
-            sg.Frame("Selected File", imageBorder, size=(size[0]+20, size[1]+20),
-                vertical_alignment='center')
+            sg.Column(columnFolders), 
+            sg.Frame("Selected File", imageBorder, size=(size[0]+20, size[1]+20), 
+                     element_justification='center', vertical_alignment='center')
     ]]
-    return layout
-
-################################################################################################
-def getMiddleFrame1(subfolders, extList, curPath: str='.', ):
-    selected = []
-    columnSubFolders = [
-        [#sg.Text('Folder:'), 
-         sg.Input(os.path.abspath(curPath), readonly=True, justification='left',
-            key='Folder', enable_events=True, size=25,
-            disabled_readonly_background_color=sg.theme_input_background_color()),
-        #  sg.Text('Ext.:'), 
-         sg.Combo(extList, default_value='*.*', size=(3, 1), key='Extension', enable_events=True)],        
-        [sg.Listbox(subfolders, size=(25, 20), key='Subfolders',
-            select_mode=sg.LISTBOX_SELECT_MODE_EXTENDED, bind_return_key=True,
-            highlight_background_color='blue', highlight_text_color='white')],
-    ]
-    columnButtons1 = [
-        [sg.Button('→')], [sg.Button('→\n→')], 
-        [sg.HorizontalSeparator(color='red', p=((0,0),(20,20)))],
-        [sg.Button('←')], [sg.Button('←\n←')]
-    ]
-
-    frame_selected = [[sg.Listbox(selected, size=(30, 20), key='Selected',
-            select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)]]
-    
-    columnTimesize = [
-        [sg.Text('Sum:'), 
-         sg.Input('00:12:34', size=8, readonly=True, justification='left', key='TotalTime', enable_events=True, 
-            disabled_readonly_background_color=sg.theme_input_background_color())],
-        [sg.Listbox(selected, size=(10, 20), key='TimeSize',
-            select_mode=sg.LISTBOX_SELECT_MODE_SINGLE, disabled=False)]
-        # TODO: '☑' and '☐' https://github.com/PySimpleGUI/PySimpleGUI/issues/3706
-    ]
-    columnButtons2 = [
-        [sg.Button('↑')], [sg.Button('↑↑')], 
-        [sg.HorizontalSeparator(color='red', p=((0,0),(20,20)))],
-        [sg.Button('↓')], [sg.Button('↓↓')]
-    ]
-
-
-    layout = [[
-            sg.Column(columnSubFolders), 
-            sg.Column(columnButtons1, element_justification='center'),
-            sg.Frame("Selected Files", frame_selected),
-            sg.Column(columnTimesize),
-            sg.Column(columnButtons2, element_justification='center'),
-            # TODO: add list to show mp3/mp4 time or image size
-    ]]
-
     return layout
 
 ################################################################################################
@@ -186,128 +134,81 @@ def saveElementAsFile(element, filename):
     grab.save(filename)
 
 ################################################################################################
-def handleEvents(window, event, values, cn_font, subfolders: list, selectedFiles: list, selectedFileTimes: list, orthographic=False, plotAll=False) :
-    if event == 'Folder_Enter':
-        curPath = values['Folder']
-        selectedItem = '*.*'
-        subfolders, extList = myUtils.listFoldersFiles(curPath, selectedItem)
-        window['Subfolders'].update(values=subfolders)
-    elif event == 'Subfolders':
-        window[BUTTON_DISPLAY_MODE].update(disabled=True)
-        window[BUTTON_SHOW_LINES].update(disabled=True)
-        selectedItems = values['Subfolders']
-        if len(selectedItems) == 1:
-            if os.path.isdir(selectedItems[0]):
-                curPath = selectedItems[0]
-                selectedItem = '*.*'
-                subfolders, extList = myUtils.listFoldersFiles(curPath, selectedItem)
-                window['Subfolders'].update(values=subfolders)
-                window['Folder'].update(value=os.path.abspath('.'))
+def updateFolders(window, folderName, folderValue, subfolderName):
+    window[folderName].update(select=False)
+    window[folderName].update(value=folderValue)
+    newSubfolders, extList = myUtils.listFoldersFiles(folderValue)
+    window[subfolderName].update(values=newSubfolders)
+
+################################################################################################
+def toogleButtons(window, disabled):
+    window[BUTTON_DISPLAY_MODE].update(disabled=disabled)
+    window[BUTTON_SHOW_LINES].update(disabled=disabled)
+
+################################################################################################
+def toogleOldFolders(window, readonly):
+    window[OLD_FOLDER].update(readonly=readonly)
+    window[OLD_SUBFOLDERS].update(disabled=readonly)
+
+################################################################################################
+def handleEvents(window, event, values, cn_font, newSubfolders, newSelectedFile, oldSubfolders, oldSelectedFile=None, projection=False, plotAll=False):
+    if event == NEW_FOLDER + '_Enter':
+        newPath = os.path.abspath(values[NEW_FOLDER])
+        if os.path.isdir(newPath):
+            updateFolders(window, NEW_FOLDER, newPath, NEW_SUBFOLDERS)
+        else:
+            window[NEW_FOLDER].update(select=True)
+    elif event == OLD_FOLDER + '_Enter':
+        oldPath = os.path.abspath(values[OLD_FOLDER])
+        if os.path.isdir(oldPath):
+            updateFolders(window, OLD_FOLDER, oldPath, OLD_SUBFOLDERS)
+        else:
+            window[OLD_FOLDER].update(select=True)
+    elif event == NEW_SUBFOLDERS:
+        toogleButtons(window, True)
+        toogleOldFolders(window, True)
+        newFolder = values[NEW_FOLDER]
+        selectedFiles = values[NEW_SUBFOLDERS]
+        if len(selectedFiles) == 1:
+            newSelectedFile = os.path.abspath(newFolder + '/' + selectedFiles[0])
+            if os.path.isdir(newSelectedFile):
+                updateFolders(window, NEW_FOLDER, newSelectedFile, NEW_SUBFOLDERS)
             else:
-                folder = values['Folder']
-                filename = f'{folder}/{selectedItems[0]}'
-                if selectedItems[0].endswith('.kml'):
-                    image = myPlot.getImageFromKml(filename, cn_font, size=size, orthographic=orthographic, plotAll=plotAll)
+                if newSelectedFile.endswith('.kml'):
+                    oldSelectedFile = None
+                    image = myPlot.getImageFromKml(cn_font, newSelectedFile, oldSelectedFile, size=size, projection=projection, plotAll=plotAll)
                     window["-IMAGE-"].update(data=image)
-                    isKmlFile = True
-                    window[BUTTON_DISPLAY_MODE].update(disabled=False)
-                    window[BUTTON_SHOW_LINES].update(disabled=False)
-                elif selectedItems[0][-4:] in '.png,.jpg,.jpeg':
-                    image = myPlot.getImage(filename, size=size)
+                    toogleButtons(window, False)
+                    toogleOldFolders(window, False)
+                elif selectedFiles[0][-4:] in '.gif,.png,.jpg,.jpeg':
+                    image = myPlot.getImage(newSelectedFile, size=size)
                     window["-IMAGE-"].update(data=image)
-    elif event == BUTTON_DISPLAY_MODE:
-        orthographic = not orthographic
-        selectedItems = values['Subfolders']
-        folder = values['Folder']
-        filename = f'{folder}/{selectedItems[0]}'
-        image = myPlot.getImageFromKml(filename, cn_font, size=size, orthographic=orthographic, plotAll=plotAll)
-        window["-IMAGE-"].update(data=image)
+    elif event == OLD_SUBFOLDERS:
+        toogleButtons(window, True)
+        oldFolder = values[OLD_FOLDER]
+        selectedFiles = values[OLD_SUBFOLDERS]
+        if len(selectedFiles) == 1:
+            oldSelectedFile = os.path.abspath(oldFolder + '/' + selectedFiles[0])
+            if os.path.isdir(oldSelectedFile):
+                updateFolders(window, OLD_FOLDER, oldSelectedFile, OLD_SUBFOLDERS)
+            else:
+                if oldSelectedFile.endswith('.kml'):
+                    image = myPlot.getImageFromKml( cn_font, newSelectedFile, oldSelectedFile, size=size, projection=projection, plotAll=plotAll)
+                    window["-IMAGE-"].update(data=image)
+                    toogleButtons(window, False)
     elif event == BUTTON_SHOW_LINES:
-        plotAll = not plotAll
-        selectedItems = values['Subfolders']
-        folder = values['Folder']
-        filename = f'{folder}/{selectedItems[0]}'
-        image = myPlot.getImageFromKml(filename, cn_font, size=size, orthographic=orthographic, plotAll=plotAll)
+        if newSelectedFile.endswith('.kml'):
+            plotAll = not plotAll
+            image = myPlot.getImageFromKml(cn_font, newSelectedFile, oldSelectedFile, size=size, projection=projection, plotAll=plotAll)
+            window["-IMAGE-"].update(data=image)
+    elif event == BUTTON_DISPLAY_MODE:
+        projection = not projection
+        image = myPlot.getImageFromKml(cn_font, newSelectedFile, oldSelectedFile, size=size, projection=projection, plotAll=plotAll)
         window["-IMAGE-"].update(data=image)
     elif event == BUTTON_SAVE:
         filename = sg.popup_get_file('Choose file (PNG, JPG, GIF) to save to', save_as=True)
         saveElementAsFile(window['-IMAGE-'], filename)
-
-    return subfolders, selectedFiles, selectedFileTimes, orthographic, plotAll
-    # elif event == 'Extension':
-    #     selectedItem = values['Extension']
-    #     subfolders, extList = myUtils.listFoldersFiles(os.path.curdir, selectedItem)
-    #     window['Subfolders'].update(values=subfolders)
-    # elif event == '→':
-    #     selectedItems = values['Subfolders']
-    #     if selectedItems:
-    #         for item in selectedItems:
-    #             if os.path.isfile(item):
-    #                 subfolders.remove(item)
-    #                 selectedFiles.append(item)
-    #                 # selectedFiles.insert(0, item)
-    #                 if myUtils.isAudioFile(item) or myUtils.isVideoFile(item):
-    #                     fileTime = myUtils.second2Time(myPlot.getVideoTime(item))
-    #                     selectedFileTimes.append(f'{fileTime} ☑')
-    #                     # selectedFileTimes.insert(0, f'{fileTime}')
-    #                 elif myUtils.isImageFile(item):
-    #                     w, h = myUtils.getImageSize(item)
-    #                     selectedFileTimes.append(f'{w}x{h}')
-    #                     # selectedFileTimes.insert(0, f'{w}x{h}')
-    #         subfolders = sorted(subfolders)
-    #         window['Selected'].update(values=selectedFiles)
-    #         window['TimeSize'].update(values=selectedFileTimes)
-    #         window['Subfolders'].update(values=subfolders)
-    # elif event == '→\n→':
-    #     return
-    # elif event == '←':
-    #     selectedItems = values['Selected']
-    #     if selectedItems:
-    #         for item in selectedItems:
-    #             selectedFiles.remove(item)
-    #         # TODO if not same folder skip
-    #         subfolders = sorted(subfolders.extend(selectedItems))
-    #         window['Selected'].update(values=selectedFiles)
-    #         window['Subfolders'].update(values=subfolders)
-    # elif event == '←\n←':
-    #     return
-    # elif event == '↑':
-    #     selectedItems = values['Selected']
-    #     if selectedItems:
-    #         selectedIndex = selectedFiles.index(selectedItems[0])
-    #         if selectedIndex > 0:
-    #             selectedFiles = myUtils.swapListItems(selectedFiles, selectedIndex, selectedIndex - 1)
-    #         selectedIndex = selectedFiles.index(selectedItems[0])
-    #         window['Selected'].update(values=selectedFiles, set_to_index=[selectedIndex], scroll_to_index=selectedIndex)
-    # elif event == '↑↑':
-    #     selectedItems = values['Selected']
-    #     if selectedItems:
-    #         selectedIndex = selectedFiles.index(selectedItems[0])
-    #         if selectedIndex > 0:
-    #             selectedFiles.remove(selectedItems[0])
-    #             selectedFiles.insert(0, selectedItems[0])
-    #         selectedIndex = selectedFiles.index(selectedItems[0])
-    #         window['Selected'].update(values=selectedFiles, set_to_index=[selectedIndex], scroll_to_index=selectedIndex)
-    # elif event == '↓':
-    #     selectedItems = values['Selected']
-    #     if selectedItems:
-    #         selectedIndex = selectedFiles.index(selectedItems[0])
-    #         if selectedIndex < len(selectedFiles) - 1:
-    #             selectedFiles = myUtils.swapListItems(selectedFiles, selectedIndex, selectedIndex + 1)
-    #         selectedIndex = selectedFiles.index(selectedItems[0])
-    #         window['Selected'].update(values=selectedFiles, set_to_index=[selectedIndex], scroll_to_index=selectedIndex)
-    # elif event == '↓↓':
-    #     selectedItems = values['Selected']
-    #     if selectedItems:
-    #         selectedIndex = selectedFiles.index(selectedItems[0])
-    #         if selectedIndex < len(selectedFiles) - 1:
-    #             selectedFiles.remove(selectedItems[0])
-    #             selectedFiles.append(selectedItems[0])
-    #         selectedIndex = selectedFiles.index(selectedItems[0])
-    #         window['Selected'].update(values=selectedFiles, set_to_index=[selectedIndex], scroll_to_index=selectedIndex)
-    # elif event == constants.BUTTON1_LABEL:
-    #     window.minimize()
-    #     cn_font = myPlot.init()
+    return newSubfolders, newSelectedFile, oldSubfolders, oldSelectedFile, projection, plotAll
 
 ################################################################################################
 def showRunTime(func):

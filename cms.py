@@ -14,8 +14,7 @@ import pyorbital.orbital
 import pytz
 from fake_useragent import UserAgent
 
-path.append("")
-import myUtils
+from myModules import myUtils
 
 TIMEZONE_SHANGHAI = zoneinfo.ZoneInfo('Asia/Shanghai')
 TIMEZONE_UTC = pytz.timezone('UTC')

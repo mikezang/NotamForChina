@@ -3,11 +3,9 @@ import shutil
 import subprocess
 from sys import argv
 from timeit import timeit
-import PySimpleGUI as sg
 import os
 
-import myUtils
-import myPlot
+from myModules import myUtils
 
 ################################################################################################
 def createSlideScriptNew(inputList, index, countdown=10, duration=0, width=864, height=504, fontPath='/WINDOWS/Fonts/Arial.ttf'):
@@ -232,7 +230,7 @@ def mergeSlideToVideo(inputList, outputFilename, slide=None, countdown=10, width
     for index, _ in enumerate(inputList):
         if slide or countdown > 0:
             videoText += f'file v{index:02}.mp4\n'
-            duration = 0 if myUtils.isImageFile(inputList[index]) else int(myPlot.getFileDuration(inputList[index]))
+            duration = 0 if myUtils.isImageFile(inputList[index]) else int(myUtils.getFileDuration(inputList[index]))
             script = createSlideScript(inputList, index, countdown, duration, width, height, fontPath)
             myUtils.saveTextFile(f'script-{index:02}.txt', script, False, True, False)
             cmd = createSlideCommand(inputList, index, countdown, duration)
@@ -330,219 +328,206 @@ def main():
     myUtils.playSound()
     return
 
-    window, subfolders = getWindow()
-    myPlot.moveWindow(window, y=0)
-    selectedFiles = []
-    selectedFileTimes = []
-
-    while True:
-        event, values = window.read(timeout=0)
-        if event == sg.WIN_CLOSED or event == 'Exit':
-            break
-        subfolders, selectedFiles, selectedFileTimes = handleEvents(window, event, values, subfolders, selectedFiles, selectedFileTimes)
-        window.Normal()
-    window.close()
-
-################################################################################################
-def getWindow():
-    myPlot.make_dpi_aware()
-    sg.theme('Python')
-    sg.set_options(text_justification='right')      
-    subfolders, extList = myUtils.listFoldersFiles()
-    layout = []
-    layout.append([getTopFrame()])  
-    layout.append(getMiddleFrame(subfolders, extList))
-    layout.append([getBottomFrame()])  
-    layout.append(getButton())  
-    window = sg.Window('Merge pictures/videos to video', layout, finalize=True, font=("Helvetica", 12))      
-    return window, subfolders
+# ################################################################################################
+# def getWindow():
+#     myPlot.make_dpi_aware()
+#     sg.theme('Python')
+#     sg.set_options(text_justification='right')      
+#     subfolders, extList = myUtils.listFoldersFiles()
+#     layout = []
+#     layout.append([getTopFrame()])  
+#     layout.append(getMiddleFrame(subfolders, extList))
+#     layout.append([getBottomFrame()])  
+#     layout.append(getButton())  
+#     window = sg.Window('Merge pictures/videos to video', layout, finalize=True, font=("Helvetica", 12))      
+#     return window, subfolders
 
 ################################################################################################
-def getButton():
-    button = [
-        sg.Button('Start Task', font=("Helvetica", 14)), 
-        # sg.Button('Button2', font=("Helvetica", 14)), 
-        # sg.Push(), 
-        # sg.Button('Show Chart Pictures', font=("Helvetica", 14)), 
-        # sg.Button('Play Bar Chart Race Videos', font=("Helvetica", 14)), 
-        sg.Push(), 
-        sg.Button('Exit', font=("Helvetica", 14))
-    ]
-    return button
+# def getButton():
+#     button = [
+#         sg.Button('Start Task', font=("Helvetica", 14)), 
+#         # sg.Button('Button2', font=("Helvetica", 14)), 
+#         # sg.Push(), 
+#         # sg.Button('Show Chart Pictures', font=("Helvetica", 14)), 
+#         # sg.Button('Play Bar Chart Race Videos', font=("Helvetica", 14)), 
+#         sg.Push(), 
+#         sg.Button('Exit', font=("Helvetica", 14))
+#     ]
+#     return button
 
 ################################################################################################
-def getTopFrame():
-    # lastYear = '2024'
-    # subYears = ['20232024']
-    # yearsTitle = [sg.Checkbox('选择合成类型', key='fileType', enable_events=True)]
-    # for i, subYear in enumerate(subYears):
-    checkbox = [sg.Radio('合成图像视频', 'siwtchLayout', key='fileType101', enable_events=True, default=True),
-                sg.Radio('配乐视频', 'siwtchLayout', key='fileType102', enable_events=True),
-                sg.Radio('显示图像', 'siwtchLayout', key='fileType103', enable_events=True),
-                sg.Radio('播放视频', 'siwtchLayout', key='fileType104', enable_events=True)]
-    layout = [checkbox]
-    return sg.Frame('选择任务类型', layout)
+# def getTopFrame():
+#     # lastYear = '2024'
+#     # subYears = ['20232024']
+#     # yearsTitle = [sg.Checkbox('选择合成类型', key='fileType', enable_events=True)]
+#     # for i, subYear in enumerate(subYears):
+#     checkbox = [sg.Radio('合成图像视频', 'siwtchLayout', key='fileType101', enable_events=True, default=True),
+#                 sg.Radio('配乐视频', 'siwtchLayout', key='fileType102', enable_events=True),
+#                 sg.Radio('显示图像', 'siwtchLayout', key='fileType103', enable_events=True),
+#                 sg.Radio('播放视频', 'siwtchLayout', key='fileType104', enable_events=True)]
+#     layout = [checkbox]
+#     return sg.Frame('选择任务类型', layout)
 
 ################################################################################################
-def getBottomFrame():
-    lastYear = '2024'
-    subYears = ['2023', '2024']
-    yearsTitle = [sg.Checkbox('选择全发射期间', key='year01', enable_events=True)]
-    layout = [yearsTitle]
-    # for i, subYear in enumerate(subYears):
-    #     checkbox = [sg.Checkbox(item, key=f'year-{i * 10 + j + 1}', default=True if item == lastYear else False) for j, item in enumerate(subYear)]
-    #     layout.append(checkbox)
-    return sg.Frame('Bttom Frame', layout)
+# def getBottomFrame():
+#     lastYear = '2024'
+#     subYears = ['2023', '2024']
+#     yearsTitle = [sg.Checkbox('选择全发射期间', key='year01', enable_events=True)]
+#     layout = [yearsTitle]
+#     # for i, subYear in enumerate(subYears):
+#     #     checkbox = [sg.Checkbox(item, key=f'year-{i * 10 + j + 1}', default=True if item == lastYear else False) for j, item in enumerate(subYear)]
+#     #     layout.append(checkbox)
+#     return sg.Frame('Bttom Frame', layout)
 
 ################################################################################################
-def getMiddleFrame(subfolders, extList, curPath: str='.', ):
-    selected = []
-    columnSubFolders = [
-        [#sg.Text('Folder:'), 
-         sg.Input(os.path.abspath(curPath), readonly=True, justification='left',
-            key='Folder', enable_events=True, size=25,
-            disabled_readonly_background_color=sg.theme_input_background_color()),
-        #  sg.Text('Ext.:'), 
-         sg.Combo(extList, default_value='*.*', size=(3, 1), key='Extension', enable_events=True)],        
-        [sg.Listbox(subfolders, size=(25, 20), key='Subfolders',
-            select_mode=sg.LISTBOX_SELECT_MODE_EXTENDED, bind_return_key=True,
-            highlight_background_color='blue', highlight_text_color='white')],
-    ]
-    columnButtons1 = [
-        [sg.Button('→')], [sg.Button('→\n→')], 
-        [sg.HorizontalSeparator(color='red', p=((0,0),(20,20)))],
-        [sg.Button('←')], [sg.Button('←\n←')]
-    ]
+# def getMiddleFrame(subfolders, extList, curPath: str='.', ):
+#     selected = []
+#     columnSubFolders = [
+#         [#sg.Text('Folder:'), 
+#          sg.Input(os.path.abspath(curPath), readonly=True, justification='left',
+#             key='Folder', enable_events=True, size=25,
+#             disabled_readonly_background_color=sg.theme_input_background_color()),
+#         #  sg.Text('Ext.:'), 
+#          sg.Combo(extList, default_value='*.*', size=(3, 1), key='Extension', enable_events=True)],        
+#         [sg.Listbox(subfolders, size=(25, 20), key='Subfolders',
+#             select_mode=sg.LISTBOX_SELECT_MODE_EXTENDED, bind_return_key=True,
+#             highlight_background_color='blue', highlight_text_color='white')],
+#     ]
+#     columnButtons1 = [
+#         [sg.Button('→')], [sg.Button('→\n→')], 
+#         [sg.HorizontalSeparator(color='red', p=((0,0),(20,20)))],
+#         [sg.Button('←')], [sg.Button('←\n←')]
+#     ]
 
-    frame_selected = [[sg.Listbox(selected, size=(30, 20), key='Selected',
-            select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)]]
+#     frame_selected = [[sg.Listbox(selected, size=(30, 20), key='Selected',
+#             select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)]]
     
-    columnTimesize = [
-        [sg.Text('Sum:'), 
-         sg.Input('00:12:34', size=8, readonly=True, justification='left', key='TotalTime', enable_events=True, 
-            disabled_readonly_background_color=sg.theme_input_background_color())],
-        [sg.Listbox(selected, size=(10, 20), key='TimeSize',
-            select_mode=sg.LISTBOX_SELECT_MODE_SINGLE, disabled=False)]
-        # TODO: '☑' and '☐' https://github.com/PySimpleGUI/PySimpleGUI/issues/3706
-    ]
-    columnButtons2 = [
-        [sg.Button('↑')], [sg.Button('↑↑')], 
-        [sg.HorizontalSeparator(color='red', p=((0,0),(20,20)))],
-        [sg.Button('↓')], [sg.Button('↓↓')]
-    ]
+#     columnTimesize = [
+#         [sg.Text('Sum:'), 
+#          sg.Input('00:12:34', size=8, readonly=True, justification='left', key='TotalTime', enable_events=True, 
+#             disabled_readonly_background_color=sg.theme_input_background_color())],
+#         [sg.Listbox(selected, size=(10, 20), key='TimeSize',
+#             select_mode=sg.LISTBOX_SELECT_MODE_SINGLE, disabled=False)]
+#         # TODO: '☑' and '☐' https://github.com/PySimpleGUI/PySimpleGUI/issues/3706
+#     ]
+#     columnButtons2 = [
+#         [sg.Button('↑')], [sg.Button('↑↑')], 
+#         [sg.HorizontalSeparator(color='red', p=((0,0),(20,20)))],
+#         [sg.Button('↓')], [sg.Button('↓↓')]
+#     ]
 
 
-    layout = [[
-            sg.Column(columnSubFolders), 
-            sg.Column(columnButtons1, element_justification='center'),
-            sg.Frame("Selected Files", frame_selected),
-            sg.Column(columnTimesize),
-            sg.Column(columnButtons2, element_justification='center'),
-            # TODO: add list to show mp3/mp4 time or image size
-    ]]
+#     layout = [[
+#             sg.Column(columnSubFolders), 
+#             sg.Column(columnButtons1, element_justification='center'),
+#             sg.Frame("Selected Files", frame_selected),
+#             sg.Column(columnTimesize),
+#             sg.Column(columnButtons2, element_justification='center'),
+#             # TODO: add list to show mp3/mp4 time or image size
+#     ]]
 
-    return layout
+#     return layout
 
 ################################################################################################
-def handleEvents(window, event, values, subfolders: list, selectedFiles: list, selectedFileTimes: list):
-    # font = ("Courier New", 11)
-    # entry = window['Main'].Widget
-    # input_size = entry.winfo_width() // sg.Text.char_width_in_pixels(font)
+# def handleEvents(window, event, values, subfolders: list, selectedFiles: list, selectedFileTimes: list):
+#     # font = ("Courier New", 11)
+#     # entry = window['Main'].Widget
+#     # input_size = entry.winfo_width() // sg.Text.char_width_in_pixels(font)
     
-    if event == 'Subfolders':
-        selectedItems = values['Subfolders']
-        if len(selectedItems) == 1:
-            if os.path.isdir(selectedItems[0]):
-                curPath = selectedItems[0]
-                selectedItem = values['Extension']
-                subfolders, extList = myUtils.listFoldersFiles(curPath, selectedItem)
-                window['Subfolders'].update(values=subfolders)
-                window['Extension'].update(values=extList, value='*.*')
-                window['Folder'].update(os.path.abspath(curPath))
-            else:
-                if selectedItems[0].endswith('.txt'):
-                    lines = myUtils.readTextFile(selectedItems[0])
-                    selectedFiles.extend(lines)
-                    window['Selected'].update(values=selectedFiles)
-    elif event == 'Extension':
-        selectedItem = values['Extension']
-        subfolders, extList = myUtils.listFoldersFiles(os.path.curdir, selectedItem)
-        window['Subfolders'].update(values=subfolders)
-    elif event == '→':
-        selectedItems = values['Subfolders']
-        if selectedItems:
-            for item in selectedItems:
-                if os.path.isfile(item):
-                    subfolders.remove(item)
-                    selectedFiles.append(item)
-                    # selectedFiles.insert(0, item)
-                    if myUtils.isAudioFile(item) or myUtils.isVideoFile(item):
-                        fileTime = myUtils.second2Time(myPlot.getVideoTime(item))
-                        selectedFileTimes.append(f'{fileTime} ☑')
-                        # selectedFileTimes.insert(0, f'{fileTime}')
-                    elif myUtils.isImageFile(item):
-                        w, h = myUtils.getImageSize(item)
-                        selectedFileTimes.append(f'{w}x{h}')
-                        # selectedFileTimes.insert(0, f'{w}x{h}')
-            subfolders = sorted(subfolders)
-            window['Selected'].update(values=selectedFiles)
-            window['TimeSize'].update(values=selectedFileTimes)
-            window['Subfolders'].update(values=subfolders)
-    elif event == '→\n→':
-        return
-    elif event == '←':
-        selectedItems = values['Selected']
-        if selectedItems:
-            for item in selectedItems:
-                selectedFiles.remove(item)
-            # TODO if not same folder skip
-            subfolders = sorted(subfolders.extend(selectedItems))
-            window['Selected'].update(values=selectedFiles)
-            window['Subfolders'].update(values=subfolders)
-    elif event == '←\n←':
-        return
-    elif event == '↑':
-        selectedItems = values['Selected']
-        if selectedItems:
-            selectedIndex = selectedFiles.index(selectedItems[0])
-            if selectedIndex > 0:
-                selectedFiles = myUtils.swapListItems(selectedFiles, selectedIndex, selectedIndex - 1)
-            selectedIndex = selectedFiles.index(selectedItems[0])
-            window['Selected'].update(values=selectedFiles, set_to_index=[selectedIndex], scroll_to_index=selectedIndex)
-    elif event == '↑↑':
-        selectedItems = values['Selected']
-        if selectedItems:
-            selectedIndex = selectedFiles.index(selectedItems[0])
-            if selectedIndex > 0:
-                selectedFiles.remove(selectedItems[0])
-                selectedFiles.insert(0, selectedItems[0])
-            selectedIndex = selectedFiles.index(selectedItems[0])
-            window['Selected'].update(values=selectedFiles, set_to_index=[selectedIndex], scroll_to_index=selectedIndex)
-    elif event == '↓':
-        selectedItems = values['Selected']
-        if selectedItems:
-            selectedIndex = selectedFiles.index(selectedItems[0])
-            if selectedIndex < len(selectedFiles) - 1:
-                selectedFiles = myUtils.swapListItems(selectedFiles, selectedIndex, selectedIndex + 1)
-            selectedIndex = selectedFiles.index(selectedItems[0])
-            window['Selected'].update(values=selectedFiles, set_to_index=[selectedIndex], scroll_to_index=selectedIndex)
-    elif event == '↓↓':
-        selectedItems = values['Selected']
-        if selectedItems:
-            selectedIndex = selectedFiles.index(selectedItems[0])
-            if selectedIndex < len(selectedFiles) - 1:
-                selectedFiles.remove(selectedItems[0])
-                selectedFiles.append(selectedItems[0])
-            selectedIndex = selectedFiles.index(selectedItems[0])
-            window['Selected'].update(values=selectedFiles, set_to_index=[selectedIndex], scroll_to_index=selectedIndex)
-    # elif event == constants.BUTTON1_LABEL:
-    #     window.minimize()
-    #     cn_font = myPlot.init()
-    # elif event == constants.BUTTON2_LABEL:
-    #     window.minimize()
-    #     cn_font = myPlot.init(True)
+#     if event == 'Subfolders':
+#         selectedItems = values['Subfolders']
+#         if len(selectedItems) == 1:
+#             if os.path.isdir(selectedItems[0]):
+#                 curPath = selectedItems[0]
+#                 selectedItem = values['Extension']
+#                 subfolders, extList = myUtils.listFoldersFiles(curPath, selectedItem)
+#                 window['Subfolders'].update(values=subfolders)
+#                 window['Extension'].update(values=extList, value='*.*')
+#                 window['Folder'].update(os.path.abspath(curPath))
+#             else:
+#                 if selectedItems[0].endswith('.txt'):
+#                     lines = myUtils.readTextFile(selectedItems[0])
+#                     selectedFiles.extend(lines)
+#                     window['Selected'].update(values=selectedFiles)
+#     elif event == 'Extension':
+#         selectedItem = values['Extension']
+#         subfolders, extList = myUtils.listFoldersFiles(os.path.curdir, selectedItem)
+#         window['Subfolders'].update(values=subfolders)
+#     elif event == '→':
+#         selectedItems = values['Subfolders']
+#         if selectedItems:
+#             for item in selectedItems:
+#                 if os.path.isfile(item):
+#                     subfolders.remove(item)
+#                     selectedFiles.append(item)
+#                     # selectedFiles.insert(0, item)
+#                     if myUtils.isAudioFile(item) or myUtils.isVideoFile(item):
+#                         fileTime = myUtils.second2Time(myPlot.getVideoTime(item))
+#                         selectedFileTimes.append(f'{fileTime} ☑')
+#                         # selectedFileTimes.insert(0, f'{fileTime}')
+#                     elif myUtils.isImageFile(item):
+#                         w, h = myUtils.getImageSize(item)
+#                         selectedFileTimes.append(f'{w}x{h}')
+#                         # selectedFileTimes.insert(0, f'{w}x{h}')
+#             subfolders = sorted(subfolders)
+#             window['Selected'].update(values=selectedFiles)
+#             window['TimeSize'].update(values=selectedFileTimes)
+#             window['Subfolders'].update(values=subfolders)
+#     elif event == '→\n→':
+#         return
+#     elif event == '←':
+#         selectedItems = values['Selected']
+#         if selectedItems:
+#             for item in selectedItems:
+#                 selectedFiles.remove(item)
+#             # TODO if not same folder skip
+#             subfolders = sorted(subfolders.extend(selectedItems))
+#             window['Selected'].update(values=selectedFiles)
+#             window['Subfolders'].update(values=subfolders)
+#     elif event == '←\n←':
+#         return
+#     elif event == '↑':
+#         selectedItems = values['Selected']
+#         if selectedItems:
+#             selectedIndex = selectedFiles.index(selectedItems[0])
+#             if selectedIndex > 0:
+#                 selectedFiles = myUtils.swapListItems(selectedFiles, selectedIndex, selectedIndex - 1)
+#             selectedIndex = selectedFiles.index(selectedItems[0])
+#             window['Selected'].update(values=selectedFiles, set_to_index=[selectedIndex], scroll_to_index=selectedIndex)
+#     elif event == '↑↑':
+#         selectedItems = values['Selected']
+#         if selectedItems:
+#             selectedIndex = selectedFiles.index(selectedItems[0])
+#             if selectedIndex > 0:
+#                 selectedFiles.remove(selectedItems[0])
+#                 selectedFiles.insert(0, selectedItems[0])
+#             selectedIndex = selectedFiles.index(selectedItems[0])
+#             window['Selected'].update(values=selectedFiles, set_to_index=[selectedIndex], scroll_to_index=selectedIndex)
+#     elif event == '↓':
+#         selectedItems = values['Selected']
+#         if selectedItems:
+#             selectedIndex = selectedFiles.index(selectedItems[0])
+#             if selectedIndex < len(selectedFiles) - 1:
+#                 selectedFiles = myUtils.swapListItems(selectedFiles, selectedIndex, selectedIndex + 1)
+#             selectedIndex = selectedFiles.index(selectedItems[0])
+#             window['Selected'].update(values=selectedFiles, set_to_index=[selectedIndex], scroll_to_index=selectedIndex)
+#     elif event == '↓↓':
+#         selectedItems = values['Selected']
+#         if selectedItems:
+#             selectedIndex = selectedFiles.index(selectedItems[0])
+#             if selectedIndex < len(selectedFiles) - 1:
+#                 selectedFiles.remove(selectedItems[0])
+#                 selectedFiles.append(selectedItems[0])
+#             selectedIndex = selectedFiles.index(selectedItems[0])
+#             window['Selected'].update(values=selectedFiles, set_to_index=[selectedIndex], scroll_to_index=selectedIndex)
+#     # elif event == constants.BUTTON1_LABEL:
+#     #     window.minimize()
+#     #     cn_font = myPlot.init()
+#     # elif event == constants.BUTTON2_LABEL:
+#     #     window.minimize()
+#     #     cn_font = myPlot.init(True)
 
-    return subfolders, selectedFiles, selectedFileTimes
+#     return subfolders, selectedFiles, selectedFileTimes
 
 ################################################################################################
 def showRunTime(func):

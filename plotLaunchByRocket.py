@@ -2,17 +2,16 @@ from timeit import timeit
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from math import log, sqrt#, e
-from sys import exit, path
-from datetime import timedelta#, datetime
+from math import sqrt
+from sys import path
+from datetime import timedelta
 from openpyxl import load_workbook as loadXLSX
 from matplotlib.lines import Line2D
 
 path.append("")
 
-# import constants 
-import myPlot
-import myUtils
+from myModules import myPlot
+from myModules import myUtils
 
 ################################################################################################
 def countDataFrameByRocket(df, retired_rockets):
