@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="2315">
+        <Style id="2322">
+            <PolyStyle id="2323">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="2326">
+            <LineStyle id="2327">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>128-2019年07月26日11時57分西昌長征二号丙</name>
+        <Placemark id="2317">
+            <name>ZPKM</name>
+            <styleUrl>#2322</styleUrl>
+            <Polygon id="2316">
+                <outerBoundaryIs>
+                    <LinearRing id="2320">
+                        <coordinates>107.36666666666666,26.583333333333332,0.0 106.95,26.716666666666665,0.0 107.03333333333333,26.966666666666665,0.0 107.46666666666667,26.833333333333332,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="2325">
+            <name>Route</name>
+            <styleUrl>#2326</styleUrl>
+            <LineString id="2324">
+                <coordinates>102.03333,28.25,0.0 107.20416666666668,26.775,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

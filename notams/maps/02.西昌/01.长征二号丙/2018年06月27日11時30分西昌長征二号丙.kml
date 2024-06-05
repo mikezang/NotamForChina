@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1717">
+        <Style id="1724">
+            <PolyStyle id="1725">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1728">
+            <LineStyle id="1729">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>094-2018年06月27日11時30分西昌長征二号丙</name>
+        <Placemark id="1719">
+            <name>ZPKM</name>
+            <styleUrl>#1724</styleUrl>
+            <Polygon id="1718">
+                <outerBoundaryIs>
+                    <LinearRing id="1722">
+                        <coordinates>107.36666666666666,26.583333333333332,0.0 106.95,26.716666666666665,0.0 107.03333333333333,26.966666666666665,0.0 107.46666666666667,26.833333333333332,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1727">
+            <name>Route</name>
+            <styleUrl>#1728</styleUrl>
+            <LineString id="1726">
+                <coordinates>102.03333,28.25,0.0 107.20416666666668,26.775,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

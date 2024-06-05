@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1703">
+        <Style id="1710">
+            <PolyStyle id="1711">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1714">
+            <LineStyle id="1715">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>093-2018年06月05日21時07分西昌長征三号甲</name>
+        <Placemark id="1705">
+            <name>ZGZU</name>
+            <styleUrl>#1710</styleUrl>
+            <Polygon id="1704">
+                <outerBoundaryIs>
+                    <LinearRing id="1708">
+                        <coordinates>114.9,24.6,0.0 114.06666666666666,24.883333333333333,0.0 113.96666666666667,24.633333333333333,0.0 114.8,24.35,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1713">
+            <name>Route</name>
+            <styleUrl>#1714</styleUrl>
+            <LineString id="1712">
+                <coordinates>102.03333,28.25,0.0 114.43333333333334,24.616666666666667,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

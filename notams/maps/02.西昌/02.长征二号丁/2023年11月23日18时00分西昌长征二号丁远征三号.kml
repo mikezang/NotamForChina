@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>2023年11月23日西昌长征二号丁远征三号</name>
+    <Style id="line-000000-1000-normal">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1</width>
+      </LineStyle>
+    </Style>
+    <Style id="line-000000-1000-highlight">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.5</width>
+      </LineStyle>
+    </Style>
+    <StyleMap id="line-000000-1000">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#line-000000-1000-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#line-000000-1000-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-F9A825-1200-255-normal">
+      <LineStyle>
+        <color>ff25a8f9</color>
+        <width>1.2</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff25a8f9</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-F9A825-1200-255-highlight">
+      <LineStyle>
+        <color>ff25a8f9</color>
+        <width>1.8</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff25a8f9</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-F9A825-1200-255">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-F9A825-1200-255-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-F9A825-1200-255-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-F9A825-1200-77-normal">
+      <LineStyle>
+        <color>ff25a8f9</color>
+        <width>1.2</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4d25a8f9</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-F9A825-1200-77-highlight">
+      <LineStyle>
+        <color>ff25a8f9</color>
+        <width>1.8</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4d25a8f9</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-F9A825-1200-77">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-F9A825-1200-77-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-F9A825-1200-77-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>ZPKM/ZGZU/A3694/23</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-F9A825-1200-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              106.05,24.283333,0
+              105.766667,24.566667,0
+              105.616667,24.45,0
+              105.9,24.166667,0
+              106.05,24.283333,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>ZGZU/A3695/23</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-F9A825-1200-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              109.133333,20.866667,0
+              108.7,21.366667,0
+              108.466667,21.2,0
+              108.916667,20.7,0
+              109.133333,20.866667,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>MSA/GX125/23</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-F9A825-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              108.7,21.366667,0
+              108.482,21.192,0
+              108.9088333,20.703,0
+              109.132,20.875,0
+              108.7,21.366667,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>YBBB/N3864/23</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-F9A825-1200-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              162,-37.2,0
+              161.133333,-36.616667,0
+              160.683333,-37.033333,0
+              161.566667,-37.633333,0
+              162,-37.2,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>西昌46.6°轨道</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#line-000000-1000</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          102.03333,28.25,0
+          165.792948,-39.959861,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+  </Document>
+</kml>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>2023年01月09日西昌长征二号丙</name>
+    <Style id="line-000000-1000-normal">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1</width>
+      </LineStyle>
+    </Style>
+    <Style id="line-000000-1000-highlight">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.5</width>
+      </LineStyle>
+    </Style>
+    <StyleMap id="line-000000-1000">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#line-000000-1000-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#line-000000-1000-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-F9A825-1200-255-normal">
+      <LineStyle>
+        <color>ff25a8f9</color>
+        <width>1.2</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff25a8f9</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-F9A825-1200-255-highlight">
+      <LineStyle>
+        <color>ff25a8f9</color>
+        <width>1.8</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff25a8f9</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-F9A825-1200-255">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-F9A825-1200-255-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-F9A825-1200-255-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>ZPKM/A0034/24</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-F9A825-1200-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              107.383333,26.583333,0
+              107.483333,26.85,0
+              107.033333,26.983333,0
+              106.95,26.716667,0
+              107.383333,26.583333,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>ZGZU/A0035/24</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-F9A825-1200-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              112.233333,24.633333,0
+              112.5,25.266667,0
+              111.75,25.533333,0
+              111.466667,24.9,0
+              112.233333,24.633333,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>西昌17.3°轨道</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#line-000000-1000</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          102.03333,28.25,0
+          145.062825,8.608331,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+  </Document>
+</kml>

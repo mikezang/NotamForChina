@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="3581">
+        <Style id="3588">
+            <PolyStyle id="3589">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="3592">
+            <LineStyle id="3593">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>201-2021年05月07日02時11分西昌長征二号丙</name>
+        <Placemark id="3583">
+            <name>ZPKM</name>
+            <styleUrl>#3588</styleUrl>
+            <Polygon id="3582">
+                <outerBoundaryIs>
+                    <LinearRing id="3586">
+                        <coordinates>107.36666666666666,26.583333333333332,0.0 106.95,26.716666666666665,0.0 107.03333333333333,26.966666666666665,0.0 107.46666666666667,26.833333333333332,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="3591">
+            <name>Route</name>
+            <styleUrl>#3592</styleUrl>
+            <LineString id="3590">
+                <coordinates>102.03333,28.25,0.0 107.20416666666668,26.775,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>
