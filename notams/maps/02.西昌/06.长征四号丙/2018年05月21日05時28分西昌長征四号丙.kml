@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1671">
+        <Style id="1678">
+            <PolyStyle id="1679">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1682">
+            <LineStyle id="1683">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>091-2018年05月21日05時28分西昌長征四号丙</name>
+        <Placemark id="1673">
+            <name>RJJJ</name>
+            <styleUrl>#1678</styleUrl>
+            <Polygon id="1672">
+                <outerBoundaryIs>
+                    <LinearRing id="1676">
+                        <coordinates>127.18333333333334,24.4,0.0 126.96666666666667,23.7,0.0 125.68333333333334,24.033333333333335,0.0 125.9,24.733333333333334,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1681">
+            <name>Route</name>
+            <styleUrl>#1682</styleUrl>
+            <LineString id="1680">
+                <coordinates>102.03333,28.25,0.0 126.43333333333334,24.216666666666665,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

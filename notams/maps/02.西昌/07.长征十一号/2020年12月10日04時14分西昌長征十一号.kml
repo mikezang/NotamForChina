@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="3343">
+        <Style id="3350">
+            <PolyStyle id="3351">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="3354">
+            <LineStyle id="3355">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>186-2020年12月10日04時14分西昌長征十一号</name>
+        <Placemark id="3345">
+            <name>ZPKM</name>
+            <styleUrl>#3350</styleUrl>
+            <Polygon id="3344">
+                <outerBoundaryIs>
+                    <LinearRing id="3348">
+                        <coordinates>106.11666666666666,27.5,0.0 105.63333333333334,27.583333333333332,0.0 105.68333333333334,27.85,0.0 106.18333333333334,27.766666666666666,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="3353">
+            <name>Route</name>
+            <styleUrl>#3354</styleUrl>
+            <LineString id="3352">
+                <coordinates>102.03333,28.25,0.0 105.90416666666667,27.675,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>
