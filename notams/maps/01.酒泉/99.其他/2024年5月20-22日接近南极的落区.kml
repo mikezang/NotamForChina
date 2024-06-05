@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>2024年5月20-22日接近南极的落区</name>
+    <Style id="poly-A52714-1-255-normal">
+      <LineStyle>
+        <color>ff1427a5</color>
+        <width>0.001</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff1427a5</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-A52714-1-255-highlight">
+      <LineStyle>
+        <color>ff1427a5</color>
+        <width>0.0015</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff1427a5</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-A52714-1-255">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-A52714-1-255-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-A52714-1-255-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>YMMM/F1654/24</name>
+      <description><![CDATA[说明: <br>name: (ERROR)YMMM/F1654/24]]></description>
+      <styleUrl>#poly-A52714-1-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>(ERROR)YMMM/F1654/24</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              75.116667,-56.45,0
+              68.6333333,-66.3,0
+              70.2302475,-66.4283612,0
+              76.816667,-56.683333,0
+              75.116667,-56.45,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>YMMM/F1675/24</name>
+      <description><![CDATA[说明: <br>name: (ERROR)YMMM/F1675/24]]></description>
+      <styleUrl>#poly-A52714-1-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>(ERROR)YMMM/F1675/24</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              75.116667,-56.45,0
+              75,-56.683333,0
+              75,-60.133333,0
+              76.816667,-56.683333,0
+              75.116667,-56.45,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>HYDROPAC/1663/24</name>
+      <description><![CDATA[说明: <br>name: (ERROR)HYDROPAC/1663/24]]></description>
+      <styleUrl>#poly-A52714-1-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>(ERROR)HYDROPAC/1663/24</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              68.6333333,-66.3,0
+              70.2833333,-66.55,0
+              76.816667,-56.683333,0
+              75.116667,-56.45,0
+              68.6333333,-66.3,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>

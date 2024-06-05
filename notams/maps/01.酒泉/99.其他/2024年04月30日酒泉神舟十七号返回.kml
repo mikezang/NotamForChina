@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>2024年04月30日酒泉神舟十七号返回</name>
+    <Style id="poly-A52714-1-255-nodesc-normal">
+      <LineStyle>
+        <color>ff1427a5</color>
+        <width>0.001</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff1427a5</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="poly-A52714-1-255-nodesc-highlight">
+      <LineStyle>
+        <color>ff1427a5</color>
+        <width>0.0015</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff1427a5</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="poly-A52714-1-255-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-A52714-1-255-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-A52714-1-255-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>ZLHW/A0939/24</name>
+      <styleUrl>#poly-A52714-1-255-nodesc</styleUrl>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              99.663056,41.843889,0
+              99.663056,41.353056,0
+              100.406111,41,0
+              100.406111,40.666944,0
+              101.5,40.666944,0
+              101.5,41.833056,0
+              99.663056,41.843889,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>
