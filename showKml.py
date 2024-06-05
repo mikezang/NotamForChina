@@ -2,8 +2,8 @@ from datetime import timedelta
 from timeit import timeit
 import PySimpleGUI as sg
 import os
-
 # sys.path.append("myModues")
+from myModules import constants
 from myModules import myUtils
 from myModules import myPlot
 
@@ -19,6 +19,8 @@ OLD_FOLDER = 'OldFolder'
 OLD_SUBFOLDERS = 'OldSubfolders'
 
 size = (900, 900)
+
+os.environ['CARTOPY_USERS_BACKGROUNDS'] = './ne_50m'
 
 ################################################################################################
 def main():
@@ -137,7 +139,7 @@ def saveElementAsFile(element, filename):
 def updateFolders(window, folderName, folderValue, subfolderName):
     window[folderName].update(select=False)
     window[folderName].update(value=folderValue)
-    newSubfolders, extList = myUtils.listFoldersFiles(folderValue)
+    newSubfolders, _ = myUtils.listFoldersFiles(folderValue)
     window[subfolderName].update(values=newSubfolders)
 
 ################################################################################################
@@ -180,6 +182,9 @@ def handleEvents(window, event, values, cn_font, newSubfolders, newSelectedFile,
                     window["-IMAGE-"].update(data=image)
                     toogleButtons(window, False)
                     toogleOldFolders(window, False)
+                    location, _ = myUtils.getLocation(newSelectedFile)
+                    oldFolder = os.path.abspath(constants.KML_FOLDERS[location])
+                    updateFolders(window, OLD_FOLDER, oldFolder, OLD_SUBFOLDERS)
                 elif selectedFiles[0][-4:] in '.gif,.png,.jpg,.jpeg':
                     image = myPlot.getImage(newSelectedFile, size=size)
                     window["-IMAGE-"].update(data=image)
