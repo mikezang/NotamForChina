@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1919">
+        <Style id="1926">
+            <PolyStyle id="1927">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1934">
+            <PolyStyle id="1935">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1938">
+            <LineStyle id="1939">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>107-2018年10月29日08時43分酒泉長征二号丙</name>
+        <Placemark id="1921">
+            <name>ZLHW</name>
+            <styleUrl>#1926</styleUrl>
+            <Polygon id="1920">
+                <outerBoundaryIs>
+                    <LinearRing id="1924">
+                        <coordinates>99.03333333333333,35.86666666666667,0.0 98.65,35.95,0.0 98.75,36.333333333333336,0.0 99.13333333333334,36.266666666666666,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1929">
+            <name>ZLHW</name>
+            <styleUrl>#1934</styleUrl>
+            <Polygon id="1928">
+                <outerBoundaryIs>
+                    <LinearRing id="1932">
+                        <coordinates>98.31666666666666,32.15,0.0 97.43333333333334,32.3,0.0 97.61666666666666,33.016666666666666,0.0 98.5,32.85,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1937">
+            <name>Route</name>
+            <styleUrl>#1938</styleUrl>
+            <LineString id="1936">
+                <coordinates>100.3,40.96666666666667,0.0 97.96666666666667,32.579166666666666,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

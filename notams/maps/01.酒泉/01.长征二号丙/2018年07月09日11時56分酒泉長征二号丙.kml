@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1731">
+        <Style id="1734">
+            <LineStyle id="1735">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <Style id="1742">
+            <PolyStyle id="1743">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1746">
+            <LineStyle id="1747">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>095-2018年07月09日11時56分酒泉長征二号丙</name>
+        <Placemark id="1733">
+            <name>ZLHW</name>
+            <styleUrl>#1734</styleUrl>
+            <LineString id="1732">
+                <coordinates>99.0,32.6,0.0 96.5,35.05,0.0</coordinates>
+            </LineString>
+        </Placemark>
+        <Placemark id="1737">
+            <name>ZLHW</name>
+            <styleUrl>#1742</styleUrl>
+            <Polygon id="1736">
+                <outerBoundaryIs>
+                    <LinearRing id="1740">
+                        <coordinates>97.4,32.31666666666667,0.0 97.58333333333333,33.016666666666666,0.0 98.46666666666667,32.85,0.0 98.28333333333333,32.15,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1745">
+            <name>Route</name>
+            <styleUrl>#1746</styleUrl>
+            <LineString id="1744">
+                <coordinates>100.3,40.96666666666667,0.0 97.93333333333334,32.583333333333336,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

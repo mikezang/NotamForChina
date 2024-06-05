@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1889">
+        <Style id="1896">
+            <PolyStyle id="1897">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1900">
+            <LineStyle id="1901">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>103-2018年10月09日10時43分酒泉長征二号丙</name>
+        <Placemark id="1891">
+            <name>YMMM</name>
+            <styleUrl>#1896</styleUrl>
+            <Polygon id="1890">
+                <outerBoundaryIs>
+                    <LinearRing id="1894">
+                        <coordinates>81.48333333333333,-38.15,0.0 80.36666666666666,-37.93333333333333,0.0 81.08333333333333,-35.75,0.0 82.16666666666667,-35.96666666666667,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1899">
+            <name>Route</name>
+            <styleUrl>#1900</styleUrl>
+            <LineString id="1898">
+                <coordinates>100.3,40.96666666666667,0.0 81.275,-36.95,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>
