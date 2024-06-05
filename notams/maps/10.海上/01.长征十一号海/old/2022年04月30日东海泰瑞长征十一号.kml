@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>2022年04月30日东海泰瑞长征十一号</name>
+    <Style id="icon-1569-673AB7-labelson">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-1.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="line-000000-1200-normal">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.2</width>
+      </LineStyle>
+    </Style>
+    <Style id="line-000000-1200-highlight">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.8</width>
+      </LineStyle>
+    </Style>
+    <StyleMap id="line-000000-1200">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#line-000000-1200-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#line-000000-1200-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="line-673AB7-1200-normal">
+      <LineStyle>
+        <color>ffb73a67</color>
+        <width>1.2</width>
+      </LineStyle>
+    </Style>
+    <Style id="line-673AB7-1200-highlight">
+      <LineStyle>
+        <color>ffb73a67</color>
+        <width>1.8</width>
+      </LineStyle>
+    </Style>
+    <StyleMap id="line-673AB7-1200">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#line-673AB7-1200-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#line-673AB7-1200-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-673AB7-1200-77-normal">
+      <LineStyle>
+        <color>ffb73a67</color>
+        <width>1.2</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4db73a67</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-673AB7-1200-77-highlight">
+      <LineStyle>
+        <color>ffb73a67</color>
+        <width>1.8</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4db73a67</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-673AB7-1200-77">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-673AB7-1200-77-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-673AB7-1200-77-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>泰瑞</name>
+      <description><![CDATA[说明: 36°37.8N,121°13.2E<br>名前: ]]></description>
+      <styleUrl>#icon-1569-673AB7-labelson</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value>36°37.8N,121°13.2E</value>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          121.22,36.63,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>泰瑞</name>
+      <description><![CDATA[说明: 36°12.0N,121°20.0E<br>名前: ]]></description>
+      <styleUrl>#icon-1569-673AB7-labelson</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value>36°12.0N,121°20.0E</value>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          121.333333333333,36.2,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>泰瑞 </name>
+      <description><![CDATA[说明: N32°11,E123°48<br>名前: 泰瑞]]></description>
+      <styleUrl>#icon-1569-673AB7-labelson</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value>N32°11,E123°48</value>
+        </Data>
+        <Data name="名前">
+          <value>泰瑞</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          123.8,32.1833333333333,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Ship Route</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#line-673AB7-1200</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          121.22,36.63,0
+          121.3333333,36.2,0
+          123.8,32.1833333,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>1st Stage</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-673AB7-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              122.6,29.4,0
+              122.45,28.9666667,0
+              122.75,28.9,0
+              122.9,29.3166667,0
+              122.6,29.4,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>2nd Stage</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-673AB7-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              118.2166667,17.1333333,0
+              117.8,15.65,0
+              118.5333333,15.45,0
+              118.9666667,16.9333333,0
+              118.2166667,17.1333333,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>3rd Stage</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-673AB7-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              101.1833333,-37.25,0
+              100.0833333,-39.8166667,0
+              100.9833333,-40.05,0
+              102.0333333,-37.4666667,0
+              101.1833333,-37.25,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>Route</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#line-000000-1200</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          123.8,32.1833333,0
+          98.5067292,-43.6608592,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>远望6号</name>
+      <description><![CDATA[说明: N17°56.08,E112°51.07<br>名前: ]]></description>
+      <styleUrl>#icon-1569-673AB7-labelson</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value>N17°56.08,E112°51.07</value>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          112.851166666667,17.9346666666667,0
+        </coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>

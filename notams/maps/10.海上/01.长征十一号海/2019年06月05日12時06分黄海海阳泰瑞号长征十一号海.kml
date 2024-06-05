@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>2019年06月05日黄海海阳泰瑞号长征十一号海</name>
+    <Style id="line-000000-1200-normal">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.2</width>
+      </LineStyle>
+    </Style>
+    <Style id="line-000000-1200-highlight">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.8</width>
+      </LineStyle>
+    </Style>
+    <StyleMap id="line-000000-1200">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#line-000000-1200-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#line-000000-1200-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-3949AB-1000-255-normal">
+      <LineStyle>
+        <color>ffab4939</color>
+        <width>1</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ffab4939</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-3949AB-1000-255-highlight">
+      <LineStyle>
+        <color>ffab4939</color>
+        <width>1.5</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ffab4939</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-3949AB-1000-255">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-3949AB-1000-255-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-3949AB-1000-255-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>ZSHA/A2585/19</name>
+      <description><![CDATA[description: <br>名前: ]]></description>
+      <styleUrl>#line-000000-1200</styleUrl>
+      <ExtendedData>
+        <Data name="description">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          121.409097,34.899247,0
+          121.407996,34.881579,0
+          121.404801,34.864084,0
+          121.399542,34.846932,0
+          121.392271,34.830286,0
+          121.38306,34.814308,0
+          121.371999,34.79915,0
+          121.359193,34.784958,0
+          121.344768,34.771868,0
+          121.328861,34.760006,0
+          121.311627,34.749485,0
+          121.29323,34.740406,0
+          121.273848,34.732857,0
+          121.253665,34.726909,0
+          121.232876,34.722619,0
+          121.211679,34.720028,0
+          121.190278,34.719162,0
+          121.168876,34.720028,0
+          121.147679,34.722619,0
+          121.12689,34.726909,0
+          121.106708,34.732857,0
+          121.087325,34.740406,0
+          121.068929,34.749485,0
+          121.051694,34.760006,0
+          121.035788,34.771868,0
+          121.021362,34.784958,0
+          121.008557,34.79915,0
+          120.997495,34.814308,0
+          120.988284,34.830286,0
+          120.981014,34.846932,0
+          120.975755,34.864084,0
+          120.972559,34.881579,0
+          120.971459,34.899247,0
+          120.972466,34.91692,0
+          120.975572,34.934426,0
+          120.980748,34.951596,0
+          120.987946,34.968266,0
+          120.997098,34.984274,0
+          121.008115,34.999465,0
+          121.020893,35.013694,0
+          121.03531,35.026821,0
+          121.051225,35.038721,0
+          121.068487,35.049279,0
+          121.086928,35.058391,0
+          121.10637,35.06597,0
+          121.126625,35.071942,0
+          121.147496,35.07625,0
+          121.168783,35.078851,0
+          121.190278,35.079721,0
+          121.211773,35.078851,0
+          121.233059,35.07625,0
+          121.253931,35.071942,0
+          121.274186,35.06597,0
+          121.293628,35.058391,0
+          121.312069,35.049279,0
+          121.32933,35.038721,0
+          121.345246,35.026821,0
+          121.359662,35.013694,0
+          121.37244,34.999465,0
+          121.383458,34.984274,0
+          121.392609,34.968266,0
+          121.399807,34.951596,0
+          121.404984,34.934426,0
+          121.40809,34.91692,0
+          121.409097,34.899247,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>ZSHA/A2637/19</name>
+      <description><![CDATA[description: <br>名前: ]]></description>
+      <styleUrl>#poly-3949AB-1000-255</styleUrl>
+      <ExtendedData>
+        <Data name="description">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              124,33.680556,0
+              123.628889,33.235556,0
+              124.598652,32.687742,0
+              124.966694,33.118961,0
+              124,33.680556,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>RKRR/A0864/19</name>
+      <description><![CDATA[description: <br>名前: ]]></description>
+      <styleUrl>#poly-3949AB-1000-255</styleUrl>
+      <ExtendedData>
+        <Data name="description">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              124,33.680556,0
+              124,33.023056,0
+              124.598652,32.687742,0
+              124.966694,33.118961,0
+              124,33.680556,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>RJJJ/J2462/19</name>
+      <description><![CDATA[description: <br>名前: ]]></description>
+      <styleUrl>#poly-3949AB-1000-255</styleUrl>
+      <ExtendedData>
+        <Data name="description">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              135.728611,25.744722,0
+              135.224722,25.186111,0
+              136.487549,24.20233,0
+              137.016389,24.755556,0
+              135.728611,25.744722,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>海上45°轨道</name>
+      <description><![CDATA[description: <br>名前: Route]]></description>
+      <styleUrl>#line-000000-1200</styleUrl>
+      <ExtendedData>
+        <Data name="description">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value>Route</value>
+        </Data>
+      </ExtendedData>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          121.1829579,34.9082773,0
+          138.2007802,23.3168334,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+  </Document>
+</kml>

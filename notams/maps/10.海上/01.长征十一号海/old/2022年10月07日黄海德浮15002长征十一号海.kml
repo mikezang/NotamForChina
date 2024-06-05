@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>2022年10月07日黄海德浮15002长征十一号海</name>
+    <Style id="line-000000-1000-normal">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1</width>
+      </LineStyle>
+    </Style>
+    <Style id="line-000000-1000-highlight">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.5</width>
+      </LineStyle>
+    </Style>
+    <StyleMap id="line-000000-1000">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#line-000000-1000-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#line-000000-1000-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-673AB7-1000-255-normal">
+      <LineStyle>
+        <color>ffb73a67</color>
+        <width>1</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ffb73a67</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-673AB7-1000-255-highlight">
+      <LineStyle>
+        <color>ffb73a67</color>
+        <width>1.5</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ffb73a67</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-673AB7-1000-255">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-673AB7-1000-255-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-673AB7-1000-255-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-673AB7-1200-77-normal">
+      <LineStyle>
+        <color>ffb73a67</color>
+        <width>1.2</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4db73a67</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-673AB7-1200-77-highlight">
+      <LineStyle>
+        <color>ffb73a67</color>
+        <width>1.8</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4db73a67</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-673AB7-1200-77">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-673AB7-1200-77-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-673AB7-1200-77-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>Stage</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-673AB7-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              121.1695,36.6713333,0
+              121.1695,36.6088333,0
+              121.2098333,36.6088333,0
+              121.2098333,36.5918333,0
+              121.2453743,36.5926749,0
+              121.2451667,36.626,0
+              121.2265,36.626,0
+              121.2265,36.6713333,0
+              121.1695,36.6713333,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>1st Stage</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-673AB7-1000-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              123.916667,33.933333,0
+              124.166667,34.116667,0
+              123.8,34.466667,0
+              123.55,34.3,0
+              123.916667,33.933333,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>2nd Stage</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-673AB7-1000-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              134.5,21,0
+              135.45,21,0
+              135,21.666667,0
+              134.333333,21.25,0
+              134.5,21,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>3rd Stage</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-673AB7-1000-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              163.333333,-22.883333,0
+              165.033333,-25.1,0
+              165.683333,-24.7,0
+              163.983333,-22.466667,0
+              163.333333,-22.883333,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>Route</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#line-000000-1000</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          121.3637078,36.5614728,0
+          166.9899285,-26.8253231,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+  </Document>
+</kml>

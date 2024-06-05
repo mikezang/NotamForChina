@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>2023年09月05日黄海德浮15002谷神星一号海</name>
+    <Style id="icon-1569-3949AB-normal">
+      <IconStyle>
+        <color>ffab4939</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+    </Style>
+    <Style id="icon-1569-3949AB-highlight">
+      <IconStyle>
+        <color>ffab4939</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+    </Style>
+    <StyleMap id="icon-1569-3949AB">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1569-3949AB-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1569-3949AB-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="line-000000-1000-normal">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1</width>
+      </LineStyle>
+    </Style>
+    <Style id="line-000000-1000-highlight">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.5</width>
+      </LineStyle>
+    </Style>
+    <StyleMap id="line-000000-1000">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#line-000000-1000-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#line-000000-1000-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-3949AB-1-255-normal">
+      <LineStyle>
+        <color>ffab4939</color>
+        <width>0.001</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ffab4939</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-3949AB-1-255-highlight">
+      <LineStyle>
+        <color>ffab4939</color>
+        <width>0.0015</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ffab4939</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-3949AB-1-255">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-3949AB-1-255-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-3949AB-1-255-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-3949AB-1200-255-normal">
+      <LineStyle>
+        <color>ffab4939</color>
+        <width>1.2</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ffab4939</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-3949AB-1200-255-highlight">
+      <LineStyle>
+        <color>ffab4939</color>
+        <width>1.8</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ffab4939</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-3949AB-1200-255">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-3949AB-1200-255-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-3949AB-1200-255-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-3949AB-1200-77-normal">
+      <LineStyle>
+        <color>ffab4939</color>
+        <width>1.2</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4dab4939</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-3949AB-1200-77-highlight">
+      <LineStyle>
+        <color>ffab4939</color>
+        <width>1.8</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4dab4939</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-3949AB-1200-77">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-3949AB-1200-77-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-3949AB-1200-77-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>MSASD/477/23</name>
+      <description><![CDATA[说明: <br>名前: MSASD/477/23]]></description>
+      <styleUrl>#poly-3949AB-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value>MSASD/477/23</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              121.1694167,36.6714,0
+              121.1694833,36.6544167,0
+              121.2259,36.6544167,0
+              121.2261167,36.6714,0
+              121.1694167,36.6714,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>德浮15002</name>
+      <description><![CDATA[说明: <br>名前: 德浮15002]]></description>
+      <styleUrl>#icon-1569-3949AB</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value>德浮15002</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          121.19842,36.63123,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>MSASD/477/23</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-3949AB-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              121.2451333,36.6259333,0
+              121.2258833,36.6259913,0
+              121.2259,36.6088,0
+              121.2098833,36.60885,0
+              121.2098833,36.59185,0
+              121.2451333,36.59185,0
+              121.2451333,36.6259333,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>MSASD/471/23</name>
+      <description><![CDATA[说明: <br>名前: MSASD/471/23]]></description>
+      <styleUrl>#poly-3949AB-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value>MSASD/471/23</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              121.1694833,36.6544167,0
+              121.1693117,36.6085824,0
+              121.2259,36.6088,0
+              121.2259,36.6544167,0
+              121.1694833,36.6544167,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>MSDSD/476/23</name>
+      <description><![CDATA[说明: <br>名前: MSDSD/476/23]]></description>
+      <styleUrl>#poly-3949AB-1-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value>MSDSD/476/23</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              121.4933333,36.1838333,0
+              121.9683827,35.8146148,0
+              122.2028333,35.9983333,0
+              121.727,36.3766667,0
+              121.4933333,36.1838333,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>ZSHA/A2551/23</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-3949AB-1200-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              121.466667,36.2,0
+              121.983333,35.783333,0
+              122.216667,35.966667,0
+              121.7,36.383333,0
+              121.466667,36.2,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>RJJJ/P4711/23</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-3949AB-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              127.983333,30.6,0
+              127.783333,30.466667,0
+              127.766667,30.383333,0
+              128.3,29.816667,0
+              128.5,29.966667,0
+              128.516667,30.05,0
+              127.983333,30.6,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>AGGG/A0187/23</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-3949AB-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              156.683333,-11.066667,0
+              158.316667,-13.3,0
+              158.766667,-12.983333,0
+              157.133333,-10.766667,0
+              156.683333,-11.066667,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>海上47.9°轨道</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#line-000000-1000</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          121.19842,36.63123,0
+          159.6366211,-14.8285758,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+  </Document>
+</kml>
