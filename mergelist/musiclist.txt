@@ -1,0 +1,30 @@
+# this is a comment
+file 'music/歌唱祖国音乐.mp3'
+file 'music/歌唱祖国音乐.mp3'
+file 'music/歌唱祖国音乐.mp3'
+# file 'music/歌唱祖国音乐.mp3'
+# file 'music/歌唱祖国音乐.mp3'
+# file 'music/歌唱祖国音乐.mp3'
+# file 'music/歌唱祖国音乐.mp3'
+# file 'music/歌唱祖国音乐.mp3'
+# file 'music/歌唱祖国音乐.mp3'
+
+#file 'music/歌唱祖国音乐.mp3'
+#file 'music/歌唱祖国女声.mp3'
+#file 'music/歌唱祖国音乐.mp3'
+
+# 03:08 = 41-パールカラーにゆれて.mp3
+# 03:01 = 18-冬の色.mp3
+# 04:13 = 79-AGOLDNEEDLEANDSILVERTHREAD.mp3
+# 04:27 = 56-青い羊歯(しだ)~アジアンタム.mp3
+# 04:55 = 44-オレンジ・ブロッサム・ブルース.mp3
+# 04:33 = 81-CRYFORME.mp3
+# 02:49 = 26-初恋時代.mp3
+# 27:06 = 合計
+#file 'music/41-パールカラーにゆれて.mp3'
+#file 'music/18-冬の色.mp3'
+#file 'music/79-AGOLDNEEDLEANDSILVERTHREAD.mp3'
+#file 'music/56-青い羊歯(しだ)~アジアンタム.mp3'
+#file 'music/44-オレンジ・ブロッサム・ブルース.mp3'
+#file 'music/81-CRYFORME.mp3'
+#file 'music/26-初恋時代.mp3'

@@ -1,0 +1,5 @@
+#slide: up|down|left|right|None, default: None
+#slide=up
+#countdown: seconds|0, default: 0 no countdown
+#countdown=10
+videos/years/2024全部.mp4

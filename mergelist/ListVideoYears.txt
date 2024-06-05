@@ -1,0 +1,23 @@
+#slide: up|down|left|right|None, default: None
+#slide=up
+#countdown: seconds|0, default: 0 no countdown
+#countdown=10
+videos\years\1970～1979全部.mp4
+videos\years\1980～1989全部.mp4
+videos\years\1990～1999全部.mp4
+videos\years\2000～2009全部.mp4
+videos\years\2010全部.mp4
+videos\years\2011全部.mp4
+videos\years\2012全部.mp4
+videos\years\2013全部.mp4
+videos\years\2014全部.mp4
+videos\years\2015全部.mp4
+videos\years\2016全部.mp4
+videos\years\2017全部.mp4
+videos\years\2018全部.mp4
+videos\years\2019全部.mp4
+videos\years\2020全部.mp4
+videos\years\2021全部.mp4
+videos\years\2022全部.mp4
+videos\years\2023全部.mp4
+videos\years\2024全部.mp4
