@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="849">
+        <Style id="856">
+            <PolyStyle id="857">
+                <color>ff2f8b55</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="860">
+            <LineStyle id="861">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>045-2016年06月25日20時00分文昌長征七号</name>
+        <Placemark id="851">
+            <name>RPHI/1234/16</name>
+            <styleUrl>#856</styleUrl>
+            <Polygon id="850">
+                <outerBoundaryIs>
+                    <LinearRing id="854">
+                        <coordinates>
+							116.6,14.716666666666667,0.0 
+							116.96666666666667,15.133333333333333,0.0 
+							115.9,16.016666666666666,0.0 
+							115.53333333333333,15.6,0.0
+						</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="851">
+            <name>RPHI/1235/16</name>
+            <styleUrl>#856</styleUrl>
+            <Polygon id="850">
+                <outerBoundaryIs>
+                    <LinearRing id="854">
+                        <coordinates>
+ 							117.15,14.183333333333334,0.0 
+							117.56666666666666,14.666666666666666,0.0 
+							117.08333333333333,15.083333333333334,0.0 
+							116.65,14.6,0.0 
+						</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="851">
+            <name>RPHI/1236/16</name>
+            <styleUrl>#856</styleUrl>
+            <Polygon id="850">
+                <outerBoundaryIs>
+                    <LinearRing id="854">
+                        <coordinates>
+							117.7,13.65,0.0 
+							118.2,14.2,0.0 
+							117.63333333333334,14.666666666666666,0.0 
+							117.15,14.133333333333333,0.0
+						</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="859">
+            <name>Route</name>
+            <styleUrl>#860</styleUrl>
+            <LineString id="858">
+                <coordinates>110.95,19.616666666666667,0.0 117.01111111111113,14.720833333333331,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

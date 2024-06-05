@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="3067">
+        <Style id="3074">
+            <PolyStyle id="3075">
+                <color>ff2f8b55</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="3082">
+            <PolyStyle id="3083">
+                <color>ff2f8b55</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="3086">
+            <LineStyle id="3087">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>169-2020年07月23日12時41分文昌長征五号</name>
+        <Placemark id="3069">
+            <name>ROCK</name>
+            <styleUrl>#3074</styleUrl>
+            <Polygon id="3068">
+                <outerBoundaryIs>
+                    <LinearRing id="3072">
+                        <coordinates>118.75,15.766666666666667,0.0 117.83333333333333,16.216666666666665,0.0 118.05,16.616666666666667,0.0 118.96666666666667,16.166666666666668,0.0 128.01666666666668,10.9,0.0 126.81666666666666,11.55,0.0 127.03333333333333,11.95,0.0 128.25,11.283333333333333,0.0 144.6,1.0666666666666667,0.0 142.75,2.183333333333333,0.0 142.98333333333332,2.5666666666666664,0.0 144.83333333333334,1.45,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="3077">
+            <name>KZAK</name>
+            <styleUrl>#3082</styleUrl>
+            <Polygon id="3076">
+                <outerBoundaryIs>
+                    <LinearRing id="3080">
+                        <coordinates>144.6,1.0666666666666667,0.0 142.75,2.183333333333333,0.0 142.98333333333332,2.5666666666666664,0.0 144.83333333333334,1.45,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="3085">
+            <name>Route</name>
+            <styleUrl>#3086</styleUrl>
+            <LineString id="3084">
+                <coordinates>110.95,19.616666666666667,0.0 143.79166666666669,1.8166666666666667,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

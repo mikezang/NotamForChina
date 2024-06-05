@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>2021年04月29日11時23分文昌長征五号乙</name>
+    <Style id="poly-558B2F-1-255-normal">
+      <LineStyle>
+        <color>ff2f8b55</color>
+        <width>0.001</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff2f8b55</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-558B2F-1-255-highlight">
+      <LineStyle>
+        <color>ff2f8b55</color>
+        <width>0.0015</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff2f8b55</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-558B2F-1-255">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-558B2F-1-255-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-558B2F-1-255-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>RPHI/B1128/21</name>
+      <description><![CDATA[说明: <br>名前: RPHI/B1128/21]]></description>
+      <styleUrl>#poly-558B2F-1-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value>RPHI/B1128/21</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              117.5005556,14.5552778,0
+              117.1936111,14.2180556,0
+              117.9569444,13.5627778,0
+              118.2644444,13.8988889,0
+              117.5005556,14.5552778,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>RPHI/B1126/21</name>
+      <description><![CDATA[说明: <br>名前: RPHI/B1126/21]]></description>
+      <styleUrl>#poly-558B2F-1-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value>RPHI/B1126/21</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              119.0669444,13.1947222,0
+              118.7591667,12.8597222,0
+              119.3769444,12.3194444,0
+              119.685,12.6538889,0
+              119.0669444,13.1947222,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>

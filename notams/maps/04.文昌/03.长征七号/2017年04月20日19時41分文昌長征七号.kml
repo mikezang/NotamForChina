@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1177">
+        <Style id="1184">
+            <PolyStyle id="1185">
+                <color>ff2f8b55</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1188">
+            <LineStyle id="1189">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>063-2017年04月20日19時41分文昌長征七号</name>
+        <Placemark id="1179">
+            <name>RPHI/B1413/17</name>
+            <styleUrl>#1184</styleUrl>
+            <Polygon id="1178">
+                <outerBoundaryIs>
+                    <LinearRing id="1182">
+                        <coordinates>115.45,15.333333333333334,0.0 115.83333333333333,15.733333333333333,0.0 117.41666666666667,14.4,0.0 117.96666666666667,13.9,0.0 117.45,13.383333333333333,0.0 116.91666666666667,13.866666666666667,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1187">
+            <name>Route</name>
+            <styleUrl>#1188</styleUrl>
+            <LineString id="1186">
+                <coordinates>110.95,19.616666666666667,0.0 116.83888888888889,14.436111111111112,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>
