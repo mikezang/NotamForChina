@@ -273,23 +273,23 @@ def lineStringToPointGdf(lineGdf):
     return pointGdf
 
 ################################################################################################
-def plotGeometry(ax, gdf, extent=None, color=None, legend=None, lables=None, plotAll=False, projection=False):
+def plotGeometry(ax, gdf, extent=None, color=None, legend=None, lables=None, plotAll=False, projection=False, zorder=2):
     try:
         if isinstance(gdf, gpd.GeoDataFrame):
             polyGdf = gdf[gdf['geometry'].apply(lambda x: isinstance(x, Polygon))]
             if  projection:
                 ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True, color='none')
-                geoplot.polyplot(polyGdf, ax=ax, extent=extent, facecolor=color, zorder=2)
+                geoplot.polyplot(polyGdf, ax=ax, extent=extent, facecolor=color, zorder=zorder)
                 if plotAll:
                     lineGdf = gdf[gdf.geometry.type=='LineString']
                     if not lineGdf.empty:
-                        geoplot.polyplot(lineGdf, ax=ax, extent=extent, facecolor='none', edgecolor=color, zorder=2)
+                        geoplot.polyplot(lineGdf, ax=ax, extent=extent, facecolor='none', edgecolor=color, zorder=zorder+1)
             else:
-                polyGdf.plot(ax=ax, facecolor=color, color=color, label=legend, zorder=2)
+                polyGdf.plot(ax=ax, facecolor=color, color=color, label=legend, zorder=zorder)
                 if plotAll:
                     lineGdf = gdf[gdf.geometry.type=='LineString']
                     if not lineGdf.empty:
-                        lineGdf.plot(ax=ax, color=color, label=legend, zorder=3)
+                        lineGdf.plot(ax=ax, color=color, label=legend, zorder=zorder+1)
         elif isinstance(gdf, Polygon):
             x, y = gdf.exterior.xy
             plt.plot(x, y, color=color, zorder=3)
@@ -305,7 +305,7 @@ def plotGeometry(ax, gdf, extent=None, color=None, legend=None, lables=None, plo
         pass
 
 ################################################################################################
-def plotIntersection(ax, newPolys, oldPolys):
+def plotIntersection(ax, newPolys, oldPolys, projection=False):
     newIndex = 0
     ious = []
 
@@ -335,7 +335,7 @@ def plotIntersection(ax, newPolys, oldPolys):
                     if iou > 0.01:
                         text = f'{geomName} JSI: {iou:.1%}'
                         ious.append(text)
-                        plotGeometry(ax, gpd.GeoDataFrame(geometry=[intersection]), color='orange', legend=text)
+                        plotGeometry(ax, gpd.GeoDataFrame(geometry=[intersection]), color='orange', legend=text, zorder=4)
     return ious
 
 ################################################################################################
@@ -401,9 +401,9 @@ def plotTwoNoatms(ax, newGdf, oldGdf=None, plotAll=False, plotWorldMap=True, adj
                 adjustLim(ax, minLon, minLat, maxLon, maxLat)
 
 ################################################################################################
-def plotPolygonsIntersection(fig, ax, cn_font, newPolys, newTitle, oldPolys=None, oldTitle=''):
+def plotPolygonsIntersection(fig, ax, cn_font, newPolys, newTitle, oldPolys=None, oldTitle='', projection=False):
     # Calculate NOTAM drop zones Jaccard Similarity Index and plot intersection polygons
-    ious = plotIntersection(ax, newPolys, oldPolys)
+    ious = plotIntersection(ax, newPolys, oldPolys, projection=projection)
     # plot title, axis and NOTAM drop zones
     title = f'{newTitle}\n{oldTitle}'
     for ios in ious:
@@ -529,7 +529,7 @@ def getImageFromKml(cn_font, newKmlFile, oldKmlFile=None, size=(900, 900), proje
     if oldKmlFile:
         newTitle = newTitle if '时' in newTitle else newTitle.replace('日', '日??时??分')
         oldTitle = myUtils.getTitle(oldKmlFile)
-        plotPolygonsIntersection(fig, ax, cn_font, newGdf, newTitle, oldGdf, oldTitle)
+        plotPolygonsIntersection(fig, ax, cn_font, newGdf, newTitle, oldGdf, oldTitle, projection=projection)
     else:
         plotTitleXYLabels(fig, ax, cn_font, newTitle, 'Longitude（经度）', 'Latitude（纬度）')
     image = getImageInMemoryFromFig(fig, resize=True, size=size)
