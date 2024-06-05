@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1831">
+        <Style id="1838">
+            <PolyStyle id="1839">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1846">
+            <PolyStyle id="1847">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1850">
+            <LineStyle id="1851">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>099-2018年08月25日07時52分西昌長征三号乙</name>
+        <Placemark id="1833">
+            <name>RPHI</name>
+            <styleUrl>#1838</styleUrl>
+            <Polygon id="1832">
+                <outerBoundaryIs>
+                    <LinearRing id="1836">
+                        <coordinates>116.5,12.166666666666666,0.0 115.95,12.883333333333333,0.0 115.36666666666666,12.45,0.0 115.91666666666667,11.733333333333333,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1841">
+            <name>ZJSA</name>
+            <styleUrl>#1846</styleUrl>
+            <Polygon id="1840">
+                <outerBoundaryIs>
+                    <LinearRing id="1844">
+                        <coordinates>111.83333333333333,18.083333333333332,0.0 111.31666666666666,18.716666666666665,0.0 110.71666666666667,18.266666666666666,0.0 111.25,17.633333333333333,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1849">
+            <name>Route</name>
+            <styleUrl>#1850</styleUrl>
+            <LineString id="1848">
+                <coordinates>102.03333,28.25,0.0 115.93333333333334,12.308333333333334,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1031">
+        <Style id="1038">
+            <PolyStyle id="1039">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1046">
+            <PolyStyle id="1047">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1054">
+            <PolyStyle id="1055">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1058">
+            <LineStyle id="1059">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>055-2016年11月22日23時24分西昌長征三号丙</name>
+        <Placemark id="1033">
+            <name>ZPKM</name>
+            <styleUrl>#1038</styleUrl>
+            <Polygon id="1032">
+                <outerBoundaryIs>
+                    <LinearRing id="1036">
+                        <coordinates>106.2,27.766666666666666,0.0 105.7,27.85,0.0 105.65,27.583333333333332,0.0 106.13333333333334,27.5,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1041">
+            <name>ZPKM</name>
+            <styleUrl>#1046</styleUrl>
+            <Polygon id="1040">
+                <outerBoundaryIs>
+                    <LinearRing id="1044">
+                        <coordinates>108.36666666666666,27.35,0.0 107.98333333333333,27.416666666666668,0.0 107.93333333333334,27.25,0.0 108.33333333333333,27.166666666666668,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1049">
+            <name>ZSHA</name>
+            <styleUrl>#1054</styleUrl>
+            <Polygon id="1048">
+                <outerBoundaryIs>
+                    <LinearRing id="1052">
+                        <coordinates>114.48333333333333,26.133333333333333,0.0 114.0,26.233333333333334,0.0 113.91666666666667,25.966666666666665,0.0 114.4,25.866666666666667,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1057">
+            <name>Route</name>
+            <styleUrl>#1058</styleUrl>
+            <LineString id="1056">
+                <coordinates>102.03333,28.25,0.0 114.20000000000002,26.049999999999997,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

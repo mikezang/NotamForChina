@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1779">
+        <Style id="1786">
+            <PolyStyle id="1787">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1794">
+            <PolyStyle id="1795">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1802">
+            <PolyStyle id="1803">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1806">
+            <LineStyle id="1807">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>097-2018年07月29日09時48分西昌長征三号乙</name>
+        <Placemark id="1781">
+            <name>RPHI</name>
+            <styleUrl>#1786</styleUrl>
+            <Polygon id="1780">
+                <outerBoundaryIs>
+                    <LinearRing id="1784">
+                        <coordinates>116.51666666666667,12.166666666666666,0.0 115.95,12.883333333333333,0.0 115.36666666666666,12.45,0.0 115.91666666666667,11.733333333333333,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1789">
+            <name>ZGZU</name>
+            <styleUrl>#1794</styleUrl>
+            <Polygon id="1788">
+                <outerBoundaryIs>
+                    <LinearRing id="1792">
+                        <coordinates>107.13333333333334,23.183333333333334,0.0 106.85,23.483333333333334,0.0 106.61666666666666,23.316666666666666,0.0 106.9,23.0,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1797">
+            <name>ZJSA</name>
+            <styleUrl>#1802</styleUrl>
+            <Polygon id="1796">
+                <outerBoundaryIs>
+                    <LinearRing id="1800">
+                        <coordinates>111.83333333333333,18.083333333333332,0.0 111.31666666666666,18.716666666666665,0.0 110.71666666666667,18.266666666666666,0.0 111.25,17.633333333333333,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1805">
+            <name>Route</name>
+            <styleUrl>#1806</styleUrl>
+            <LineString id="1804">
+                <coordinates>102.03333,28.25,0.0 115.9375,12.308333333333334,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

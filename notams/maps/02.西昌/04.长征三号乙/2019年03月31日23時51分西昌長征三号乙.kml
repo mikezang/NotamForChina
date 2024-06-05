@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="2199">
+        <Style id="2206">
+            <PolyStyle id="2207">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="2210">
+            <LineStyle id="2211">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>120-2019年03月31日23時51分西昌長征三号乙</name>
+	    <Placemark>
+	      <name>ZPKM/A1234/19</name>
+	      <styleUrl>#2206</styleUrl>
+	      <Polygon>
+	        <outerBoundaryIs>
+	          <LinearRing>
+	            <tessellate>1</tessellate>
+	            <coordinates>
+	              107.7186667,27.5208333,0
+	              107.6575,27.2546667,0
+	              108.5525,27.1005,0
+	              108.6081667,27.3598333,0
+	              107.7186667,27.5208333,0
+	            </coordinates>
+	          </LinearRing>
+	        </outerBoundaryIs>
+	      </Polygon>
+	    </Placemark>
+	    <Placemark>
+	      <name>ZGZU/ZSHA/A1235/19</name>
+	      <styleUrl>#2206</styleUrl>
+	      <Polygon>
+	        <outerBoundaryIs>
+	          <LinearRing>
+	            <tessellate>1</tessellate>
+	            <coordinates>
+	              114.0021667,26.2405,0
+	              113.9253333,25.9761667,0
+	              114.4093333,25.8703333,0
+	              114.4866667,26.1346667,0
+	              114.0021667,26.2405,0
+	            </coordinates>
+	          </LinearRing>
+	        </outerBoundaryIs>
+	      </Polygon>
+	    </Placemark>
+        <Placemark id="2201">
+            <name>RJJJ</name>
+            <styleUrl>#2206</styleUrl>
+            <Polygon id="2200">
+                <outerBoundaryIs>
+                    <LinearRing id="2204">
+                        <coordinates>127.15,22.45,0.0 126.23333333333333,22.75,0.0 126.13333333333334,22.5,0.0 127.05,22.2,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="2209">
+            <name>Route</name>
+            <styleUrl>#2210</styleUrl>
+            <LineString id="2208">
+                <coordinates>102.03333,28.25,0.0 126.64166666666667,22.475,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

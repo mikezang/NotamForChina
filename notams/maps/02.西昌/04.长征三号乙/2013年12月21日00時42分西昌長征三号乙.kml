@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="235">
+        <Style id="242">
+            <PolyStyle id="243">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="250">
+            <PolyStyle id="251">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="254">
+            <LineStyle id="255">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>011-2013年12月21日00時42分西昌長征三号乙</name>
+        <Placemark id="237">
+            <name>ZPKM</name>
+            <styleUrl>#242</styleUrl>
+            <Polygon id="236">
+                <outerBoundaryIs>
+                    <LinearRing id="240">
+                        <coordinates>108.6,27.35,0.0 107.71666666666667,27.516666666666666,0.0 107.65,27.25,0.0 108.55,27.1,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="245">
+            <name>ZSHA</name>
+            <styleUrl>#250</styleUrl>
+            <Polygon id="244">
+                <outerBoundaryIs>
+                    <LinearRing id="248">
+                        <coordinates>114.48333333333333,26.133333333333333,0.0 114.0,26.233333333333334,0.0 113.91666666666667,25.966666666666665,0.0 114.4,25.866666666666667,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="253">
+            <name>Route</name>
+            <styleUrl>#254</styleUrl>
+            <LineString id="252">
+                <coordinates>102.03333,28.25,0.0 114.20000000000002,26.049999999999997,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

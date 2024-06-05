@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="2051">
+        <Style id="2058">
+            <PolyStyle id="2059">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="2066">
+            <PolyStyle id="2067">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="2074">
+            <PolyStyle id="2075">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="2082">
+            <PolyStyle id="2083">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="2086">
+            <LineStyle id="2087">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>114-2018年12月25日00時53分西昌長征三号丙</name>
+        <Placemark id="2053">
+            <name>ZPKM</name>
+            <styleUrl>#2058</styleUrl>
+            <Polygon id="2052">
+                <outerBoundaryIs>
+                    <LinearRing id="2056">
+                        <coordinates>108.36666666666666,27.35,0.0 107.98333333333333,27.416666666666668,0.0 107.93333333333334,27.25,0.0 108.33333333333333,27.166666666666668,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="2061">
+            <name>ZPKM</name>
+            <styleUrl>#2066</styleUrl>
+            <Polygon id="2060">
+                <outerBoundaryIs>
+                    <LinearRing id="2064">
+                        <coordinates>106.2,27.766666666666666,0.0 105.7,27.85,0.0 105.65,27.583333333333332,0.0 106.13333333333334,27.5,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="2069">
+            <name>ZSHA</name>
+            <styleUrl>#2074</styleUrl>
+            <Polygon id="2068">
+                <outerBoundaryIs>
+                    <LinearRing id="2072">
+                        <coordinates>114.48333333333333,26.133333333333333,0.0 114.0,26.233333333333334,0.0 113.91666666666667,25.966666666666665,0.0 114.4,25.866666666666667,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="2077">
+            <name>RJJJ</name>
+            <styleUrl>#2082</styleUrl>
+            <Polygon id="2076">
+                <outerBoundaryIs>
+                    <LinearRing id="2080">
+                        <coordinates>124.35,23.366666666666667,0.0 123.43333333333334,23.65,0.0 123.33333333333333,23.4,0.0 124.26666666666667,23.1,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="2085">
+            <name>Route</name>
+            <styleUrl>#2086</styleUrl>
+            <LineString id="2084">
+                <coordinates>102.03333,28.25,0.0 123.84583333333333,23.379166666666663,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1431">
+        <Style id="1438">
+            <PolyStyle id="1439">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1442">
+            <LineStyle id="1443">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>078-2018年01月12日07時18分西昌長征三号乙</name>
+        <Placemark id="1433">
+            <name>ZJSA</name>
+            <styleUrl>#1438</styleUrl>
+            <Polygon id="1432">
+                <outerBoundaryIs>
+                    <LinearRing id="1436">
+                        <coordinates>111.83333333333333,18.083333333333332,0.0 111.31666666666666,18.716666666666665,0.0 110.71666666666667,18.266666666666666,0.0 111.25,17.633333333333333,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1441">
+            <name>Route</name>
+            <styleUrl>#1442</styleUrl>
+            <LineString id="1440">
+                <coordinates>102.03333,28.25,0.0 111.27916666666667,18.174999999999997,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

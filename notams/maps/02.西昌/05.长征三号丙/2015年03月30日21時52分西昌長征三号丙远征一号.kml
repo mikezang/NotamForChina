@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="367">
+        <Style id="374">
+            <PolyStyle id="375">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="382">
+            <PolyStyle id="383">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="386">
+            <LineStyle id="387">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>019-2015年03月30日21時52分西昌長征三号丙</name>
+        <Placemark id="369">
+            <name>ZGZU</name>
+            <styleUrl>#374</styleUrl>
+            <Polygon id="368">
+                <outerBoundaryIs>
+                    <LinearRing id="372">
+                        <coordinates>106.38333333333334,24.0,0.0 106.08333333333333,24.316666666666666,0.0 105.85,24.15,0.0 106.15,23.816666666666666,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="377">
+            <name>ZJSA</name>
+            <styleUrl>#382</styleUrl>
+            <Polygon id="376">
+                <outerBoundaryIs>
+                    <LinearRing id="380">
+                        <coordinates>111.81666666666666,18.116666666666667,0.0 111.28333333333333,18.766666666666666,0.0 110.68333333333334,18.316666666666666,0.0 111.21666666666667,17.666666666666668,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="385">
+            <name>Route</name>
+            <styleUrl>#386</styleUrl>
+            <LineString id="384">
+                <coordinates>102.03333,28.25,0.0 111.25,18.21666666666667,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

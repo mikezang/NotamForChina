@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1903">
+        <Style id="1910">
+            <PolyStyle id="1911">
+                <color>ff25a8f9</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1914">
+            <LineStyle id="1915">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>104-2018年10月15日12時23分西昌長征三号乙</name>
+        <Placemark id="1905">
+            <name>RPHI</name>
+            <styleUrl>#1910</styleUrl>
+            <Polygon id="1904">
+                <outerBoundaryIs>
+                    <LinearRing id="1908">
+                        <coordinates>116.51666666666667,12.166666666666666,0.0 115.95,12.883333333333333,0.0 115.36666666666666,12.45,0.0 115.91666666666667,11.733333333333333,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1913">
+            <name>Route</name>
+            <styleUrl>#1914</styleUrl>
+            <LineString id="1912">
+                <coordinates>102.03333,28.25,0.0 115.9375,12.308333333333334,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>
