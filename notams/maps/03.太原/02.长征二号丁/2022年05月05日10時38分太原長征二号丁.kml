@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="5073">
+        <Style id="5080">
+            <PolyStyle id="5081">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="5084">
+            <LineStyle id="5085">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>257-2022年05月05日10時38分太原長征二号丁</name>
+        <Placemark id="5075">
+            <name>ZHWH</name>
+            <styleUrl>#5080</styleUrl>
+            <Polygon id="5074">
+                <outerBoundaryIs>
+                    <LinearRing id="5078">
+                        <coordinates>110.23333333333333,29.916666666666668,0.0 109.86666666666666,29.95,0.0 109.96666666666667,30.583333333333332,0.0 110.33333333333333,30.533333333333335,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="5083">
+            <name>Route</name>
+            <styleUrl>#5084</styleUrl>
+            <LineString id="5082">
+                <coordinates>111.604815,38.84257,0.0 110.1,30.245833333333334,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

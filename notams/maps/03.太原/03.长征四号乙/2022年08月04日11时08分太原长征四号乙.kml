@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>2022年08月04日太原长征四号乙</name>
+    <Style id="icon-1569-E65100-labelson">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-2.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="icon-1739-0288D1-labelson">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-1.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="line-000000-1200-normal">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.2</width>
+      </LineStyle>
+    </Style>
+    <Style id="line-000000-1200-highlight">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.8</width>
+      </LineStyle>
+    </Style>
+    <StyleMap id="line-000000-1200">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#line-000000-1200-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#line-000000-1200-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-E65100-1200-77-normal">
+      <LineStyle>
+        <color>ff0051e6</color>
+        <width>1.2</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4d0051e6</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-E65100-1200-77-highlight">
+      <LineStyle>
+        <color>ff0051e6</color>
+        <width>1.8</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4d0051e6</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-E65100-1200-77">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-E65100-1200-77-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-E65100-1200-77-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>Spot</name>
+      <description><![CDATA[说明: Spot<br>名前: 15°00.00N,109°48.00E]]></description>
+      <styleUrl>#icon-1739-0288D1-labelson</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value>Spot</value>
+        </Data>
+        <Data name="名前">
+          <value>15°00.00N,109°48.00E</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          109.8,15,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>1st Stage</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-E65100-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              110.3448647,30.5366104,0
+              110.25,29.8833333,0
+              110.6166667,29.85,0
+              110.7,30.5,0
+              110.3448647,30.5366104,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>3rd Stage</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-E65100-1200-77</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              109.45,15.5666667,0
+              109.4,14.65,0
+              109.973063,14.6343177,0
+              110.0333333,15.5333333,0
+              109.45,15.5666667,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>Route</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#line-000000-1200</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          111.604815,38.84257,0
+          108.1560038,-8.7354321,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>远望5号</name>
+      <description><![CDATA[说明: <br>名前: N26°23.3,E125°24.0]]></description>
+      <styleUrl>#icon-1569-E65100-labelson</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value>N26°23.3,E125°24.0</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          119.0665831,-10.6524574,0
+        </coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>

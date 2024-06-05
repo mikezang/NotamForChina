@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1417">
+        <Style id="1424">
+            <PolyStyle id="1425">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1428">
+            <LineStyle id="1429">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>077-2018年01月09日11時24分太原長征二号丁</name>
+        <Placemark id="1419">
+            <name>ZPKM</name>
+            <styleUrl>#1424</styleUrl>
+            <Polygon id="1418">
+                <outerBoundaryIs>
+                    <LinearRing id="1422">
+                        <coordinates>109.46666666666667,30.316666666666666,0.0 109.06666666666666,30.383333333333333,0.0 108.85,29.5,0.0 109.25,29.433333333333334,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1427">
+            <name>Route</name>
+            <styleUrl>#1428</styleUrl>
+            <LineString id="1426">
+                <coordinates>111.604815,38.84257,0.0 109.15833333333333,29.908333333333335,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

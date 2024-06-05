@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="2929">
+        <Style id="2936">
+            <PolyStyle id="2937">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="2940">
+            <LineStyle id="2941">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>162-2020年06月11日02時31分太原長征二号丙</name>
+        <Placemark id="2931">
+            <name>ZHWH</name>
+            <styleUrl>#2936</styleUrl>
+            <Polygon id="2930">
+                <outerBoundaryIs>
+                    <LinearRing id="2934">
+                        <coordinates>109.91666666666667,30.9,0.0 110.21666666666667,30.866666666666667,0.0 110.11666666666666,30.233333333333334,0.0 109.8,30.283333333333335,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="2939">
+            <name>Route</name>
+            <styleUrl>#2940</styleUrl>
+            <LineString id="2938">
+                <coordinates>111.604815,38.84257,0.0 110.0125,30.570833333333333,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

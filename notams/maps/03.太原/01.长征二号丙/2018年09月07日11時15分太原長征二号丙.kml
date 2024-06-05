@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1853">
+        <Style id="1860">
+            <PolyStyle id="1861">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="1864">
+            <LineStyle id="1865">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>100-2018年09月07日11時15分太原長征二号丙</name>
+        <Placemark id="1855">
+            <name>ZHWH</name>
+            <styleUrl>#1860</styleUrl>
+            <Polygon id="1854">
+                <outerBoundaryIs>
+                    <LinearRing id="1858">
+                        <coordinates>109.91666666666667,30.9,0.0 110.21666666666667,30.866666666666667,0.0 110.11666666666666,30.233333333333334,0.0 109.8,30.283333333333335,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="1863">
+            <name>Route</name>
+            <styleUrl>#1864</styleUrl>
+            <LineString id="1862">
+                <coordinates>111.604815,38.84257,0.0 110.0125,30.570833333333333,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

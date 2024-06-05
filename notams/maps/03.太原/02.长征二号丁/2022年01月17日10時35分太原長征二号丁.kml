@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="4687">
+        <Style id="4694">
+            <PolyStyle id="4695">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="4702">
+            <PolyStyle id="4703">
+                <color>ff0051e6</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="4706">
+            <LineStyle id="4707">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>244-2022年01月17日10時35分太原長征二号丁</name>
+        <Placemark id="4689">
+            <name>ZHWH/ZLHW</name>
+            <styleUrl>#4694</styleUrl>
+            <Polygon id="4688">
+                <outerBoundaryIs>
+                    <LinearRing id="4692">
+                        <coordinates>110.35,33.45,0.0 110.56666666666666,33.416666666666664,0.0 110.5,33.06666666666667,0.0 110.28333333333333,33.083333333333336,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="4697">
+            <name>ZHWH</name>
+            <styleUrl>#4702</styleUrl>
+            <Polygon id="4696">
+                <outerBoundaryIs>
+                    <LinearRing id="4700">
+                        <coordinates>109.7,30.383333333333333,0.0 110.06666666666666,30.333333333333332,0.0 109.95,29.7,0.0 109.6,29.75,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="4705">
+            <name>Route</name>
+            <styleUrl>#4706</styleUrl>
+            <LineString id="4704">
+                <coordinates>111.604815,38.84257,0.0 109.82916666666665,30.041666666666668,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>
