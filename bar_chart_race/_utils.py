@@ -131,8 +131,8 @@ def prepare_wide_data(df, df_for_rank=None, orientation='h', sort='desc', n_bars
         # else:
         #     df_values.iloc[:, 0] = df_values.iloc[:, 0].interpolate()
     else:
-        df_values.iloc[:, 0] = df_values.iloc[:, 0].fillna(method='ffill')
-        df_for_rank_values.iloc[:, 0] = df_for_rank_values.iloc[:, 0].fillna(method='ffill')
+        df_values.iloc[:, 0] = df_values.iloc[:, 0].ffill()
+        df_for_rank_values.iloc[:, 0] = df_for_rank_values.iloc[:, 0].ffill()
     
     df_values = df_values.set_index(df_values.columns[0])
     df_for_rank_values = df_for_rank_values.set_index(df_for_rank_values.columns[0])

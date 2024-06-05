@@ -1,9 +1,14 @@
+from datetime import datetime
+import os
+import shutil
+import subprocess
 import warnings
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import ticker
+import pytz
 from ._func_animation import FuncAnimation
 from ._func_animation import printProgressBar
 from matplotlib.colors import Colormap
@@ -14,14 +19,15 @@ from ._utils import prepare_wide_data
 
 class _BarChartRace(CommonChart):
     
-    def __init__(self, df, df_for_rank, filename, orientation, sort, n_bars, fixed_order, fixed_max,
+    def __init__(self, df, df_rank, filename, orientation, sort, n_bars, fixed_order, fixed_max,
                  steps_per_period, period_length, end_period_pause, interpolate_period,
                  interpolate_method, period_label, period_template, period_summary_func, perpendicular_bar_func, 
                  colors, title, bar_size, bar_textposition, bar_texttemplate, bar_label_font, 
                  tick_label_font, tick_template, shared_fontdict, scale, fig, writer, 
-                 bar_kwargs, fig_kwargs, filter_column_colors, save_last_frame):
+                 bar_kwargs, fig_kwargs, filter_column_colors, save_last_frame_image, plot_last_frames, 
+                 last_frames_count, save_frames_csv, incremental_plot):
         self.filename = filename
-        self.extension = self.get_extension()
+        self.folder, self.filenameOnly, self.extension = self.parse_filename()
         self.orientation = orientation
         self.sort = sort
         self.n_bars = n_bars or df.shape[1]
@@ -48,13 +54,17 @@ class _BarChartRace(CommonChart):
         self.fps = 1000 / self.period_length * steps_per_period
         self.writer = self.get_writer(writer)
         self.filter_column_colors = filter_column_colors
-        self.save_last_frame = save_last_frame
+        self.save_last_frame_image = save_last_frame_image
+        self.plot_last_frames = plot_last_frames
+        self.last_frames_count = last_frames_count
+        self.save_frames_csv = save_frames_csv
+        self.incremental_plot = incremental_plot
         self.extra_pixels = 0
         self.validate_params()
 
         self.bar_kwargs = self.get_bar_kwargs(bar_kwargs)
         self.html = self.filename is None
-        self.df_values, self.df_ranks = self.prepare_data(df, df_for_rank)
+        self.df_values, self.df_ranks = self.prepare_data(df, df_rank)
         self.col_filt = self.get_col_filt()
         self.bar_colors = self.get_bar_colors(colors)
         self.str_index = self.df_values.index.astype('str')
@@ -146,22 +156,22 @@ class _BarChartRace(CommonChart):
             font = {**default_font_dict, **font}
         return font
 
-    def prepare_data(self, df, df_for_rank):
+    def prepare_data(self, df, df_rank):
         if self.fixed_order is True:
             last_values = df.iloc[-1].sort_values(ascending=False)
             cols = last_values.iloc[:self.n_bars].index
             df = df[cols]
-            if df_for_rank:
-                df_for_rank = df_for_rank[cols]
+            if df_rank:
+                df_rank = df_rank[cols]
         elif isinstance(self.fixed_order, list):
             cols = self.fixed_order
             df = df[cols]
-            if df_for_rank:
-                df_for_rank = df_for_rank[cols]
+            if df_rank:
+                df_rank = df_rank[cols]
             self.n_bars = min(len(cols), self.n_bars)
             
         compute_ranks = self.fixed_order is False
-        dfs = prepare_wide_data(df, df_for_rank, self.orientation, self.sort, self.n_bars,
+        dfs = prepare_wide_data(df, df_rank, self.orientation, self.sort, self.n_bars,
                                 self.interpolate_period, self.interpolate_method, 
                                 self.steps_per_period, compute_ranks)
         if isinstance(dfs, tuple):
@@ -489,7 +499,13 @@ class _BarChartRace(CommonChart):
             return frames
         
         frames = frame_generator(len(self.df_values))
-        anim = FuncAnimation(self.fig, self.anim_func, frames, init_func, interval=interval)
+        if self.plot_last_frames or self.incremental_plot:
+            anim = FuncAnimation(self.fig, self.anim_func, frames[-self.last_frames_count:], init_func, interval=interval)
+        else:
+            anim = FuncAnimation(self.fig, self.anim_func, frames, init_func, interval=interval)
+
+        def getYear():
+            return datetime.now(pytz.timezone('Asia/Tokyo')).strftime('%Y')
 
         try:
             fc = self.fig.get_facecolor()
@@ -507,25 +523,60 @@ class _BarChartRace(CommonChart):
                 fc = self.fig.get_facecolor()
                 if fc == (1, 1, 1, 0):
                     fc = 'white'
-                print("Rendering video to " + self.filename)
-                ret_val = anim.save(self.filename, fps=self.fps, writer=self.writer, 
+
+                if self.save_frames_csv:
+                    csvName = f'{self.folder}/{self.filenameOnly}-{getYear()}.csv'
+                    self.df_values.to_csv(csvName)
+
+                if self.plot_last_frames or self.incremental_plot:
+                    #TODO: how to merge new to old
+                    if os.path.isfile(self.filename):
+                        curFolder = os.getcwd()
+                        filename_last = f'{self.filenameOnly}-{getYear()}-last-{self.last_frames_count}.mp4'
+                        print(f"Rendering last {self.last_frames_count} frames to {filename_last}")
+                        # print(f"Merging last {self.last_frames_count} frames to {self.filename}")
+                        os.chdir(self.folder)
+                        ret_val = anim.save(filename_last, fps=self.fps, writer=self.writer, 
+                                        savefig_kwargs=savefig_kwargs, progress_callback=printProgressBar) 
+                        # filename_tmp = 'video-tmp.mp4'
+                        # shutil.copy(os.path.basename(self.filename), filename_tmp)
+                        # with open("mylist.txt", 'w', encoding='utf-8') as f:
+                        #     f.write(f"file {filename_tmp}\n")
+                        #     f.write(f"file {filename_last}\n")
+                        # cmd = ['ffmpeg', '-loglevel', 'fatal', '-f', 'concat', '-i', 'mylist.txt', 
+                        #        '-c', 'copy', '-y', os.path.basename(self.filename)]
+                        # subprocess.run(cmd)
+                        # os.remove(filename_tmp)
+                        # os.remove('mylist.txt')
+                        os.chdir(curFolder)
+                    else:
+                        print(f"Rendering last {self.last_frames_count} frames to {self.filename}")
+                        ret_val = anim.save(self.filename, fps=self.fps, writer=self.writer, 
+                                        savefig_kwargs=savefig_kwargs, progress_callback=printProgressBar) 
+                else:
+                    print("Rendering video to " + self.filename)
+                    ret_val = anim.save(self.filename, fps=self.fps, writer=self.writer, 
                                     savefig_kwargs=savefig_kwargs, progress_callback=printProgressBar) 
                 printProgressBar(100, 100)
                 print("Rendering Complete")
-            if self.save_last_frame:
-                pngFilename = f'{self.filename[:-4]}-last.png'
-                print(f'Save last frame to {pngFilename}')
+
+            if self.save_last_frame_image:
+                pngFilename = f'{self.folder}/{self.filenameOnly}-{getYear()}.png'
+                print(f'Save last frame to {pngFilename}\n')
                 self.fig.savefig(f'{pngFilename}')
         except Exception as e:
             message = str(e)
             raise Exception(message)
         finally:
             plt.rcParams = self.orig_rcParams
-
+            plt.figure().clear()
+            plt.close()
+            plt.cla()
+            plt.clf()
         return ret_val
 
 
-def bar_chart_race(df, df_for_rank=None, filename=None, orientation='h', sort='desc', n_bars=None, 
+def bar_chart_race(df, df_rank=None, filename=None, orientation='h', sort='desc', n_bars=None, 
                    fixed_order=False, fixed_max=False, steps_per_period=10, 
                    period_length=500, end_period_pause=0, interpolate_period=False, 
                    interpolate_method='linear', period_label=True, period_template=None,
@@ -534,7 +585,8 @@ def bar_chart_race(df, df_for_rank=None, filename=None, orientation='h', sort='d
                    bar_label_font=None, tick_label_font=None, tick_template='{x:,.0f}',
                    shared_fontdict=None, scale='linear', fig=None, writer=None, 
                    bar_kwargs=None, fig_kwargs=None, filter_column_colors=False,
-                   save_last_frame=False):
+                   save_last_frame_image=True, plot_last_frames=True, last_frames_count=100,
+                   save_frames_csv=False, incremental_plot=False):
     '''
     Create an animated bar chart race using matplotlib. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -557,7 +609,7 @@ def bar_chart_race(df, df_for_rank=None, filename=None, orientation='h', sort='d
         category. Optionally, use the index to label each time period.
         The index can be of any type.
 
-    df_for_rank : pandas DataFrame, same format as df, default None
+    df_rank : pandas DataFrame, same format as df, default None
         Use df if None, this is used when data with encode format, for example,
         xxxyyy.zzz: zzz means counts for ok, yyy means counts for all in lower group, 
         xxx means counts for all in higher group, 
@@ -849,8 +901,21 @@ def bar_chart_race(df, df_for_rank=None, filename=None, orientation='h', sort='d
         This parameter is experimental and may be changed/removed
         in a later version.
 
-    save_last_frame : bool, default `False`
-        Save last frame to filename(without extesnion).png file if 'True'
+    save_last_frame_image : bool, default `True`
+        Save last frame to f'{filenameOnly}.png' file if 'True'
+
+    plot_last_frames : bool, default `True`
+        Save last_frames_count frames to f'filename-last-{last_frames_count}-frames.mp4' file if 'True'
+
+    last_frames_count : int, default 100
+        The count of last frames to save
+    
+    save_frames_csv : bool, default False
+        Save all frames to f'{self.filenameOnly}-YYYYMMDD-HHMMSS.csv'
+
+    incremental_plot: bool, default True
+        Save the different frames since last saved, base on saved frames file in hidden folder,
+        Then remove different frames from saved mp4 file, merge new to old.
 
     Returns
     -------
@@ -903,10 +968,12 @@ def bar_chart_race(df, df_for_rank=None, filename=None, orientation='h', sort='d
         'medium', 'large', 'x-large', 'xx-large', 'smaller', 'larger'
     These sizes are relative to plt.rcParams['font.size'].
     '''
-    bcr = _BarChartRace(df, df_for_rank, filename, orientation, sort, n_bars, fixed_order, fixed_max,
+    bcr = _BarChartRace(df, df_rank, filename, orientation, sort, n_bars, fixed_order, fixed_max,
                         steps_per_period, period_length, end_period_pause, interpolate_period, 
-                        interpolate_method, period_label, period_template, period_summary_func, perpendicular_bar_func,
-                        colors, title, bar_size, bar_textposition, bar_texttemplate, 
+                        interpolate_method, period_label, period_template, period_summary_func, 
+                        perpendicular_bar_func, colors, title, bar_size, bar_textposition, bar_texttemplate, 
                         bar_label_font, tick_label_font, tick_template, shared_fontdict, scale, 
-                        fig, writer, bar_kwargs, fig_kwargs, filter_column_colors, save_last_frame)
+                        fig, writer, bar_kwargs, fig_kwargs, filter_column_colors, save_last_frame_image, 
+                        plot_last_frames, last_frames_count, save_frames_csv, 
+                        incremental_plot)
     return bcr.make_animation()

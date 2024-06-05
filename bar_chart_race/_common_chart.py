@@ -1,13 +1,17 @@
 import matplotlib.pyplot as plt
 from matplotlib import ticker
-
+import os
 
 class CommonChart:
         
+    def parse_filename(self):
+        name = os.path.basename(self.filename).split('.')
+        return os.path.abspath(os.path.dirname(self.filename)), name[0], name[1]
+
     def get_extension(self):
         if self.filename:
             return self.filename.split('.')[-1]
-
+        
     def get_title(self, title):
         if isinstance(title, str):
             return {'label': title}
