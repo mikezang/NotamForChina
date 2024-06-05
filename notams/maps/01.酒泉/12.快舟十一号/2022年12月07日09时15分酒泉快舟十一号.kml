@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>2022年12月07日酒泉快舟十一号</name>
+    <Style id="icon-1569-A52714-normal">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-1.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+    </Style>
+    <Style id="icon-1569-A52714-highlight">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-1.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+    </Style>
+    <StyleMap id="icon-1569-A52714">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1569-A52714-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1569-A52714-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="line-000000-1000-normal">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1</width>
+      </LineStyle>
+    </Style>
+    <Style id="line-000000-1000-highlight">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.5</width>
+      </LineStyle>
+    </Style>
+    <StyleMap id="line-000000-1000">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#line-000000-1000-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#line-000000-1000-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-A52714-1200-255-normal">
+      <LineStyle>
+        <color>ff1427a5</color>
+        <width>1.2</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff1427a5</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <Style id="poly-A52714-1200-255-highlight">
+      <LineStyle>
+        <color>ff1427a5</color>
+        <width>1.8</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>ff1427a5</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="poly-A52714-1200-255">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-A52714-1200-255-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-A52714-1200-255-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>ZLHW</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-A52714-1200-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              100.216667,39.7,0
+              100.266667,39.933333,0
+              100.133333,39.95,0
+              100.083333,39.7,0
+              100.216667,39.7,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>ZLHW</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#poly-A52714-1200-255</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <tessellate>1</tessellate>
+            <coordinates>
+              99.7,38.333333,0
+              99.733333,38.583333,0
+              99.6,38.6,0
+              99.566667,38.35,0
+              99.7,38.333333,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>Route</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#line-000000-1000</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          100.3,40.966667,0
+          93.321875,4.023401,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>远望5号</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#icon-1569-A52714</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          113.1203733,-10.4825908,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>远望6号</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#icon-1569-A52714</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          122.2151944,29.7362839,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>远望7号</name>
+      <description><![CDATA[说明: <br>名前: ]]></description>
+      <styleUrl>#icon-1569-A52714</styleUrl>
+      <ExtendedData>
+        <Data name="说明">
+          <value/>
+        </Data>
+        <Data name="名前">
+          <value/>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          133.7944728,12.3150628,0
+        </coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="5773">
+        <Style id="5780">
+            <PolyStyle id="5781">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="5788">
+            <PolyStyle id="5789">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="5792">
+            <LineStyle id="5793">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>279-2022年09月06日10時24分酒泉快舟一号甲</name>
+        <Placemark id="5775">
+            <name>YBBB</name>
+            <styleUrl>#5780</styleUrl>
+            <Polygon id="5774">
+                <outerBoundaryIs>
+                    <LinearRing id="5778">
+                        <coordinates>155.7,-18.45,0.0 156.0,-18.216666666666665,0.0 156.6,-18.916666666666668,0.0 156.3,-19.15,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="5783">
+            <name>ZHWH/ZBPE</name>
+            <styleUrl>#5788</styleUrl>
+            <Polygon id="5782">
+                <outerBoundaryIs>
+                    <LinearRing id="5786">
+                        <coordinates>112.1,34.95,0.0 111.96666666666667,34.8,0.0 111.35,35.2,0.0 111.48333333333333,35.35,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="5791">
+            <name>Route</name>
+            <styleUrl>#5792</styleUrl>
+            <LineString id="5790">
+                <coordinates>100.3,40.96666666666667,0.0 156.14999999999998,-18.68333333333333,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

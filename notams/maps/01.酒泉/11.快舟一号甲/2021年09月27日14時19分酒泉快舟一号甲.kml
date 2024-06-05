@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="4091">
+        <Style id="4098">
+            <PolyStyle id="4099">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="4106">
+            <PolyStyle id="4107">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="4110">
+            <LineStyle id="4111">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>223-2021年09月27日14時19分酒泉快舟一号甲</name>
+        <Placemark id="4093">
+            <name>ZLHW</name>
+            <styleUrl>#4098</styleUrl>
+            <Polygon id="4092">
+                <outerBoundaryIs>
+                    <LinearRing id="4096">
+                        <coordinates>100.05,39.68333333333333,0.0 99.95,39.71666666666667,0.0 100.0,39.93333333333333,0.0 100.11666666666666,39.916666666666664,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="4101">
+            <name>ZPKM</name>
+            <styleUrl>#4106</styleUrl>
+            <Polygon id="4100">
+                <outerBoundaryIs>
+                    <LinearRing id="4104">
+                        <coordinates>97.75,30.666666666666668,0.0 97.55,30.716666666666665,0.0 97.71666666666667,31.333333333333332,0.0 97.91666666666667,31.283333333333335,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="4109">
+            <name>Route</name>
+            <styleUrl>#4110</styleUrl>
+            <LineString id="4108">
+                <coordinates>100.3,40.96666666666667,0.0 97.73333333333333,31.0,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

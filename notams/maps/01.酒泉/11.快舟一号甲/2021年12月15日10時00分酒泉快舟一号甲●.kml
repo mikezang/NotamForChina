@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1">
+        <Style id="8">
+            <PolyStyle id="9">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="16">
+            <PolyStyle id="17">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="24">
+            <PolyStyle id="25">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="28">
+            <LineStyle id="29">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>239-2021年12月15日10時00分酒泉快舟一号甲●</name>
+        <Placemark id="3">
+            <name>YBBB</name>
+            <styleUrl>#8</styleUrl>
+            <Polygon id="2">
+                <outerBoundaryIs>
+                    <LinearRing id="6">
+                        <coordinates>159.3,-19.416666666666668,0.0 159.58333333333334,-19.183333333333334,0.0 160.2,-19.866666666666667,0.0 159.91666666666666,-20.1,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="11">
+            <name>YBBB</name>
+            <styleUrl>#16</styleUrl>
+            <Polygon id="10">
+                <outerBoundaryIs>
+                    <LinearRing id="14">
+                        <coordinates>155.7,-18.433333333333334,0.0 155.98333333333332,-18.216666666666665,0.0 156.58333333333334,-18.916666666666668,0.0 156.3,-19.15,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="19">
+            <name>ZBPE/ZHWH</name>
+            <styleUrl>#24</styleUrl>
+            <Polygon id="18">
+                <outerBoundaryIs>
+                    <LinearRing id="22">
+                        <coordinates>112.08333333333333,34.95,0.0 111.95,34.8,0.0 111.35,35.18333333333333,0.0 111.48333333333333,35.333333333333336,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="27">
+            <name>Route</name>
+            <styleUrl>#28</styleUrl>
+            <LineString id="26">
+                <coordinates>100.3,40.96666666666667,0.0 159.75,-19.641666666666666,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

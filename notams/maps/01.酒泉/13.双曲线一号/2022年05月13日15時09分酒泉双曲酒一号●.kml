@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="5125">
+        <Style id="5132">
+            <PolyStyle id="5133">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="5136">
+            <LineStyle id="5137">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>259-2022年05月13日15時09分酒泉双曲线一号●</name>
+        <Placemark id="5127">
+            <name>VCCF</name>
+            <styleUrl>#5132</styleUrl>
+            <Polygon id="5126">
+                <outerBoundaryIs>
+                    <LinearRing id="5130">
+                        <coordinates>91.15,4.266666666666667,0.0 92.0,4.083333333333333,0.0 92.0,2.5,0.0 90.86666666666666,2.7333333333333334,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="5135">
+            <name>Route</name>
+            <styleUrl>#5136</styleUrl>
+            <LineString id="5134">
+                <coordinates>100.3,40.96666666666667,0.0 91.50416666666666,3.395833333333333,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

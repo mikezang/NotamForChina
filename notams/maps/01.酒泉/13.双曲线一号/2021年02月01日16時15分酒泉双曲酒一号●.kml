@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="3437">
+        <Style id="3444">
+            <PolyStyle id="3445">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="3448">
+            <LineStyle id="3449">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>191-2021年02月01日16時15分酒泉双曲线一号●</name>
+        <Placemark id="3439">
+            <name>ROCK</name>
+            <styleUrl>#3444</styleUrl>
+            <Polygon id="3438">
+                <outerBoundaryIs>
+                    <LinearRing id="3442">
+                        <coordinates>91.05,0.6666666666666666,0.0 90.61666666666666,0.7666666666666667,0.0 90.78333333333333,1.6333333333333333,0.0 91.23333333333333,1.55,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="3447">
+            <name>Route</name>
+            <styleUrl>#3448</styleUrl>
+            <LineString id="3446">
+                <coordinates>100.3,40.96666666666667,0.0 90.92083333333333,1.1541666666666666,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

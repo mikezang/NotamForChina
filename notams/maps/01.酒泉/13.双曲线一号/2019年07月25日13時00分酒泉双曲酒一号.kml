@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="2301">
+        <Style id="2308">
+            <PolyStyle id="2309">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="2312">
+            <LineStyle id="2313">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>127-2019年07月25日13時00分酒泉双曲线一号</name>
+        <Placemark id="2303">
+            <name>RJJJ</name>
+            <styleUrl>#2308</styleUrl>
+            <Polygon id="2302">
+                <outerBoundaryIs>
+                    <LinearRing id="2306">
+                        <coordinates>131.31666666666666,28.983333333333334,0.0 131.01666666666668,28.616666666666667,0.0 130.06666666666666,29.2,0.0 130.36666666666667,29.566666666666666,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="2311">
+            <name>Route</name>
+            <styleUrl>#2312</styleUrl>
+            <LineString id="2310">
+                <coordinates>100.3,40.96666666666667,0.0 130.69166666666666,29.091666666666665,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

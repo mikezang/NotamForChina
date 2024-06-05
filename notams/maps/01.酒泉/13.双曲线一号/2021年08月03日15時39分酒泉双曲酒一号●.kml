@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="3899">
+        <Style id="3906">
+            <PolyStyle id="3907">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="3910">
+            <LineStyle id="3911">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>214-2021年08月03日15時39分酒泉双曲线一号●</name>
+        <Placemark id="3901">
+            <name>VCCF</name>
+            <styleUrl>#3906</styleUrl>
+            <Polygon id="3900">
+                <outerBoundaryIs>
+                    <LinearRing id="3904">
+                        <coordinates>91.46666666666667,0.7666666666666667,0.0 91.01666666666667,0.85,0.0 91.18333333333334,1.75,0.0 91.63333333333334,1.6666666666666665,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="3909">
+            <name>Route</name>
+            <styleUrl>#3910</styleUrl>
+            <LineString id="3908">
+                <coordinates>100.3,40.96666666666667,0.0 91.325,1.2583333333333333,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>

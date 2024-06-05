@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="4405">
+        <Style id="4412">
+            <PolyStyle id="4413">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="4420">
+            <PolyStyle id="4421">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="4428">
+            <PolyStyle id="4429">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="4436">
+            <PolyStyle id="4437">
+                <color>ff1427a5</color>
+                <colorMode>normal</colorMode>
+                <fill>1</fill>
+                <outline>0</outline>
+            </PolyStyle>
+        </Style>
+        <Style id="4440">
+            <LineStyle id="4441">
+                <color>ff000000</color>
+                <colorMode>normal</colorMode>
+                <width>1</width>
+            </LineStyle>
+        </Style>
+        <name>237-2021年12月10日08時11分酒泉長征四号乙</name>
+        <Placemark id="4407">
+            <name>VYYF</name>
+            <styleUrl>#4412</styleUrl>
+            <Polygon id="4406">
+                <outerBoundaryIs>
+                    <LinearRing id="4410">
+                        <coordinates>93.75,17.083333333333332,0.0 93.2,17.2,0.0 93.46666666666667,18.383333333333333,0.0 94.03333333333333,18.266666666666666,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="4415">
+            <name>ZLHW</name>
+            <styleUrl>#4420</styleUrl>
+            <Polygon id="4414">
+                <outerBoundaryIs>
+                    <LinearRing id="4418">
+                        <coordinates>97.63333333333334,36.15,0.0 100.08333333333333,35.11666666666667,0.0 96.5,35.05,0.0 99.0,32.6,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="4423">
+            <name>ZLHW</name>
+            <styleUrl>#4428</styleUrl>
+            <Polygon id="4422">
+                <outerBoundaryIs>
+                    <LinearRing id="4426">
+                        <coordinates>98.33333333333333,35.333333333333336,0.0 98.11666666666666,35.38333333333333,0.0 98.23333333333333,35.71666666666667,0.0 98.45,35.68333333333333,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="4431">
+            <name>ZLHW</name>
+            <styleUrl>#4436</styleUrl>
+            <Polygon id="4430">
+                <outerBoundaryIs>
+                    <LinearRing id="4434">
+                        <coordinates>97.56666666666666,32.78333333333333,0.0 97.2,32.86666666666667,0.0 97.4,33.483333333333334,0.0 97.76666666666667,33.4,0.0</coordinates>
+                    </LinearRing>
+                </outerBoundaryIs>
+            </Polygon>
+        </Placemark>
+        <Placemark id="4439">
+            <name>Route</name>
+            <styleUrl>#4440</styleUrl>
+            <LineString id="4438">
+                <coordinates>100.3,40.96666666666667,0.0 93.61249999999998,17.733333333333334,0.0</coordinates>
+            </LineString>
+        </Placemark>
+    </Document>
+</kml>
