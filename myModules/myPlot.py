@@ -1,38 +1,36 @@
 import io
 import os
 import random
-import warnings
-import cartopy.feature as cfeature
-import cartopy.crs as ccrs
 import subprocess
-from PIL import Image
+from math import log, sqrt
+from re import findall
+from datetime import datetime
+from openpyxl import load_workbook as loadXLSX
 import ffmpeg
+import PySimpleGUI as sg
 import numpy as np
+from PIL import Image
 import pandas as pd
 import geopandas as gpd
+import geodatasets
+import cartopy.feature as cfeature
+import cartopy.crs as ccrs
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
-from re import findall
-from math import log, sqrt
 import matplotlib.font_manager as fm
-from datetime import datetime
-from openpyxl import load_workbook as loadXLSX
-import pyexcel as xls
-from fiona.drvsupport import supported_drivers
-from shapely.geometry import Polygon, LineString #, Point
 import matplotlib.colors as mcolors
-import PySimpleGUI as sg
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-import geodatasets
-from shapely.geometry import Polygon
 from matplotlib.lines import Line2D
+from mpl_toolkits.basemap import Basemap
+from fiona.drvsupport import supported_drivers
 import geoplot
+import pyproj
+from shapely.geometry import Polygon, LineString, Point
+from shapely.ops import transform
 
-import constants
-import myUtils
+from myModules import constants
+from myModules import myUtils
 
 ################################################################################################
 def calcDurationByFrames(frames, framerate):
@@ -46,16 +44,6 @@ def getFileFrameRate(filename: str) -> float:
     cmd = f"ffprobe.exe -v error -show_entries stream=avg_frame_rate -of default=nw=1:nk=1 {filename}"
     result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     return int(result.stdout.split('/')[0])
-
-################################################################################################
-def getFileDuration(filename: str) -> float:
-    if not myUtils.isVideoFile(filename) and not myUtils.isAudioFile(filename):
-        print(f'{filename} is not Audio/Video file!')
-        return 0
-    cmd = f"ffprobe -v fatal -show_entries format=duration -of default=nw=1:nk=1 {filename}"
-    result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    return float(result.stdout)
-    # return myUtils.runCommand(command)
 
 ################################################################################################
 def diffFrames(oldFramesList: list, newFramesList: list):
@@ -232,39 +220,82 @@ def getFigure(nrows=1, ncols=1, figsize=(18, 10.5), subplot_kw=None, setAspectEq
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, subplot_kw=subplot_kw) 
     # Adjust the spacing between the subplots
     # plt.subplots_adjust(left=0, right=1, wspace=0, hspace=0)
-
     if setAspectEqual:
         ax.set_aspect('equal')
+    # print(f'Projection: {ax.projection}')
     return fig, ax
 
 ################################################################################################
-def plotGeometry(ax, polys, color=None, legend=None, lables=None, plotAll=False, orthographic=False):
+# Function to extract coordinates from LineString geometries
+def extractLinestringCoordinates(gdf):
+    coords = []
+    for line in gdf.geometry:
+        if line and line.geom_type == 'LineString':
+            x, y = line.xy
+            coords.append((list(x), list(y)))
+    return coords
+
+################################################################################################
+# Function to convert LineString to Points
+def lineStringToPoints(gdf):
+    points = []
+    for line in gdf.geometry:
+        if isinstance(line, LineString):
+            for coord in line.coords:
+                points.append(Point(coord))
+    pointsGdf = gpd.GeoDataFrame(geometry=points, crs=gdf.crs)
+    return pointsGdf
+
+################################################################################################
+def lineStringToPoint(line):
+    coords = line.coords
+    points = [Point(coord) for coord in coords]
+    return points
+
+################################################################################################
+def lineStringToPointGdf(lineGdf):
+    pointGeometries = []
+    names = []
+    descriptions = []
+
+    for idx, row in lineGdf.iterrows():
+        name = row['Name']
+        points = [Point(coord) for coord in row['geometry'].coords]
+        pointGeometries.extend(points)
+        names.extend([name] * len(points))
+        descriptions.extend([1 for i in range(len(points))])
+
+    pointGdf = gpd.GeoDataFrame({
+        'Name': names, 
+        'description': descriptions,
+        'geometry': pointGeometries
+    }, crs=lineGdf.crs)
+    return pointGdf
+
+################################################################################################
+def plotGeometry(ax, gdf, extent=None, color=None, legend=None, lables=None, plotAll=False, projection=False):
     try:
-        if isinstance(polys, gpd.GeoDataFrame):
-            polys1 = polys[polys['geometry'].apply(lambda x: isinstance(x, Polygon))]
-            lines1 = polys[polys['geometry'].apply(lambda x: isinstance(x, LineString))]
-            if  orthographic:
-                import matplotlib.ticker as mticker
-                gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True) # 経度線・緯度線ラベルを無効
-                # ax.axes.tick_params(top=True, right=True, labeltop=True, labelright=False)
-                # gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=False) # 経度線・緯度線ラベルを無効
-                # gl.xlocator = mticker.FixedLocator(np.arange(-180, 180, 5)) # 経度線
-                # gl.ylocator = mticker.FixedLocator(np.arange(-90, 90.1, 5)) # 緯度線
-                # ax.set_xticks(np.arange(0, 360.1, 20), crs=ccrs.PlateCarree()) # 経度線ラベル
-                # ax.set_yticks(np.arange(-90, 90.1, 20), crs=ccrs.PlateCarree()) # 緯度線ラベル
-                geoplot.polyplot(polys1, ax=ax, facecolor="blue", zorder=2)
-                if plotAll and not lines1.empty:
-                    geoplot.polyplot(lines1, ax=ax, color="blue", zorder=3)
+        if isinstance(gdf, gpd.GeoDataFrame):
+            polyGdf = gdf[gdf['geometry'].apply(lambda x: isinstance(x, Polygon))]
+            if  projection:
+                ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True, color='none')
+                geoplot.polyplot(polyGdf, ax=ax, extent=extent, facecolor=color, zorder=2)
+                if plotAll:
+                    lineGdf = gdf[gdf.geometry.type=='LineString']
+                    if not lineGdf.empty:
+                        geoplot.polyplot(lineGdf, ax=ax, extent=extent, facecolor='none', edgecolor=color, zorder=2)
             else:
-                polys1.plot(ax=ax, facecolor=color, color=color, label=legend, zorder=2)
-                if plotAll and not lines1.empty:
-                    lines1.plot(ax=ax, color=color, label=legend, zorder=3)
-        elif isinstance(polys, Polygon):
-            x, y = polys.exterior.xy
+                polyGdf.plot(ax=ax, facecolor=color, color=color, label=legend, zorder=2)
+                if plotAll:
+                    lineGdf = gdf[gdf.geometry.type=='LineString']
+                    if not lineGdf.empty:
+                        lineGdf.plot(ax=ax, color=color, label=legend, zorder=3)
+        elif isinstance(gdf, Polygon):
+            x, y = gdf.exterior.xy
             plt.plot(x, y, color=color, zorder=3)
 
-        if lables != None and polys.geometry.any() is not None:
-            for i, iloc in enumerate(polys.geometry.iloc):
+        if lables != None and gdf.geometry.any() is not None:
+            for i, iloc in enumerate(gdf.geometry.iloc):
                 if isinstance(iloc, Polygon):
                     x, y = iloc.centroid.coords[0]
                     label = lables[i]
@@ -274,7 +305,7 @@ def plotGeometry(ax, polys, color=None, legend=None, lables=None, plotAll=False,
         pass
 
 ################################################################################################
-def plotIntersection(fig, ax, newPolys, oldPolys):
+def plotIntersection(ax, newPolys, oldPolys):
     newIndex = 0
     ious = []
 
@@ -304,42 +335,80 @@ def plotIntersection(fig, ax, newPolys, oldPolys):
                     if iou > 0.01:
                         text = f'{geomName} JSI: {iou:.1%}'
                         ious.append(text)
-                        plotGeometry(ax, gpd.GeoDataFrame(geometry=[intersection]), 'orange', text)
+                        plotGeometry(ax, gpd.GeoDataFrame(geometry=[intersection]), color='orange', legend=text)
     return ious
 
 ################################################################################################
-def plot2Noatms(fig, ax, newPolys, oldPolys=None, plotAll=False, plotWorldMap=True, adjustLimit=True, orthographic=False):
-    plotGeometry(ax, newPolys, 'blue', plotAll=plotAll, orthographic=orthographic)
-    if oldPolys is not None:
-        plotGeometry(ax, oldPolys, 'green', plotAll=plotAll, orthographic=orthographic)
-
-    if adjustLimit:
-        lon1, lon2 = ax.get_xlim()
-        lat1, lat2 = ax.get_ylim()
-
-    if plotWorldMap:
-        if  orthographic:
-            ax.coastlines()
-            # ax.stock_img()
-            ax.add_feature(cfeature.LAND) # 陸に色を付ける
-            # ax.add_feature(cfeature.OCEAN) # 海に色を付ける
-        else:
-            worldmap = gpd.read_file(geodatasets.get_path("naturalearth.land"))
-            worldmap["geometry"].boundary.plot(facecolor="lightgrey", color="grey", ax=ax, zorder=1)
-
-    if adjustLimit:
-        # Set the extent of the axis object to the desired latitude and longitude ranges
-        adjustLim(ax, lon1, lat1, lon2, lat2)
+def getLimits(gdf):
+    minLatitude = gdf.bounds.miny.min()
+    maxLatitude = gdf.bounds.maxy.max()
+    minLongitude = gdf.bounds.minx.min()
+    maxLongiitude = gdf.bounds.maxx.max()
+    return minLongitude, minLatitude, maxLongiitude, maxLatitude
 
 ################################################################################################
-def plotPolygonsIntersection(fig, ax, cn_font, newPolys, newTitle, oldPolys=None, oldTitle=None):
+def getExtent(newGdf, oldGdf=None):
+    if oldGdf is None:
+        return getLimits(newGdf)
+    newMinLongitute, newMinLatitude, newMaxLongitute, newMaxLatitude  = getLimits(newGdf)
+    oldMinLongitute, oldMinLatitude, oldwMaxLongitute, oldMaxLatitude = getLimits(oldGdf)
+    minLongitude = min(newMinLongitute, oldMinLongitute)
+    minLatitude = min(newMinLatitude, oldMinLatitude)
+    maxLongitude = max(newMaxLongitute, oldwMaxLongitute)
+    maxLatitude = max(newMaxLatitude, oldMaxLatitude)
+    extent = [minLongitude, minLatitude, maxLongitude, maxLatitude]
+    return extent
+
+################################################################################################
+def plotTwoNoatms(ax, newGdf, oldGdf=None, plotAll=False, plotWorldMap=True, adjustLimit=True, projection=False):
+    if adjustLimit:
+        extent = getExtent(newGdf, oldGdf)
+        extent = adjustLim(ax, extent[0], extent[1], extent[2], extent[3])
+    else:
+        extent = None
+    plotGeometry(ax, newGdf, extent=extent, color='blue', plotAll=plotAll, projection=projection)
+
+    if oldGdf is not None:
+        plotGeometry(ax, oldGdf, extent=extent, color='green', plotAll=plotAll, projection=projection)
+
+    if plotWorldMap:
+        if  projection:
+            ax.coastlines(resolution='110m')
+            # ax.coastlines()
+            # ax.stock_img()
+            ax.add_feature(cfeature.BORDERS, edgecolor='gray')
+            ax.add_feature(cfeature.LAND) # 陸に色を付ける
+            ax.add_feature(cfeature.OCEAN) # 海に色を付ける
+        else:
+            if adjustLimit:
+                minLon, maxLon = ax.get_xlim()
+                minLat, maxLat = ax.get_ylim()
+                # extent = getExtent(newGdf, oldGdf)
+        
+            if plotWorldMap:
+                # m = Basemap(llcrnrlon=minLon, llcrnrlat=minLlat, urcrnrlon=maxLon, urcrnrlat=maxLat,
+                #     rsphere=(6378137.00, 6356752.3142), resolution='l', projection='merc', lat_ts=20.)
+                # m.drawcoastlines()
+                # m.fillcontinents(color='coral', lake_color='aqua')
+                # m = Basemap(llcrnrlon=minLon, llcrnrlat=minLlat, urcrnrlon=maxLon, urcrnrlat=maxLat,
+                #     rsphere=(6378137.00,6356752.3142), resolution='l',projection='merc',
+                #     lat_0=40.,lon_0=-20.,lat_ts=20.)
+                worldmap = gpd.read_file(geodatasets.get_path("naturalearth.land"))
+                worldmap["geometry"].boundary.plot(facecolor="lightgrey", color="grey", ax=ax, zorder=1)
+
+            if adjustLimit:
+                # extent = adjustLim(ax, extent[0], extent[1], extent[2], extent[3])
+                adjustLim(ax, minLon, minLat, maxLon, maxLat)
+
+################################################################################################
+def plotPolygonsIntersection(fig, ax, cn_font, newPolys, newTitle, oldPolys=None, oldTitle=''):
     # Calculate NOTAM drop zones Jaccard Similarity Index and plot intersection polygons
-    ious = plotIntersection(fig, ax, newPolys, oldPolys)
+    ious = plotIntersection(ax, newPolys, oldPolys)
     # plot title, axis and NOTAM drop zones
     title = f'{newTitle}\n{oldTitle}'
     for ios in ious:
         title += f'\n{ios}'
-    plotTitleXYLabels(fig, ax, cn_font, title, 'Latitude（纬度）', 'Longitude（经度）')
+    plotTitleXYLabels(fig, ax, cn_font, title, 'Longitude（经度）', 'Latitude（纬度）')
     return ious
 
 ################################################################################################
@@ -359,24 +428,25 @@ def plotTitleXYLabels(fig, ax, cn_font, title, xLabel, yLabel):
     fig.legend(handles=handles, loc='lower center', ncol=3, fontsize=12)
 
 ################################################################################################
-def adjustLim(ax, lon1, lat1, lon2, lat2):
-    lon21 = lon2 - lon1
-    lat21 = lat2 - lat1
+def adjustLim(ax, minLon, minLat, maxLon, maxLat):
+    lon21 = maxLon - minLon
+    lat21 = maxLat - minLat
     ratio1 = lat21 / lon21
 
     if lon21 < lat21:
         dLon = lon21 * (ratio1 - 1) / 2
-        ax.set_xlim(lon1 - dLon, lon2 + dLon)
-        ax.set_ylim(lat1, lat2)
+        ax.set_xlim(minLon - dLon, maxLon + dLon)
+        ax.set_ylim(minLat, maxLat)
     else:
         dLat = lat21 * (1 - ratio1) / ratio1 / 2
-        ax.set_xlim(lon1, lon2)
-        ax.set_ylim(lat1 - dLat, lat2 + dLat)
+        ax.set_xlim(minLon, maxLon)
+        ax.set_ylim(minLat - dLat, maxLat + dLat)
 
-    lon1, lon2 = ax.get_xlim()
-    lat1, lat2 = ax.get_ylim()
-    ratio2 = (lat2 - lat1) / (lon2 - lon1)
+    minLon1, maxLon1 = ax.get_xlim()
+    minLat1, maxLat1 = ax.get_ylim()
+    # ratio2 = (lat2 - lat1) / (lon2 - lon1)
     # print(f'Ratio1: {ratio1:0.2f}, Ratio2: {ratio2:0.2f}')
+    return minLon1, minLat1, maxLon1, maxLat1
 
 ################################################################################################
 def getImageInMemoryFromFig(fig, dpi=80, resize=False, size=(900, 900)):
@@ -397,25 +467,71 @@ def getImageInMemoryFromFig(fig, dpi=80, resize=False, size=(900, 900)):
     return imagePng
 
 ################################################################################################
-def getImageFromKml(newFile, cn_font, size=(900, 900), orthographic=False, plotAll=False):
+project_to_3857 = pyproj.Transformer.from_proj(
+    # pyproj.Proj(init='epsg:4326'), # source coordinate system
+    # pyproj.Proj(init='epsg:3857')).transform # destination coordinate system
+    pyproj.CRS.from_epsg(4326), # source coordinate system
+    pyproj.CRS.from_epsg(3857)).transform # destination coordinate system
+
+################################################################################################
+project_to_3785 = pyproj.Transformer.from_proj(
+    # pyproj.Proj(init='epsg:4326'), # source coordinate system
+    # pyproj.Proj(init='epsg:3857')).transform # destination coordinate system
+    pyproj.CRS.from_epsg(4326), # source coordinate system
+    pyproj.CRS.from_epsg(3785)).transform # destination coordinate system
+
+################################################################################################
+def convertAndTransformGeometry(geometry):
+    transformedGeometry = transform(project_to_3857, geometry)
+    return transformedGeometry
+    
+################################################################################################
+def applyConversionToGeodf(geoDf, conversionFunction):
+    if geoDf is None or geoDf.empty:
+        return geoDf
+    convertedGeometries = geoDf.geometry.apply(conversionFunction)
+    flatGeometries = [item for sublist in convertedGeometries for item in (sublist if isinstance(sublist, list) else [sublist])]
+    repeatedData = geoDf.loc[geoDf.index.repeat(convertedGeometries.apply(lambda x: len(x) if isinstance(x, list) else 1))].reset_index(drop=True)
+    newGeoDf = gpd.GeoDataFrame(repeatedData.drop(columns='geometry'), geometry=flatGeometries, crs=geoDf.crs)
+    return newGeoDf
+
+################################################################################################
+
+################################################################################################
+def getImageFromKml(cn_font, newKmlFile, oldKmlFile=None, size=(900, 900), projection=False, plotAll=False):
     if plt:
         plt.close()
 
-    newPolys = gpd.read_file(os.path.abspath(newFile), driver='KML')
+    newGdf = gpd.read_file(os.path.abspath(newKmlFile), driver='KML')
+    newGdf = newGdf[(newGdf.geometry.type=='Polygon') | (newGdf.geometry.type=='LineString')]
+    if oldKmlFile:
+        oldGdf = gpd.read_file(os.path.abspath(oldKmlFile), driver='KML')
+        oldGdf = oldGdf[(oldGdf.geometry.type=='Polygon') | (oldGdf.geometry.type=='LineString')]
+        # oldGdf = oldGdf[~(oldGdf.geometry.type=='Point')]
+    else:
+        oldGdf = None
 
-    if orthographic:
+    if projection:
+        import warnings
         warnings.filterwarnings('ignore', message='Geometry is in a geographic CRS')
-        lonMean, LagMean = newPolys.centroid.get_coordinates().mean()
-        proj = geoplot.crs.Orthographic(central_longitude=lonMean, central_latitude=LagMean)
-        # xMean, yMean = newPolys.to_crs(4328).centroid.get_coordinates().mean()
-        # proj = ccrs.Orthographic(central_longitude=lonMean, central_latitude=LagMean)
+        newLonMean, newLagMean = newGdf.centroid.get_coordinates().mean()
+        oldLonMean, oLdLagMean = oldGdf.centroid.get_coordinates().mean() if oldKmlFile else (newLonMean, newLagMean)
+        lonMean, lagMean = (newLonMean + oldLonMean) / 2, (newLagMean + oLdLagMean) / 2
+        # proj = geoplot.crs.Orthographic(central_longitude=lonMean, central_latitude=LagMean)
+        # proj = ccrs.Mercator(central_longitude=lonMean)
+        proj = ccrs.Orthographic(central_longitude=lonMean, central_latitude=lagMean)
         fig, ax = getFigure(setAspectEqual=True, subplot_kw={"projection": proj})
     else:
         fig, ax = getFigure(setAspectEqual=True)
 
-    plot2Noatms(fig, ax, newPolys, plotAll=plotAll, orthographic=orthographic)
-    title = myUtils.getTitle(newFile)
-    plotTitleXYLabels(fig, ax, cn_font, title, 'Latitude（纬度）', 'Longitude（经度）')
+    plotTwoNoatms(ax, newGdf, oldGdf, plotAll=plotAll, projection=projection)
+    newTitle = myUtils.getTitle(newKmlFile)# + '\n' + myUtils.getTitle(oldFile) if oldFile is not None else ''
+    if oldKmlFile:
+        newTitle = newTitle if '时' in newTitle else newTitle.replace('日', '日??时??分')
+        oldTitle = myUtils.getTitle(oldKmlFile)
+        plotPolygonsIntersection(fig, ax, cn_font, newGdf, newTitle, oldGdf, oldTitle)
+    else:
+        plotTitleXYLabels(fig, ax, cn_font, newTitle, 'Longitude（经度）', 'Latitude（纬度）')
     image = getImageInMemoryFromFig(fig, resize=True, size=size)
     return image
 
@@ -647,8 +763,6 @@ def plotRocketNumber(cn_font, ax, x, y, gap, label, fontsize, color):
     for i in range(count):
         y1 = y + (count / 2 - i) * gap if i < count / 2 else y - (i - count / 2) * gap
         y1 -= gap / 2
-        # if y1 > 1:
-        #     print(f'count={count}, y={y1}, label={label[i]}')
         ax.text(x+1, y1, s=label[i], color=color, ha="center", va="center", fontproperties=cn_font, fontsize=fontsize)
 
 def isDarkColor(rgb):
@@ -915,19 +1029,6 @@ def countRocket(df, columnRocket, rocket, seriesDict=None):
     return df[cond1] if cond1 is not None else df
 
 ################################################################################################
-# headersRow starts from 0
-def readShipMoveData(excelFile, sheetName=None, skipRows=None, headers=None):
-    if excelFile[-4:] == '.xls':
-        oldExcelFile = excelFile
-        excelFile = excelFile.replace('.xls', '.xlsx')
-        xls.save_book_as(file_name=oldExcelFile, dest_file_name=excelFile)
-    df = pd.read_excel(excelFile, sheetName, skiprows=skipRows, dtype={'速度': float}) # Convert the worksheet to a DataFrame
-    df.replace('-', np.nan, inplace=True) # Replace '-' with NaN
-    df.replace([None, np.nan], '', inplace=True) # Replace None with empty string
-    df = df[df['速度'] > 1.0]
-    return df
-
-################################################################################################
 def readDataFromSheetNew(excelFile, sheetName, onlyFailed=False):
     df = pd.read_excel(excelFile, sheetName, header=0, usecols='A:O', dtype={constants.EXCEL_COLUMN_SPOT: str})
     cond1 = df[constants.EXCEL_COLUMN_RESULT] != '中止'
@@ -1078,10 +1179,6 @@ def getUpperStageDict(dfList, columnRocket='火箭', columnNumber='序号', colu
             key = df.iloc[i][columnRocket] + df.iloc[i][columnNumber]
             value = df.iloc[i][columnRemark]
             result_dict[key] = value
-        # for i in range(0, len(df) - 1, 2):  # Iterate until the second last row
-        #     key = df.iloc[i][columnRocket] + df.iloc[i][columnNumber]  # Key from col1 and col2 of row N
-        #     value = df.iloc[i + 1][columnRocket] + df.iloc[i + 1][columnNumber]  # Value from col1 and col2 of row N+1
-        #     result_dict[key] = value
     return result_dict
     
 ################################################################################################
@@ -1564,9 +1661,6 @@ def getUniqueColorList(n: int):
     colorList = list(mpl.colors.CSS4_COLORS.values())
     random.shuffle(colorList)
     return colorList[:n]
-
-def countdownVideoDuration(filename):
-    duration = getFileDuration(filename)
 
 
 

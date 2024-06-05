@@ -17,8 +17,8 @@ from urllib.parse import urlparse
 
 path.append("")
 
-import constants
-import myUtils
+from myModules import constants
+from myModules import myUtils
 
 MAX_POOLS = 10
 class Video_Decoder(object):

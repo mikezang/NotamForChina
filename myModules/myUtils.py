@@ -7,27 +7,23 @@ import hashlib
 import json
 import logging
 import os
-# import shutil
-import socket
 import subprocess
 import time
 import unicodedata
 import pytz
-import inspect
 import zipfile
 import calendar
 import ctypes
 import configparser
 import geopandas as gpd
 import matplotlib.pyplot as plt
-from time import localtime, sleep, strftime
-from re import compile, findall, finditer, match, search, sub#, IGNORECASE
+from time import localtime, strftime
+from re import compile, findall, finditer, match, sub#, IGNORECASE, search
 from pathlib import Path
 from numpy import zeros
-from pprint import pprint
 from simplekml import Kml
 from json import dump, load
-from sys import argv, platform, exc_info
+from sys import argv, platform
 from datetime import datetime, timedelta, date
 import os
 from glob import glob
@@ -36,22 +32,13 @@ from fiona.drvsupport import supported_drivers
 from shapely.ops import transform
 from shapely.geometry import Point, Polygon
 from pyproj import Transformer, CRS
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox import service as fs
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
 import ffmpeg
 import traceback
-from email.mime.text import MIMEText
+# from email.mime.text import MIMEText
 import smtplib
 from typing import NamedTuple
 
-import constants
-import myPlot
-import notam
-import nsf
+from myModules import constants
 
 class FileInfo(NamedTuple):
     origName: str   # 'videos/01.mp4'
@@ -70,6 +57,16 @@ startTime = 0
 # https://stackoverflow.com/a/25432403
 # https://stackoverflow.com/a/43441940
 FILE_ATTRIBUTE_HIDDEN = 0x02
+
+################################################################################################
+def getFileDuration(filename: str) -> float:
+    if not isVideoFile(filename) and not isAudioFile(filename):
+        print(f'{filename} is not Audio/Video file!')
+        return 0
+    cmd = f"ffprobe -v fatal -show_entries format=duration -of default=nw=1:nk=1 {filename}"
+    result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    return float(result.stdout)
+    # return myUtils.runCommand(command)
 
 ################################################################################################
 def getDateAfterDays(startDate, days: int):
@@ -230,16 +227,6 @@ def saveDictToJsonFile(nsfDict, filename):
     print(f'Save   to file "{filename}.json"')
     with open(f'{filename}.json', "w", encoding="utf-8") as f:
         dump(nsfDict, f, ensure_ascii=False, indent=2)
-
-################################################################################################
-def elementAttributes(driver: webdriver.Firefox, element):
-    script  = 'var items = {}; '
-    script += 'for (index = 0; index < arguments[0].attributes.length; ++index) { '
-    script += '  items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value'
-    script += '}; '
-    script += 'return items;'
-    return driver.execute_script(script, element)
-    # driver.execute_script('var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;', element)
 
 ################################################################################################
 def isVideoWithPNGHeader(videoFile: str) -> tuple:
@@ -411,17 +398,6 @@ def getAreaCenter(coordsList) -> tuple:
 def getCityCoordinate(city) -> tuple:
     p1s = constants.CITIES[city].split('|')[1].split(',')
     return [p1s[0], p1s[1]]
-
-################################################################################################
-def getConditionDetail(driver, tdCondition) -> str:
-    tdCondition.click()
-    sleep(1)
-    condition = elementXPath(driver, 30, constants.XPATH_SPAN_DETAIL).text
-    index = condition.index("E)")
-    if index:
-        condition = condition[(index + 3):] # exclude 'E) '
-    driver.back()
-    return condition
 
 #N16°33',E093°17'
 #N16°33'44",E093°17'66"
@@ -671,8 +647,24 @@ def getLocation(newFile):
     return None, locations
 
 ################################################################################################
+# headersRow starts from 0
+def readShipMoveData(excelFile, sheetName=None, skipRows=None, headers=None):
+    if excelFile[-4:] == '.xls':
+        oldExcelFile = excelFile
+        excelFile = excelFile.replace('.xls', '.xlsx')
+        import pyexcel as xls
+        xls.save_book_as(file_name=oldExcelFile, dest_file_name=excelFile)
+    import pandas as pd
+    import numpy as np
+    df = pd.read_excel(excelFile, sheetName, skiprows=skipRows, dtype={'速度': float}) # Convert the worksheet to a DataFrame
+    df.replace('-', np.nan, inplace=True) # Replace '-' with NaN
+    df.replace([None, np.nan], '', inplace=True) # Replace None with empty string
+    df = df[df['速度'] > 1.0]
+    return df
+
+################################################################################################
 def createShipTrackLinesKmlFile(newFile):
-    df = myPlot.readShipMoveData(newFile, '船舶轨迹', skipRows=1)
+    df = readShipMoveData(newFile, '船舶轨迹', skipRows=1)
     mmsiKey = str(df['mmsi'].iloc[0])
     startDate = removeChars(df['时间'].iloc[0])[:12]
     endDate = removeChars(df['时间'].iloc[-1])[:12]
@@ -687,44 +679,6 @@ def createShipTrackLinesKmlFile(newFile):
     drawLine(kml, coords, shipName)
     updateKmlFile(kml, title, KML_PATH)
 
-################################################################################################
-def createMsaDropZonesKmlFile(oldFile):
-    with open(oldFile, encoding='utf-8') as f:
-        content = f.read()
-
-    if content:
-        lines = content.split('\n')
-        content = ''
-        for line in lines:
-            if line != '' and line[0:1] != '#':
-                content += line
-        location, number, startDates, endDates, areas = notam.parseMsa(content)
-        lastStart = ''
-        lastEnd = ''
-        kml = Kml()
-        notams = {}
-
-        for i, area in enumerate(areas):
-            startDate = startDates[i] if i < len(startDates) else lastStart
-            endDate = endDates[i] if i < len(endDates) else lastEnd
-            startDate = startDate if startDate else getUTCTime()[:-3]
-            endDate = endDate if endDates else getUTCTime()[:-3]
-            title = f"{oldFile.replace('.txt', '').split('/')[-1]}"
-            title = convertTitle(startDate, endDate, title, isLocalTime=True)
-
-            if area:
-                area = nsf.formatMSALatitudeLongitude([area])[0]
-                coords = area.split('|')
-                coordsList = [convertDMS2DD(c) for c in coords]
-                if len(coordsList) == 1:
-                    radius = parseRadius(content)
-                    drawCircle(kml, coordsList, f'{location}/{number}', radius=radius)
-                else:
-                    drawPolygon(kml, coordsList, f'{location}/{number}')
-                notams = notam.getNoatmDict(notams, number, startDate, endDate, location, area)
-                lastStart = startDate
-                lastEnd = endDate
-        updateKmlFile(kml, title, KML_PATH, notams)
 
 MSA_RADIUS_PATTERN = r'为中心、半径(\d{1,2})公里'
 ################################################################################################
@@ -1252,73 +1206,8 @@ def checkCommand(inputCommand) -> bool:
     return False
 
 ################################################################################################
-def isVPN(show=False) -> bool:
-#    ip = socket.gethostbyname(socket.gethostname())
-    ip = getLocalIp()
-
-    if '192.168.' in ip or '100.' in ip or '172.16' in ip:
-        if show:
-            print(f"VPN Off (ip: {ip})\n")
-        return False
-    else:
-        if show:
-            print(f"VPN On (ip: {ip})\n")
-        return True
-
-################################################################################################
-def passProxy(driver) -> None:
-    try:
-        elementInput(driver, 20, constants.XPATH_INPUT_USERNAME, constants.PROXY_ID)
-        elementClick(driver, 5, constants.XPATH_INPUT_SUBMIT)
-        elementInput(driver, 20, constants.XPATH_INPUT_PASSWORD, constants.PROXY_PW)
-        elementClick(driver, 5, constants.XPATH_INPUT_SUBMIT)
-        sleep(5)
-    except Exception as e:
-        print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
-        pass
-
-################################################################################################
-def getLocalIp() -> str:
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    return s.getsockname()[0]
-
-################################################################################################
-def checkVPN(driver) -> None:
-    global isFirstTime
-
-    if isFirstTime:
-        isFirstTime = False
-        if isVPN(False):
-            passProxy(driver)
-
-################################################################################################
-def getFirefoxDriver(headless=1, disableImage=True, log=False) -> webdriver:
-    options = FirefoxOptions()
-    # options.set_preference("permissions.default.stylesheet", 2)
-    # options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", 'false')
-    options.set_preference('general.useragent.override', constants.header['User-Agent'])
-    if headless == 1:
-        options.headless = True
-        options.add_argument('--headless')
-    if disableImage:
-        options.add_argument('--blink-settings=imagesEnabled=false')
-        options.set_preference("permissions.default.image", 2)
-    if log is False:
-        service = fs.Service(log_path=os.path.devnull)
-        driver = webdriver.Firefox(options=options, service=service)
-    else:
-        # options.log.level = "trace"
-        driver = webdriver.Firefox(options=options)
-    return driver
-
-################################################################################################
 def pritnExceptionTrace():
     print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
-
-################################################################################################
-def setTimeout(driver, t):
-    driver.set_page_load_timeout(t)
 
 ################################################################################################
 # def getChromeDriver():
@@ -1385,26 +1274,12 @@ def runCommand(command):
         raise cpe
 
 ################################################################################################
-# def getRectFromPolar(lat, lon):
-#     y = sin(lat)
-#     x = cos(lat) * cos(lon)
-#     z = cos(lat) * sin(lon)
-#     return x, y, z
-
-################################################################################################
-# def polarFromRect(x, y, z):
-#     lat = asin(y)
-#     lon = 0 if (y == 1) or (y == -1) else atan2(z, x)
-#     return lat, lon
-
 def maxOfLists(lists):
     return max([max(sublist, default=float('-inf')) for sublist in lists])
 
 ################################################################################################
 def printNotamDict(d):
     for i, (key, value) in enumerate(d.items()):
-        # if len(value) > PRINT_NOTAM_LENGTH:
-        #     value = value[:PRINT_NOTAM_LENGTH] + '...'
         msg = f'{i + 1:02} {key}:{value}'
         print(msg)
 
@@ -1414,11 +1289,7 @@ def splitNotam(item):
     return items[0] + items[1] + items[2] + item[0]
 
 ################################################################################################
-# key: [P1865/23]
-# value: [2023/05/17 01:00;2023/05/20 06:00;RJJJ;N22°25',E127°18'|N22°43',E126°23'|N22°27',E126°18'|N22°09',E127°12']
 def sortDictByValue(d: dict) -> dict:
-#    sorted_tuples = sorted(d.items(), key=lambda item: item[1])
-#    sorted_dict = {k: v for k, v in sorted_tuples}
     return {k : v for k, v in sorted(d.items(), key=lambda x: splitNotam(x))}
 
 ################################################################################################
@@ -1428,37 +1299,19 @@ def sortDictByEndDate(d: dict):
     return sorted_dict
 
 ################################################################################################
-#A1043/22:2022/10/07 10:00;2022/10/13 16:00;NFFF;S22°53',E163°20'|S22°28',E163°59'|S24°42',E165°41'|S25°06',E165°02
-#P3921/22:2022/10/07 10:00;2022/10/13 16:00;RJJJ;N21°00',E134°30'|N21°15',E134°20'|N21°40',E135°00'|N21°00',E135°27
-#Q2479/22:2022/10/07 10:00;2022/10/13 16:00;RJJJ;N21°00',E136°30'
-#A2767/22:2022/10/07 13:10;2022/10/07 13:39;ZSHA;N33°56',E123°55'|N34°18',E123°33'|N34°28',E123°48'|N34°07',E124°10
 def sortDictByLatitude(d: dict):
-#    sorted_tuples = sorted(d.items(), key=lambda item: item[1])
-#    sorted_dict = {k: v for k, v in sorted_tuples}
     return {k : v for k, v in sorted(d.items(), key=lambda x: x[1])}
 
 ################################################################################################
 def sortDictByKey(d: dict):
-#    sorted_tuples = sorted(d.items(), key=lambda item: item[0])
-#    sorted_dict = {k: v for k, v in sorted_tuples}
     return  {k : v for k, v in sorted(d.items(), key=lambda x: x[0])}
-
-################################################################################################
-# def exceptPrint():
-#     exc_type, _, exc_tb = exc_info()
-#     fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-#     print(exc_type, fname, exc_tb.tb_lineno)
-
-################################################################################################
-def scrollBottom(driver: webdriver.Firefox):
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
 
 ####################################################################
 def sendEmail(subject: str, body: str, toEmail='zhengrong.zang@gmail.com'):
     if isMacOS() or isLinux():
         sender = 'mikezang2008@gmail.com'
         password = 'New@20230831'
-        msg = MIMEText(body)
+        msg = []#MIMEText(body)
         msg['Subject'] = subject
         msg['From'] = sender
         msg['To'] = toEmail
@@ -1468,51 +1321,6 @@ def sendEmail(subject: str, body: str, toEmail='zhengrong.zang@gmail.com'):
     print("Message sent!")
 
 ################################################################################################
-def findElementsByClass(driver: webdriver.Firefox, className: str):
-    return driver.find_elements(By.CLASS_NAME, className)
-
-################################################################################################
-def findElementsByXPath(driver: webdriver.Firefox, xPath: str):
-    return driver.find_elements(By.XPATH, xPath)
-
-################################################################################################
-def findElementsByLinkText(driver: webdriver.Firefox, linkText: str):
-    return driver.find_elements(By.LINK_TEXT, linkText)
-
-################################################################################################
-def findElementsByTag(driver, tagName):
-    return driver.find_elements(By.TAG_NAME, tagName)
-
-################################################################################################
-def elementXPathFocus(driver: webdriver.Firefox, xpath: str, preventScroll: bool):
-  JavaScriptFocusToElement = "arguments[0].focus({'preventScroll': arguments[1]})"
-  element = driver.find_element(By.XPATH, xpath)
-  driver.execute_script(JavaScriptFocusToElement, element, preventScroll)
-
-################################################################################################
-def elementId(driver: webdriver.Firefox, time: float, id: str):
-    return WebDriverWait(driver, time).until(EC.presence_of_element_located((By.ID, id)))
-
-################################################################################################
-def elementClass(driver: webdriver.Firefox, time: float, className: str):
-    return WebDriverWait(driver, time).until(EC.presence_of_element_located((By.CLASS_NAME, className)))
-
-################################################################################################
-def elementXPath(driver, time, xPath):
-    return WebDriverWait(driver, time).until(EC.presence_of_element_located((By.XPATH, xPath)))
-
-################################################################################################
-def elementInvisibleXPath(driver, time, xPath):
-    return WebDriverWait(driver, time).until(EC.invisibility_of_element((By.XPATH, xPath)))
-
-################################################################################################
-def elementClick(driver, time, xPath):
-    elementXPath(driver, time, xPath).click()
-
-################################################################################################
-def elementInput(driver, time, xPath, value):
-    elementXPath(driver, time, xPath).send_keys(value)
-
 # def list_files_recursive(path='.'):
 #     for entry in os.listdir(path):
 #         full_path = os.path.join(path, entry)
@@ -1577,6 +1385,7 @@ def swapListItems(swapList: list, swapIndex1: int, swapIndex2: int) -> list:
 ################################################################################################
 # TODO: remove selected files when re-enter this folder
 def listFoldersFiles(curPath: str='.', extension: str='*.*'):
+    oldPath = os.path.abspath(os.curdir)
     folders = os.listdir(curPath[:-1] if curPath.endswith('/') else curPath)
     os.chdir(curPath)
     dirList = sorted([f'{x}/' for x in folders if os.path.isdir(x)])
@@ -1604,6 +1413,7 @@ def listFoldersFiles(curPath: str='.', extension: str='*.*'):
         extSet = set(['*' + os.path.splitext(item)[1] if os.path.isfile(item) else '*.*' for item in result])
         extList = sorted(list(extSet))
         resultFiles.insert(0, '..')
+    os.chdir(oldPath)
     return resultFiles, extList
 
 ################################################################################################
@@ -2188,7 +1998,7 @@ def great_circle_distance(lat1, lon1, lat2, lon2):
     return d
 
 ################################################################################################
-def great_circle_point(lat1, lon1, lat2, lon2, distance=5000000, distanceRatio=1.5, fromSea=False):
+def great_circle_point(lat1, lon1, lat2, lon2, distance=1000000, distanceRatio=1.1, fromSea=False):
     bearing = great_circle_bearing(lat1, lon1, lat2, lon2)
     d = great_circle_distance(lat1, lon1, lat2, lon2)
     if fromSea:
@@ -2274,5 +2084,4 @@ def convertToDict(line):
     d = {number : f'{startDate};{endDate};{fir};{data[1]}'}
     # print(d)
     return d
-
 
