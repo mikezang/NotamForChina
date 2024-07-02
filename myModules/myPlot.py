@@ -1,35 +1,24 @@
 import io
-import os
+# import os
+# PySimpleGUI Developer Key
+# os.environ['PySimpleGUI_license'] = 'eJydJFMkaPWINVlobcn0NylzVgHUlKw8ZUSjIu6eIWkRRXlKdCm3VTsMbM3NBQl3cwiKIGsSIMkHxcpXYQ2OVTulcW27VCJnROCDIH6MMMToc6xpM7z1Qi08MPjxYa2AMYirwJiETUGKlcjKZFWY5tzKZkUiRQl7cuG8xWvBeHWL1hl4bin6RSWaZUXCJjztaKWP9UujInjRogxvLSCVJ6OSYBWJ1KlVRcmVlgy1cO3fQJiiO8i9JUN9aYW0tZlyIEinwdigT2mIFWtWZcUqxEh6cx3PQOiEOci5JOa7YJWg5HnaIZikwyipQD2a9HtfcRGbFyuyeRSNIy6GIPiRItsaIXkANB1CcY3XRPvSbGWTVKyDS7UrQ8iRORi2IcxoNVTbg0xENBSSIFsZIVkxRVhjdMGMVqJOcC3JNX11ZgWvQ2iPOMihIDwWNeCY8hxNOyCf8cy3MjDcI60CIqipwZiiR4GZFf0VZUU7Vz43cmGplHy3ZYX8MOiyO0imIKwoNWCG8VxwOkCz8Xy6MoD6Ia1bIwiNwqi0RYWh1whtaRWixrBrZiGlRPyCZQXPNtz9IwjVotiIenmRhHlNbRmtdpyRb3295pn4LWn9pShXb8mLd7AEZK2b1MhgaNWGwmuzYb2Z9RtkINiZwVibSTVEBbB9ZKGERVyQZVXTNjz5IPjyobi6MVT0MI2ALHjFIay0N8i745yuMWzukGuLNvzkEYiDf3QQ=8=M6cfd0f1ce97942ac714563c6eb9fff4e5e17ea366f2ebecb029772015e49bcd7bc099d9c7eba082b5b88e6510e4a82b0e9042ae87198c187d1ff2e9545990ed71bc7b29cab288cfc566d92ac9f7d406d99607ddff6a531dfffcbbe68283f84843ef67b4f4d78ca7bf44e67fae0980da79a54038e2526ad79c873978c868ed6c079da54d6fad6b10e9d0c71a264410a2217bd9e000bdc8660fb523fc5595864f46fb13598bfb86399871dec8fe916a8145a2f74bfa47731c6315455fae07ab6f2155c6df4d682c4cc522336af8c69e8161e9850af6281bdbffa3724c90a6d8da8c945ead1ca0d8ed3729a991264e4e61bd83f19438fe57effa07f4a1841c37ec4578bad12875c77404947b50ea5790d323dc1e9d88f48b6b38a16fada115a6ea902c6d62a61e81cfe1fe67a93e09f73bc86556d194c9b38727f61906d9da320b5dd7da5e713ab4e139fad910dc876d377ba267a3e1f532c505b3e801bea7c388c5ad9bb5bcc184a5e31be3f717a6890a2f01c75c1d054c0dcbd884787fca43fdc58142a0621f8bb71ff693da112ab38c4815e0e81c4cfaa689129539d1ac5d272689949484b0aeb9f189bd3529383823af517c97273a92066d28af58b5603094b773b42bf17fccb557e691ff5d2fcb31649fb1a3d6e08aa582a335967891bd65e92a757968816e21675566f698838096094352b7187366a6856f9cabcf50b6923'
 import random
 import subprocess
 from math import log, sqrt
 from re import findall
 from datetime import datetime
-from openpyxl import load_workbook as loadXLSX
-import ffmpeg
 import PySimpleGUI as sg
 import numpy as np
 from PIL import Image
 import pandas as pd
-import geopandas as gpd
-import geodatasets
-import cartopy.feature as cfeature
-import cartopy.crs as ccrs
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import matplotlib.font_manager as fm
 import matplotlib.colors as mcolors
 import matplotlib.image as mpimg
-from matplotlib.lines import Line2D
-from mpl_toolkits.basemap import Basemap
-from fiona.drvsupport import supported_drivers
-import geoplot
-import pyproj
-from shapely.geometry import Polygon, LineString, Point
-from shapely.ops import transform
 
-from myModules import constants
+from myModules import myExcel
 from myModules import myUtils
 
 ################################################################################################
@@ -44,50 +33,6 @@ def getFileFrameRate(filename: str) -> float:
     cmd = f"ffprobe.exe -v error -show_entries stream=avg_frame_rate -of default=nw=1:nk=1 {filename}"
     result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     return int(result.stdout.split('/')[0])
-
-################################################################################################
-def diffFrames(oldFramesList: list, newFramesList: list):
-    oldDiffList = sorted(list(set(oldFramesList) - set(newFramesList)))
-    newDiffList = sorted(list(set(newFramesList) - set(oldFramesList)))
-    oldFrames = [oldDiffList]
-    newFrames = [newDiffList]
-    oldFrames.append(len(oldFramesList))
-    newFrames.append(len(newFramesList))
-    oldFrames.append(len(oldDiffList))
-    newFrames.append(len(newDiffList))
-    return oldFrames, newFrames 
-
-def trimFrames(inputFile, startFrame, endFrame, outputFile):
-    inputVideo = ffmpeg.input(inputFile)
-    outputVideo = ffmpeg.output(inputVideo.trim(start_frame=startFrame, end_frame=endFrame), outputFile)
-    ffmpeg.run(outputVideo)
-
-# TODO: resume plot the newest part for shorter time
-# remove last count(removeFramesCount) of frames from old mp4 file
-# plot last count(plotFramesCount) of frames newPart mp4 file
-# merge newPart to old as new mp4 file
-# ffmpeg -i IN -c copy -bsf:v noise=drop=between(n\,20\,30) OUT
-def testTrimMergeVideo(oldVideo, oldFile, newFile):
-    oldFrames = myUtils.readTextFile(oldFile)
-    newFrames = myUtils.readTextFile(newFile)
-    oldList, newList = diffFrames(oldFrames, newFrames)
-    trimFrames(oldVideo, oldList[1] - oldList[2], oldList[1], 
-                           oldVideo.replace('.mp4', f'-trim{oldList[2]}.mp4'))
-
-# def testSlideImages():
-#     # inputList = myUtils.readTextFile('pngsImageList.txt', True)
-#     # outputFile = 'videos/pngsMerged.mp4'
-#     inputList = myUtils.readTextFile('yearsVideoList.txt', True)
-#     outputFile = 'videos/yearsMerged.mp4'
-#     mergeSlideImagesVideos(inputList, outputFile)
-
-# if __name__ == "__main__":
-#     testSlideImages()
-    # testMergeVideo()
-    # video = 'videos\\中国航天员在轨动态条形图.mp4'
-    # oldFrames = 'videos\\中国航天员在轨动态条形图-20240501.csv'
-    # newFrames = 'videos\\中国航天员在轨动态条形图-20240502.csv'
-    # testTrimMergeVideo(video, oldFrames, newFrames)
 
 ################################################################################################
 def addImages2BarChart():
@@ -205,7 +150,6 @@ def init(setDefaultFont=False):
         mpl.rcParams['font.family'] = cn_font.get_name()
     # enable the read and write functionalities for KML-driver
     # by passing 'rw' to whitelist of fiona's supported drivers:
-    supported_drivers['KML'] = 'rw'
 
     return cn_font
 
@@ -214,16 +158,6 @@ def showBackend():
     # print(plt.get_backend())
     if plt.get_backend().lower() not in ['agg', 'tkagg', 'gtk3agg', 'macosx']:
         plt.show()
-
-################################################################################################
-def getFigure(nrows=1, ncols=1, figsize=(18, 10.5), subplot_kw=None, setAspectEqual=False):
-    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, subplot_kw=subplot_kw) 
-    # Adjust the spacing between the subplots
-    # plt.subplots_adjust(left=0, right=1, wspace=0, hspace=0)
-    if setAspectEqual:
-        ax.set_aspect('equal')
-    # print(f'Projection: {ax.projection}')
-    return fig, ax
 
 ################################################################################################
 # Function to extract coordinates from LineString geometries
@@ -236,307 +170,7 @@ def extractLinestringCoordinates(gdf):
     return coords
 
 ################################################################################################
-# Function to convert LineString to Points
-def lineStringToPoints(gdf):
-    points = []
-    for line in gdf.geometry:
-        if isinstance(line, LineString):
-            for coord in line.coords:
-                points.append(Point(coord))
-    pointsGdf = gpd.GeoDataFrame(geometry=points, crs=gdf.crs)
-    return pointsGdf
-
-################################################################################################
-def lineStringToPoint(line):
-    coords = line.coords
-    points = [Point(coord) for coord in coords]
-    return points
-
-################################################################################################
-def lineStringToPointGdf(lineGdf):
-    pointGeometries = []
-    names = []
-    descriptions = []
-
-    for idx, row in lineGdf.iterrows():
-        name = row['Name']
-        points = [Point(coord) for coord in row['geometry'].coords]
-        pointGeometries.extend(points)
-        names.extend([name] * len(points))
-        descriptions.extend([1 for i in range(len(points))])
-
-    pointGdf = gpd.GeoDataFrame({
-        'Name': names, 
-        'description': descriptions,
-        'geometry': pointGeometries
-    }, crs=lineGdf.crs)
-    return pointGdf
-
-################################################################################################
-def plotGeometry(ax, gdf, extent=None, color=None, legend=None, lables=None, plotAll=False, projection=False, zorder=2):
-    try:
-        if isinstance(gdf, gpd.GeoDataFrame):
-            polyGdf = gdf[gdf['geometry'].apply(lambda x: isinstance(x, Polygon))]
-            if  projection:
-                ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True, color='none')
-                geoplot.polyplot(polyGdf, ax=ax, extent=extent, facecolor=color, zorder=zorder)
-                if plotAll:
-                    lineGdf = gdf[gdf.geometry.type=='LineString']
-                    if not lineGdf.empty:
-                        geoplot.polyplot(lineGdf, ax=ax, extent=extent, facecolor='none', edgecolor=color, zorder=zorder+1)
-            else:
-                polyGdf.plot(ax=ax, facecolor=color, color=color, label=legend, zorder=zorder)
-                if plotAll:
-                    lineGdf = gdf[gdf.geometry.type=='LineString']
-                    if not lineGdf.empty:
-                        lineGdf.plot(ax=ax, color=color, label=legend, zorder=zorder+1)
-        elif isinstance(gdf, Polygon):
-            x, y = gdf.exterior.xy
-            plt.plot(x, y, color=color, zorder=3)
-
-        if lables != None and gdf.geometry.any() is not None:
-            for i, iloc in enumerate(gdf.geometry.iloc):
-                if isinstance(iloc, Polygon):
-                    x, y = iloc.centroid.coords[0]
-                    label = lables[i]
-                    ax.annotate(label, xy=(x, y), xytext=(x + 0.5, y + 0.1), fontsize=14, arrowprops=dict(arrowstyle='->'))
-    except:
-        myUtils.pritnExceptionTrace()
-        pass
-
-################################################################################################
-def plotIntersection(ax, newPolys, oldPolys, projection=False):
-    newIndex = 0
-    ious = []
-
-    for i, newGeom in enumerate(newPolys.geometry):
-        if isinstance(newGeom, Polygon):
-            oldIndex = 0
-            newIndex += 1
-            newName = newPolys.iloc[i]["Name"]
-
-            for j, oldGeom in enumerate(oldPolys.geometry):
-                if isinstance(oldGeom, Polygon):
-                    oldIndex += 1
-                    oldName = oldPolys.iloc[j]["Name"]
-                    geomName = f'{newName} vs {oldName}'
-
-                    newPoly = kml2ShapelyPolygon(newGeom)
-                    oldPoly = kml2ShapelyPolygon(oldGeom)
-                    iou = 0.0
-
-                    if newPoly.intersects(oldPoly):
-                        try:
-                            intersection = newPoly.intersection(oldPoly)
-                            union = newPoly.union(oldPoly)
-                            iou = 0.0 if union.area == 0.0 else intersection.area / union.area
-                        except Exception as e:
-                            pass
-                    if iou > 0.01:
-                        text = f'{geomName} JSI: {iou:.1%}'
-                        ious.append(text)
-                        plotGeometry(ax, gpd.GeoDataFrame(geometry=[intersection]), color='orange', legend=text, zorder=4)
-    return ious
-
-################################################################################################
-def getLimits(gdf):
-    minLatitude = gdf.bounds.miny.min()
-    maxLatitude = gdf.bounds.maxy.max()
-    minLongitude = gdf.bounds.minx.min()
-    maxLongiitude = gdf.bounds.maxx.max()
-    return minLongitude, minLatitude, maxLongiitude, maxLatitude
-
-################################################################################################
-def getExtent(newGdf, oldGdf=None):
-    if oldGdf is None:
-        return getLimits(newGdf)
-    newMinLongitute, newMinLatitude, newMaxLongitute, newMaxLatitude  = getLimits(newGdf)
-    oldMinLongitute, oldMinLatitude, oldwMaxLongitute, oldMaxLatitude = getLimits(oldGdf)
-    minLongitude = min(newMinLongitute, oldMinLongitute)
-    minLatitude = min(newMinLatitude, oldMinLatitude)
-    maxLongitude = max(newMaxLongitute, oldwMaxLongitute)
-    maxLatitude = max(newMaxLatitude, oldMaxLatitude)
-    extent = [minLongitude, minLatitude, maxLongitude, maxLatitude]
-    return extent
-
-################################################################################################
-def plotTwoNoatms(ax, newGdf, oldGdf=None, plotAll=False, plotWorldMap=True, adjustLimit=True, projection=False):
-    if adjustLimit:
-        extent = getExtent(newGdf, oldGdf)
-        extent = adjustLim(ax, extent[0], extent[1], extent[2], extent[3])
-    else:
-        extent = None
-    plotGeometry(ax, newGdf, extent=extent, color='blue', plotAll=plotAll, projection=projection)
-
-    if oldGdf is not None:
-        plotGeometry(ax, oldGdf, extent=extent, color='green', plotAll=plotAll, projection=projection)
-
-    if plotWorldMap:
-        if  projection:
-            ax.coastlines(resolution='110m')
-            # ax.coastlines()
-            # ax.stock_img()
-            ax.add_feature(cfeature.BORDERS, edgecolor='gray')
-            ax.add_feature(cfeature.LAND) # 陸に色を付ける
-            ax.add_feature(cfeature.OCEAN) # 海に色を付ける
-        else:
-            if adjustLimit:
-                minLon, maxLon = ax.get_xlim()
-                minLat, maxLat = ax.get_ylim()
-                # extent = getExtent(newGdf, oldGdf)
-        
-            if plotWorldMap:
-                # m = Basemap(llcrnrlon=minLon, llcrnrlat=minLlat, urcrnrlon=maxLon, urcrnrlat=maxLat,
-                #     rsphere=(6378137.00, 6356752.3142), resolution='l', projection='merc', lat_ts=20.)
-                # m.drawcoastlines()
-                # m.fillcontinents(color='coral', lake_color='aqua')
-                # m = Basemap(llcrnrlon=minLon, llcrnrlat=minLlat, urcrnrlon=maxLon, urcrnrlat=maxLat,
-                #     rsphere=(6378137.00,6356752.3142), resolution='l',projection='merc',
-                #     lat_0=40.,lon_0=-20.,lat_ts=20.)
-                worldmap = gpd.read_file(geodatasets.get_path("naturalearth.land"))
-                worldmap["geometry"].boundary.plot(facecolor="lightgrey", color="grey", ax=ax, zorder=1)
-
-            if adjustLimit:
-                # extent = adjustLim(ax, extent[0], extent[1], extent[2], extent[3])
-                adjustLim(ax, minLon, minLat, maxLon, maxLat)
-
-################################################################################################
-def plotPolygonsIntersection(fig, ax, cn_font, newPolys, newTitle, oldPolys=None, oldTitle='', projection=False):
-    # Calculate NOTAM drop zones Jaccard Similarity Index and plot intersection polygons
-    ious = plotIntersection(ax, newPolys, oldPolys, projection=projection)
-    # plot title, axis and NOTAM drop zones
-    title = f'{newTitle}\n{oldTitle}'
-    for ios in ious:
-        title += f'\n{ios}'
-    plotTitleXYLabels(fig, ax, cn_font, title, 'Longitude（经度）', 'Latitude（纬度）')
-    return ious
-
-################################################################################################
-def plotTitleXYLabels(fig, ax, cn_font, title, xLabel, yLabel):
-    ax.set_title(title, fontproperties=cn_font, fontsize=18, loc='center') # plot title
-    # ax[0].axis('off') # Hide the border of the subplot
-    ax.set_xlabel(xLabel, fontproperties=cn_font)  # Add an x-label to the axes.
-    ax.set_ylabel(yLabel, fontproperties=cn_font)  # Add a y-label to the axes.
-
-    handles = [
-        Line2D([0], [0], linestyle='none', mfc='blue', mec='blue', marker='s', label='New Drop Zone'),
-        Line2D([0], [0], linestyle='none', mfc='green', mec='green', marker='s', label='Old Drop Zone'),
-        Line2D([0], [0], linestyle='none', mfc='orange', mec='orange', marker='s', label='Intersection Drop Zone')
-    ]
-    
-    # fig.legend(handles=handles, bbox_to_anchor=(0.1, 0), ncol=3) # add legend
-    fig.legend(handles=handles, loc='lower center', ncol=3, fontsize=12)
-
-################################################################################################
-def adjustLim(ax, minLon, minLat, maxLon, maxLat):
-    lon21 = maxLon - minLon
-    lat21 = maxLat - minLat
-    ratio1 = lat21 / lon21
-
-    if lon21 < lat21:
-        dLon = lon21 * (ratio1 - 1) / 2
-        ax.set_xlim(minLon - dLon, maxLon + dLon)
-        ax.set_ylim(minLat, maxLat)
-    else:
-        dLat = lat21 * (1 - ratio1) / ratio1 / 2
-        ax.set_xlim(minLon, maxLon)
-        ax.set_ylim(minLat - dLat, maxLat + dLat)
-
-    minLon1, maxLon1 = ax.get_xlim()
-    minLat1, maxLat1 = ax.get_ylim()
-    # ratio2 = (lat2 - lat1) / (lon2 - lon1)
-    # print(f'Ratio1: {ratio1:0.2f}, Ratio2: {ratio2:0.2f}')
-    return minLon1, minLat1, maxLon1, maxLat1
-
-################################################################################################
-def getImageInMemoryFromFig(fig, dpi=80, resize=False, size=(900, 900)):
-    buf = io.BytesIO()
-    fig.savefig(buf, bbox_inches='tight', dpi=dpi, format='png')
-    if resize:
-        buf.seek(0)
-        img = Image.open(buf)
-        img_resize = img.resize(size, Image.LANCZOS)
-        with io.BytesIO() as buf1:
-            img_resize.save(buf1, format='PNG')
-            imagePng = buf1.getvalue()
-    else:
-        imagePng = buf.getvalue()
-    buf.close()
-    # graphic = base64.b64encode(imagePng)
-    # graphic = graphic.decode('utf-8')
-    return imagePng
-
-################################################################################################
-project_to_3857 = pyproj.Transformer.from_proj(
-    # pyproj.Proj(init='epsg:4326'), # source coordinate system
-    # pyproj.Proj(init='epsg:3857')).transform # destination coordinate system
-    pyproj.CRS.from_epsg(4326), # source coordinate system
-    pyproj.CRS.from_epsg(3857)).transform # destination coordinate system
-
-################################################################################################
-project_to_3785 = pyproj.Transformer.from_proj(
-    # pyproj.Proj(init='epsg:4326'), # source coordinate system
-    # pyproj.Proj(init='epsg:3857')).transform # destination coordinate system
-    pyproj.CRS.from_epsg(4326), # source coordinate system
-    pyproj.CRS.from_epsg(3785)).transform # destination coordinate system
-
-################################################################################################
-def convertAndTransformGeometry(geometry):
-    transformedGeometry = transform(project_to_3857, geometry)
-    return transformedGeometry
-    
-################################################################################################
-def applyConversionToGeodf(geoDf, conversionFunction):
-    if geoDf is None or geoDf.empty:
-        return geoDf
-    convertedGeometries = geoDf.geometry.apply(conversionFunction)
-    flatGeometries = [item for sublist in convertedGeometries for item in (sublist if isinstance(sublist, list) else [sublist])]
-    repeatedData = geoDf.loc[geoDf.index.repeat(convertedGeometries.apply(lambda x: len(x) if isinstance(x, list) else 1))].reset_index(drop=True)
-    newGeoDf = gpd.GeoDataFrame(repeatedData.drop(columns='geometry'), geometry=flatGeometries, crs=geoDf.crs)
-    return newGeoDf
-
-################################################################################################
-
-################################################################################################
-def getImageFromKml(cn_font, newKmlFile, oldKmlFile=None, size=(900, 900), projection=False, plotAll=False):
-    if plt:
-        plt.close()
-
-    newGdf = gpd.read_file(os.path.abspath(newKmlFile), driver='KML')
-    newGdf = newGdf[(newGdf.geometry.type=='Polygon') | (newGdf.geometry.type=='LineString')]
-    if oldKmlFile:
-        oldGdf = gpd.read_file(os.path.abspath(oldKmlFile), driver='KML')
-        oldGdf = oldGdf[(oldGdf.geometry.type=='Polygon') | (oldGdf.geometry.type=='LineString')]
-        # oldGdf = oldGdf[~(oldGdf.geometry.type=='Point')]
-    else:
-        oldGdf = None
-
-    if projection:
-        import warnings
-        warnings.filterwarnings('ignore', message='Geometry is in a geographic CRS')
-        newLonMean, newLagMean = newGdf.centroid.get_coordinates().mean()
-        oldLonMean, oLdLagMean = oldGdf.centroid.get_coordinates().mean() if oldKmlFile else (newLonMean, newLagMean)
-        lonMean, lagMean = (newLonMean + oldLonMean) / 2, (newLagMean + oLdLagMean) / 2
-        # proj = geoplot.crs.Orthographic(central_longitude=lonMean, central_latitude=LagMean)
-        # proj = ccrs.Mercator(central_longitude=lonMean)
-        proj = ccrs.Orthographic(central_longitude=lonMean, central_latitude=lagMean)
-        fig, ax = getFigure(setAspectEqual=True, subplot_kw={"projection": proj})
-    else:
-        fig, ax = getFigure(setAspectEqual=True)
-
-    plotTwoNoatms(ax, newGdf, oldGdf, plotAll=plotAll, projection=projection)
-    newTitle = myUtils.getTitle(newKmlFile)# + '\n' + myUtils.getTitle(oldFile) if oldFile is not None else ''
-    if oldKmlFile:
-        newTitle = newTitle if '时' in newTitle else newTitle.replace('日', '日??时??分')
-        oldTitle = myUtils.getTitle(oldKmlFile)
-        plotPolygonsIntersection(fig, ax, cn_font, newGdf, newTitle, oldGdf, oldTitle, projection=projection)
-    else:
-        plotTitleXYLabels(fig, ax, cn_font, newTitle, 'Longitude（经度）', 'Latitude（纬度）')
-    image = getImageInMemoryFromFig(fig, resize=True, size=size)
-    return image
-
-################################################################################################
-def getImage(filename, resize=True, size=(900, 900)):
+def getImage(filename, resize=True, size=myExcel.IMAGE_SIZE):
     im = Image.open(filename)
     if resize:
         if im.size[0] > im.size[1]:
@@ -895,18 +529,6 @@ def getLogList(y):
     return []
 
 ################################################################################################
-def kml2ShapelyPolygon(geom):
-    x, y = list(geom.exterior.coords.xy[0]), list(geom.exterior.coords.xy[1])
-    poly = Polygon(list(zip(x, y)))
-    return poly
-
-################################################################################################
-def kml2ShapelyLine(geom):
-    x, y = list(geom.coords.xy[0]), list(geom.coords.xy[1])
-    line = LineString(list(zip(x, y)))
-    return line
-
-################################################################################################
 def countRocketWide(df, columnRocket, rocket, startYear, endYear, seriesDict, use_pinyin=False):
     if rocket == '' or rocket == '全部' or rocket == '系列':
         if rocket == '系列':
@@ -948,28 +570,17 @@ def countDataFrameByDate(dfList):
 
         # Concate other columns with the same 日期
         try:
-            dfCount[constants.EXCEL_COLUMN_ROCKET] = dfCount.groupby([constants.EXCEL_COLUMN_DATE])[constants.EXCEL_COLUMN_ROCKET].transform(lambda x: '/'.join(x))
-            dfCount[constants.EXCEL_COLUMN_NUMBER] = dfCount.groupby([constants.EXCEL_COLUMN_DATE])[constants.EXCEL_COLUMN_NUMBER].transform(lambda x: '/'.join(x))
-            dfCount[constants.EXCEL_COLUMN_PAYLOAD] = dfCount.groupby([constants.EXCEL_COLUMN_DATE])[constants.EXCEL_COLUMN_PAYLOAD].transform(lambda x: '/'.join(x))
-            dfCount[constants.EXCEL_COLUMN_LOCATION] = dfCount.groupby([constants.EXCEL_COLUMN_DATE])[constants.EXCEL_COLUMN_LOCATION].transform(lambda x: '/'.join(x))
-            dfCount[constants.EXCEL_COLUMN_RESULT] = dfCount.groupby([constants.EXCEL_COLUMN_DATE])[constants.EXCEL_COLUMN_RESULT].transform(lambda x: '/'.join(x))
-            dfCount[constants.EXCEL_COLUMN_SPOT] = dfCount.groupby([constants.EXCEL_COLUMN_DATE])[constants.EXCEL_COLUMN_SPOT].transform(lambda x: '/'.join(str(i) for i in x))
+            dfCount[myExcel.EXCEL_COLUMN_ROCKET] = dfCount.groupby([myExcel.EXCEL_COLUMN_DATE])[myExcel.EXCEL_COLUMN_ROCKET].transform(lambda x: '/'.join(x))
+            dfCount[myExcel.EXCEL_COLUMN_NUMBER] = dfCount.groupby([myExcel.EXCEL_COLUMN_DATE])[myExcel.EXCEL_COLUMN_NUMBER].transform(lambda x: '/'.join(x))
+            dfCount[myExcel.EXCEL_COLUMN_PAYLOAD] = dfCount.groupby([myExcel.EXCEL_COLUMN_DATE])[myExcel.EXCEL_COLUMN_PAYLOAD].transform(lambda x: '/'.join(x))
+            dfCount[myExcel.EXCEL_COLUMN_LOCATION] = dfCount.groupby([myExcel.EXCEL_COLUMN_DATE])[myExcel.EXCEL_COLUMN_LOCATION].transform(lambda x: '/'.join(x))
+            dfCount[myExcel.EXCEL_COLUMN_RESULT] = dfCount.groupby([myExcel.EXCEL_COLUMN_DATE])[myExcel.EXCEL_COLUMN_RESULT].transform(lambda x: '/'.join(x))
+            dfCount[myExcel.EXCEL_COLUMN_SPOT] = dfCount.groupby([myExcel.EXCEL_COLUMN_DATE])[myExcel.EXCEL_COLUMN_SPOT].transform(lambda x: '/'.join(str(i) for i in x))
         except:
             pass
         dfCount = dfCount.groupby('日期').first().reset_index()
         dfCountList.append(dfCount)
     return dfCountList
-
-################################################################################################
-# def getUpperStageAndLastLuanch(df, columnRocket):
-#     upperStage = {}
-#     lastLuanch = []
-#     df.reset_index(drop=True, inplace=True)
-#     cond1 = df[columnRocket].str.startswith('远征')
-#     dfSelected = df[cond1]
-#     indexSelected = dfSelected.index - 1
-#     df = df.iloc[indexSelected]
-#     return upperStage, lastLuanch
 
 ################################################################################################
 def countRocket(df, columnRocket, rocket, seriesDict=None):
@@ -1030,10 +641,10 @@ def countRocket(df, columnRocket, rocket, seriesDict=None):
 
 ################################################################################################
 def readDataFromSheetNew(excelFile, sheetName, onlyFailed=False):
-    df = pd.read_excel(excelFile, sheetName, header=0, usecols='A:O', dtype={constants.EXCEL_COLUMN_SPOT: str})
-    cond1 = df[constants.EXCEL_COLUMN_RESULT] != '中止'
-    cond2 = ~df[constants.EXCEL_COLUMN_RESULT].isna()
-    # cond3 = df[constants.EXCEL_COLUMN_RESULT] != '成功'
+    df = pd.read_excel(excelFile, sheetName, header=0, usecols='A:O', dtype={myExcel.EXCEL_COLUMN_SPOT: str})
+    cond1 = df[myExcel.EXCEL_COLUMN_RESULT] != '中止'
+    cond2 = ~df[myExcel.EXCEL_COLUMN_RESULT].isna()
+    # cond3 = df[myExcel.EXCEL_COLUMN_RESULT] != '成功'
     df = df[cond1 & cond2]
     df.replace('-', np.nan, inplace=True) # Replace '-' with NaN
     df.replace([None, np.nan], '', inplace=True) # Replace None with empty string
@@ -1074,7 +685,7 @@ def readDataFromBook(excelBook, sheetName, headers, columnNotNull, columnRocket,
 def mergeData(dfPivot, dfPivotOk, columnYear):
     def custom_logic(row, index):
         result = {} 
-        retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
+        retiredRocketsDict = myUtils.readConfigRetiredDict() #myExcel.RETIRED_ROCKETS
         for column, value in row.items():
             if column in retiredRocketsDict:
                 result[column] = f'{value * 1000 + dfPivotOk[column][index]}'    # 退役
@@ -1100,7 +711,7 @@ def mergeData(dfPivot, dfPivotOk, columnYear):
 def ChangeToSeriesName(df, columnRocket, seriesDict):
     if seriesDict is None:
         seriesDict = myUtils.readConfigSeriesDictList()
-        # seriesDict = constants.ROCKET_SERIES
+        # seriesDict = myExcel.ROCKET_SERIES
     for series in seriesDict:
         df[columnRocket] = df[columnRocket].replace(series)
     return df
@@ -1152,10 +763,6 @@ def duplicateLastRow(df, today):
 
 ################################################################################################
 def readUpperStageDictOld(excelSheet, headers=None):
-    # excelFile = "./data/ChinaRocketLaunch.xlsx"
-    # sheetName = "发射纪录"
-    # excelBook = loadXLSX(excelFile, data_only=True, read_only=True)
-    # excelSheet = excelBook[sheetName]
     dfList = parseExcelSheetToDataFrame(excelSheet, headers=headers, rocket='上面级+最后发射')
     dfUpperStages = dfList[:-1] # 上面级
     dfLastLaunch = dfList[-1] # 最后的发射
@@ -1329,7 +936,7 @@ def convertDataFrame2WideRocket(df, columnYear, columnRocket, columnNotNull, roc
     # copy original df to use when plot
     dfAll = dfPivot.copy()
     dfOk = dfPivotOk.copy()
-    retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
+    retiredRocketsDict = myUtils.readConfigRetiredDict() #myExcel.RETIRED_ROCKETS
 
     if isAfterRetired:
         dfRank = pd.DataFrame(index=dfPivot.index)
@@ -1347,7 +954,7 @@ def convertDataFrame2WideRocket(df, columnYear, columnRocket, columnNotNull, roc
         if dfRank.empty:
             dfRank = dfPivot * 1000 + dfPivotOk / 1000    # convert to float
     elif isAfterRetired == False:
-        # retiredRocketsDict = myUtils.readConfigRetiredDict #constants.RETIRED_ROCKETS
+        # retiredRocketsDict = myUtils.readConfigRetiredDict #myExcel.RETIRED_ROCKETS
         condition = dfPivot.columns.isin(retiredRocketsDict)
         dfTemp = np.where(condition, dfPivot + dfPivotOk / 1000, dfPivot * 1000 + dfPivotOk / 1000)
         dfRank = pd.DataFrame(dfTemp, columns=dfPivot.columns, index=dfPivot.index)
@@ -1491,7 +1098,7 @@ def parseToDataFrame(dfOld, rocket:str=None, location=None, payload=None, startY
     dfList = []
     
     if onlyFailed:
-        df = dfOld[dfOld[constants.EXCEL_COLUMN_RESULT] != '成功']
+        df = dfOld[dfOld[myExcel.EXCEL_COLUMN_RESULT] != '成功']
     else:
         df = dfOld.copy()
 
@@ -1644,14 +1251,12 @@ def calcColsPerLine(newLabels):
         ncols1 = ncols2
     return ncols1
 
-def split50perPage(dfResult):
+def split50perPage(df, count=50):
     dfList = []
-    # dfResult = df[d1] if d1 is not None else df
-    if len(dfResult) > 50:
-        dfList = dict(list(dfResult.groupby(np.arange(len(dfResult)) // 50)))
+    if len(df) > count:
+        dfList = dict(list(df.groupby(np.arange(len(df)) // count)))
     else:
-        dfList.append(dfResult)
-
+        dfList.append(df)
     return dfList
 
 def getUnique20Colors(index: int):

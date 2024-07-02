@@ -14,11 +14,11 @@ from functools import partial
 from multiprocessing import get_context
 from sys import path
 from urllib.parse import urlparse
+import ffmpeg
 
 path.append("")
 
 from myModules import constants
-from myModules import myUtils
 
 MAX_POOLS = 10
 class Video_Decoder(object):
@@ -230,7 +230,7 @@ def download(m3u8_link, output):
                 return
 
     # check video type
-    skipHeader, msg = myUtils.isVideoWithPNGHeader(downloaded_ts[0])
+    skipHeader, msg = isVideoWithPNGHeader(downloaded_ts[0])
     if msg:
         print(msg)
         return
@@ -247,7 +247,7 @@ def download(m3u8_link, output):
         mergeLargeVideos(downloaded_ts, merged_mp4, skipHeader)
     else:
         msg = f'Merge {downloaded_ts[0]} - {downloaded_ts[-1]} to {merged_mp4}...'
-        myUtils.mergeSmallVideos(downloaded_ts, merged_mp4, skipHeader, msg)
+        mergeSmallVideos(downloaded_ts, merged_mp4, skipHeader, msg)
 
     print(f"{merged_mp4} stored in {mergedDIR}")
 
@@ -263,6 +263,37 @@ def download(m3u8_link, output):
     print(f"Finish: {endTime}")
     print(f"Time spent: {endTime - startTime}\n")
     # end
+
+################################################################################################
+def isVideoWithPNGHeader(videoFile: str) -> tuple:
+    msg = ""
+    ret = False
+    try:
+        # print(f'{videoFile}:')
+        probe = ffmpeg.probe(videoFile)
+        for stream in probe['streams']:
+            codec_name = stream['codec_name']
+            if codec_name == 'png':
+                ret = True
+                break
+    except:
+        msg = f'Invalid video file: {videoFile}!\nDownload failed!'
+    return ret, msg
+
+################################################################################################
+def mergeSmallVideos(videoList, mergedVideoFile, skipHeader=False, msg=None, tsFile=True):
+    files_str = "concat:"
+    for ts_filename in videoList:
+        files_str += ts_filename+'|'
+    # files_str.rstrip('|')
+    print(msg)
+    # print(f'Merge {ordered_ts_names[0]} - {ordered_ts_names[-1]} to {merged_mp4}...')
+
+    opts = 'ffmpeg -loglevel fatal -f mpegts' if skipHeader else 'ffmpeg -loglevel fatal'
+    opts += f' -i "{files_str[:-1]}" -c copy'
+    opts += ' -bsf:a aac_adtstoasc ' if tsFile else ' '
+    opts += mergedVideoFile
+    subprocess.run(opts, shell=True)
 
 def mergeLargeVideos(ordered_ts_names, merged_mp4, skipHeader=False):
     mp4_fnames = []

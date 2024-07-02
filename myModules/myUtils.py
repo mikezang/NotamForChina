@@ -3,42 +3,28 @@
 """
 # pylint: disable=W0603,W0622,W0703,C0103,C0116,C0301,E1101
 
-import hashlib
-import json
 import logging
-import os
-import subprocess
-import time
-import unicodedata
-import pytz
-import zipfile
-import calendar
-import ctypes
 import configparser
-import geopandas as gpd
-import matplotlib.pyplot as plt
-from time import localtime, strftime
-from re import compile, findall, finditer, match, sub#, IGNORECASE, search
-from pathlib import Path
+import subprocess
+import unicodedata
+import ctypes
+from hashlib import md5
 from numpy import zeros
-from simplekml import Kml
-from json import dump, load
+from json import dumps, loads, dump, load
 from sys import argv, platform
-from datetime import datetime, timedelta, date
-import os
 from glob import glob
-from math import radians, cos, sin, asin, sqrt, atan2, degrees, pow
-from fiona.drvsupport import supported_drivers
-from shapely.ops import transform
-from shapely.geometry import Point, Polygon
-from pyproj import Transformer, CRS
-import ffmpeg
-import traceback
-# from email.mime.text import MIMEText
-import smtplib
+from pathlib import Path
+from pytz import timezone, UTC
+from time import localtime, strftime, time
+from datetime import datetime, timedelta, date
+from calendar import monthrange, month_abbr
+from re import compile, findall, finditer, match, sub
+from os import path, linesep, curdir, makedirs, remove, chdir, listdir, walk, system
 from typing import NamedTuple
 
 from myModules import constants
+from myModules import myExcept
+from myModules import myExcel
 
 class FileInfo(NamedTuple):
     origName: str   # 'videos/01.mp4'
@@ -48,15 +34,10 @@ class FileInfo(NamedTuple):
     fileName: str   # vfilename='01'
     extension: str  # extension='mp4'
 
-isFirstTime = True
-NSF_PATH = './notams/maps/nsf/'
-KML_PATH = './temp/'
-
 startTime = 0
 
 # https://stackoverflow.com/a/25432403
 # https://stackoverflow.com/a/43441940
-FILE_ATTRIBUTE_HIDDEN = 0x02
 
 ################################################################################################
 def getFileDuration(filename: str) -> float:
@@ -66,7 +47,6 @@ def getFileDuration(filename: str) -> float:
     cmd = f"ffprobe -v fatal -show_entries format=duration -of default=nw=1:nk=1 {filename}"
     result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     return float(result.stdout)
-    # return myUtils.runCommand(command)
 
 ################################################################################################
 def getDateAfterDays(startDate, days: int):
@@ -100,21 +80,6 @@ def convertToDiacritic(text, mode="NFC"):
     return text
 
 ################################################################################################
-def mergeSmallVideos(videoList, mergedVideoFile, skipHeader=False, msg=None, tsFile=True):
-    files_str = "concat:"
-    for ts_filename in videoList:
-        files_str += ts_filename+'|'
-    # files_str.rstrip('|')
-    print(msg)
-    # print(f'Merge {ordered_ts_names[0]} - {ordered_ts_names[-1]} to {merged_mp4}...')
-
-    opts = 'ffmpeg -loglevel fatal -f mpegts' if skipHeader else 'ffmpeg -loglevel fatal'
-    opts += f' -i "{files_str[:-1]}" -c copy'
-    opts += ' -bsf:a aac_adtstoasc' if tsFile else ' '
-    opts += mergedVideoFile
-    subprocess.run(opts, shell=True)
-
-################################################################################################
 def keepOneLineChar():
     if isWindows():
         return '^'
@@ -122,31 +87,6 @@ def keepOneLineChar():
         return '\\'
     
 ################################################################################################
-def set_hidden_attrib(file_name):
-    """
-    Adds the NTFS hidden attribute to a file or folder.
-    Calls the SetFileAttributesW WinApi function or attrib.exe, depending on what's available.
-    """
-    # Check if running under Windows natively:
-    if platform.system() == "Windows":
-        # https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfileattributesw
-        ret = ctypes.windll.kernel32.SetFileAttributesW(
-            str(file_name), FILE_ATTRIBUTE_HIDDEN
-        )
-        if not ret:  # There was an error.
-            raise ctypes.WinError()
-    # Check if running under Cygwin. Try ATTRIB.exe:
-    elif platform.system().startswith("CYGWIN_NT"):
-        # Get native file path:
-        native_file_name = (
-            subprocess.check_output(["cygpath", "-w", str(file_name)])
-            .decode("UTF-8")
-            .strip()
-        )
-        # Call ATTRIB.exe with native file path:
-        # print(f"> ATTRIB.exe +H /D /L \"{native_file_name}\"")
-        subprocess.check_call(["attrib", "+H", "/D", "/L", native_file_name])
-
 def removeItemsFromTwoLists(list1: list, list2: list, list1Remove: list):
     list1New = list1.copy()
     list2New = list2.copy()
@@ -167,25 +107,25 @@ def readTextFile(filename, tripLinefeed=False):
 ################################################################################################
 def setStartTime():
     global startTime
-    startTime = time.time()
+    startTime = time()
     
 ################################################################################################
 def showRunTime():
     global startTime
-    endTime = time.time()
+    endTime = time()
     runTime = endTime - startTime
     print(f"\nFinish: {strftime('%Y-%m-%d %H:%M:%S', localtime(endTime))}")
-    print(f'Run time: {runTime}s')
+    print(f'Run time: {timedelta(seconds=runTime)}')
 
 ################################################################################################
 def isSameFile(file1: str, file2: str) -> bool:
-    file1Hash = hashlib.md5(open(file1, "rb").read()).hexdigest()
-    file2Hash = hashlib.md5(open(file2, "rb").read()).hexdigest()
+    file1Hash = md5(open(file1, "rb").read()).hexdigest()
+    file2Hash = md5(open(file2, "rb").read()).hexdigest()
     return file1Hash == file2Hash
 
 ################################################################################################
 def isSameFileInDict(file: str, dictFiles: dict) -> tuple:
-    fileHash = hashlib.md5(open(file, "rb").read()).hexdigest()
+    fileHash = md5(open(file, "rb").read()).hexdigest()
     if fileHash in dictFiles:
         return True, dictFiles
     else:
@@ -196,13 +136,13 @@ def isSameFileInDict(file: str, dictFiles: dict) -> tuple:
 def readDictFromFile(filename: str):
     with open(filename) as f: 
         data = f.read()
-        return json.loads(data) 
+        return loads(data) 
     
 ################################################################################################
 def saveDictToFile(filename: str, dataDict: dict):
     with open(filename, 'w', encoding="utf-8") as f:
-        f.write(json.dumps(dataDict))
-        print(f'Save dict to "{os.path.abspath(filename)}"')
+        f.write(dumps(dataDict))
+        print(f'Save dict to "{path.abspath(filename)}"')
 
 ################################################################################################
 def saveDictToTextFile(filename, dataDict):
@@ -211,7 +151,7 @@ def saveDictToTextFile(filename, dataDict):
         for i, (key, value) in enumerate(dataDict.items(), 1):
             lines += f'{i:02} {key}: {value}\n'
         f.write(lines)
-        print(f'Save dict to "{os.path.abspath(filename)}"')
+        print(f'Save dict to "{path.abspath(filename)}"')
 
 ################################################################################################
 def saveListToTextFile(filename, dataList):
@@ -220,7 +160,7 @@ def saveListToTextFile(filename, dataList):
         for line in dataList:
             lines += f'{line}\n'
         f.write(lines)
-        print(f'Save dict to "{os.path.abspath(filename)}"')
+        print(f'Save dict to "{path.abspath(filename)}"')
 
 ################################################################################################
 def saveDictToJsonFile(nsfDict, filename):
@@ -229,47 +169,23 @@ def saveDictToJsonFile(nsfDict, filename):
         dump(nsfDict, f, ensure_ascii=False, indent=2)
 
 ################################################################################################
-def isVideoWithPNGHeader(videoFile: str) -> tuple:
-    msg = ""
-    ret = False
-    try:
-        # print(f'{videoFile}:')
-        probe = ffmpeg.probe(videoFile)
-        for stream in probe['streams']:
-            codec_name = stream['codec_name']
-            if codec_name == 'png':
-                ret = True
-                break
-                # index = stream['index']
-                # codec_type = stream['codec_type']
-                # print(f'\tstream:{index} - {codec_type} - {codec_name}')
-                # pprint(stream)
-                # print()
-                # moveAllFiles(videoFile)
-    except:
-        msg = f'Invalid video file: {videoFile}!¥nDownload failed!'
-    return ret, msg
-
-################################################################################################
-def removePngHeader(videoFileList):
-    import subprocess
-    # curDir = os.getcwd()
-    # os.chdir(curDir)
-    newDir = 'new/'
-    os.makedirs(newDir, exist_ok=True)
-    count =len(videoFileList)
-    for videoFile in videoFileList:
-        ifStr = f'if={videoFile}'
-        ofStr = f'of={newDir}{videoFile}'
-        ibs = 'ibs=8'
-        skip = 'skip=1'
-        o = subprocess.check_output(['dd', ifStr, ofStr, ibs, skip], stderr=subprocess.STDOUT)
-        no = videoFile.replace('.ts', '')
-        percent = int(no) * 100 // count
-        number = f'{no}/{count}{percent:02}%)'
-        print(f'{number}: {o}')
-        os.remove(videoFile)
-    os.chdir(newDir)
+# def removePngHeader(videoFileList):
+#     import subprocess
+#     newDir = 'new/'
+#     makedirs(newDir, exist_ok=True)
+#     count =len(videoFileList)
+#     for videoFile in videoFileList:
+#         ifStr = f'if={videoFile}'
+#         ofStr = f'of={newDir}{videoFile}'
+#         ibs = 'ibs=8'
+#         skip = 'skip=1'
+#         o = subprocess.check_output(['dd', ifStr, ofStr, ibs, skip], stderr=subprocess.STDOUT)
+#         no = videoFile.replace('.ts', '')
+#         percent = int(no) * 100 // count
+#         number = f'{no}/{count}{percent:02}%)'
+#         print(f'{number}: {o}')
+#         remove(videoFile)
+#     chdir(newDir)
 
 ################################################################################################
 def removeFile(folderWithWildcard):
@@ -278,14 +194,14 @@ def removeFile(folderWithWildcard):
     # Iterate over the list of filepaths & remove each file.
     for filePath in fileList:
         try:
-            os.remove(filePath)
+            remove(filePath)
         except:
             #print("Error while deleting file : ", filePath)
             pass
 
 ################################################################################################
 def getTitle(filename):
-    title = os.path.basename(filename)  # Get the filename from the path
+    title = path.basename(filename)  # Get the filename from the path
     title = title.split('.')[0]  # Remove the extension
     title = title.split('\\')[-1]  # Get the last portion of the path
     return title
@@ -306,14 +222,14 @@ def setLogging(filename):
 
 ################################################################################################
 def createFolder(filePath):
-    folderPath = os.path.dirname(filePath)
+    folderPath = path.dirname(filePath)
     folder = Path(folderPath)
     if not folder.exists():
-        os.makedirs(folder, exist_ok=True)
+        makedirs(folder, exist_ok=True)
 
 ################################################################################################
 def getLastdayOfMonth(year, month):
-    return calendar.monthrange(int(year), int(month))[1]
+    return monthrange(int(year), int(month))[1]
 
 ################################################################################################
 ##  Styles:
@@ -338,17 +254,17 @@ def combineValuesForSameDictKey(d1: dict, d2: dict) -> dict:
 def getJapanTimeFilename(fmt='') -> str:
     if fmt == '':
         fmt = "%Y%m%d-%H%M%S"
-    return datetime.now(pytz.timezone(constants.TIMEZONE_TOKYO)).strftime(fmt)
+    return datetime.now(timezone(constants.TIMEZONE_TOKYO)).strftime(fmt)
 
 def getJapanTime(fmt='') -> str:
     if fmt == '':
         fmt = "%Y/%m/%d %H:%M:%S"
-    return datetime.now(pytz.timezone(constants.TIMEZONE_TOKYO)).strftime(fmt)
+    return datetime.now(timezone(constants.TIMEZONE_TOKYO)).strftime(fmt)
 
 def getUTCTime(fmt='') -> str:
     if fmt == '':
         fmt = "%Y/%m/%d %H:%M:%S"
-    return datetime.now(pytz.timezone('UTC')).strftime(fmt)
+    return datetime.now(timezone('UTC')).strftime(fmt)
 
 ################################################################################################
 def getThisYear():
@@ -358,7 +274,7 @@ def getThisYear():
 def getJapanDate(fmt='') -> str:
     if fmt == '':
         fmt = "%Y%m%d"
-    return datetime.now(pytz.timezone(constants.TIMEZONE_TOKYO)).strftime(fmt)
+    return datetime.now(timezone(constants.TIMEZONE_TOKYO)).strftime(fmt)
 
 ################################################################################################
 def getChinaTime(d, fmt=''):
@@ -377,27 +293,21 @@ def getChinaTime(d, fmt=''):
 def convertTitle(utcStartDate, utcEndDate, loc, loc1=None, isLocalTime=False) -> str:
     loc = loc1 if loc == '' else loc
     if utcStartDate != '' and utcEndDate != '':
-        startTime = convertToLocalDate(utcStartDate, constants.TIMEZONE_BEIJING, isLocalTime=isLocalTime)
-        lastEndTime = convertToLocalDate(utcEndDate, constants.TIMEZONE_BEIJING, isLocalTime=isLocalTime)
+        startTime = convertToLocalDate(utcStartDate, constants.TIMEZONE_SHANGHAI, isLocalTime=isLocalTime)
+        lastEndTime = convertToLocalDate(utcEndDate, constants.TIMEZONE_SHANGHAI, isLocalTime=isLocalTime)
         endTime = datetime(startTime.year, startTime.month, startTime.day, lastEndTime.hour, lastEndTime.minute)
         endTime = endTime + timedelta(days=1) if str(endTime) < str(startTime) else endTime 
-        endTime = pytz.timezone(constants.TIMEZONE_BEIJING).localize(endTime)
+        endTime = timezone(constants.TIMEZONE_SHANGHAI).localize(endTime)
         launchTime = startTime + (endTime - startTime) / 3
         return f'{launchTime.strftime("%Y年%m月%d日%H時%M分")}{loc}'
     else:
         return loc
-    # return f'{convertToLocalDate(utcStartDate, constants.TIMEZONE_BEIJING).strftime("%Y年%m月%d日%H時%M分")}{loc}'
-
-################################################################################################
-def getAreaCenter(coordsList) -> tuple:
-    lat, lon = zip(*[(l[0], l[1]) for l in coordsList if l])
-    lats, lons = sum(lat)/len(lat), sum(lon)/len(lon)
-    return [lats + 180 if lats < 0 and lats > -10 else lats, lons]
+    # return f'{convertToLocalDate(utcStartDate, constants.TIMEZONE_SHANGHAI).strftime("%Y年%m月%d日%H時%M分")}{loc}'
 
 ################################################################################################
 def getCityCoordinate(city) -> tuple:
-    p1s = constants.CITIES[city].split('|')[1].split(',')
-    return [p1s[0], p1s[1]]
+    p1s = myExcel.CITIES[city].split('|')[1].split(',')
+    return [float(p1s[0]), float(p1s[1])]
 
 #N16°33',E093°17'
 #N16°33'44",E093°17'66"
@@ -558,6 +468,12 @@ def getNotamArea(contentSection) -> str:
                     area += '|'
                 area += m.group() 
         lastEnd = m.end()
+    if area:
+        count = len(area.split('|')) + len(area.split('-'))
+        if count == 2:
+            radiusList = findall(constants.PATTERN_RADIUS, contentSection[startIndex:])
+            if radiusList:
+                area += f'+{radiusList[0]}'
     return area
 
 ################################################################################################
@@ -580,60 +496,6 @@ def getMsaArea(contentSection) -> str:
     return areas
 
 ################################################################################################
-def createKmlFileNew(notams: dict, title1='', city1='') -> None:
-    # notamFiles = devideToFiles(notams)
-    kml = Kml()
-    lastStartDate = ''
-    lastEndDate = ''
-    lastCity = ''
-    highestPoint = []
-    lowestPoint = []
-    coordsList = []
-    coordsDict = {}
-
-    for number, item in notams.items():
-        itemArray = item.split(';')
-        startDate = itemArray[0]
-        endDate = itemArray[1]
-        loc = itemArray[2]
-        city = convertLocation(itemArray[2]) if city1 == '' else city1
-        coordsArray = itemArray[3].split('-')
-
-        # plot range with all coords for special case
-        if len(coordsArray) > 1:
-            coordsAll = itemArray[3].replace('-', '|')
-            coordsArray.append(coordsAll)
-
-        for arr in coordsArray:
-            coords = arr.split('|')
-            # if len(coords) == 5: coords.pop(0)
-            coordsList = [convertDMS2DD(c) for c in coords]
-
-            if lastStartDate == '' or isNearTime(lastStartDate, startDate, 59):
-                # if len(coordsList) > 2:
-                coords = drawStages(kml, coordsList, city, f'{loc}/{number}')
-                coordsDict[f'{loc}/{number}'] = coordsList
-                if loc == 'MSAC' or len(coordsList) > 3:
-                    lastCity, highestPoint, lowestPoint = getFirstLastPoint(lowestPoint, highestPoint, coords, lastCity, city)
-            else:
-                drawRoutes(kml, lastCity, highestPoint, lowestPoint)
-                title = convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
-                updateKmlFile(kml, title, KML_PATH)
-                highestPoint = []
-
-                kml = Kml()
-                # if len(coordsList) > 2:
-                coords = drawStages(kml, coordsList, city, f'{loc}/{number}')
-                if loc == 'MSAC' or len(coordsList) > 3:
-                    lastCity, highestPoint, lowestPoint = getFirstLastPoint(lowestPoint, highestPoint, coords, lastCity, city)
-            lastStartDate = startDate
-            lastEndDate = endDate
-
-    drawRoutes(kml, lastCity, highestPoint, lowestPoint)
-    title = convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
-    updateKmlFile(kml, title, KML_PATH)
-
-################################################################################################
 def removeChars(d):
     return d.replace('-', '').replace(' ', '').replace(':', '')
 
@@ -641,7 +503,10 @@ def removeChars(d):
 def getLocation(newFile):
     locations = readConfig(['Locations'], False)
     pattern = r'(' + locations.replace(',', '|') + ')'
-    locs = findall(pattern, newFile)
+    try:
+        locs = findall(pattern, newFile)
+    except:
+        pass
     if locs:
         return locs[0], locations
     return None, locations
@@ -662,23 +527,6 @@ def readShipMoveData(excelFile, sheetName=None, skipRows=None, headers=None):
     df = df[df['速度'] > 1.0]
     return df
 
-################################################################################################
-def createShipTrackLinesKmlFile(newFile):
-    df = readShipMoveData(newFile, '船舶轨迹', skipRows=1)
-    mmsiKey = str(df['mmsi'].iloc[0])
-    startDate = removeChars(df['时间'].iloc[0])[:12]
-    endDate = removeChars(df['时间'].iloc[-1])[:12]
-    mmsi = readConfig(['LaunchShipMMSI'])
-    shipName = readConfig(['LaunchShipName'])
-    shipNameDict = dict(zip(mmsi, shipName))
-    shipName = shipNameDict[mmsiKey] if mmsiKey in shipNameDict else f'MMSI{mmsiKey}'
-    # title = f'{startDate}-{endDate}-{shipName}-航迹'
-    title = f'{endDate[:4]}年{endDate[4:6]}月{endDate[6:8]}日{endDate[8:10]}时{endDate[10:12]}分{shipName}航迹'
-    coords = df[['经度', '纬度']].values.tolist()
-    kml = Kml()
-    drawLine(kml, coords, shipName)
-    updateKmlFile(kml, title, KML_PATH)
-
 
 MSA_RADIUS_PATTERN = r'为中心、半径(\d{1,2})公里'
 ################################################################################################
@@ -691,71 +539,6 @@ def parseRadius(content):
 def getNotamNumbers(content) -> tuple:
     numbers = finditer(constants.PATTERN_NOTAM_NUMBER_NEW, content)
     return [m.group(1) for m in numbers][0]
-
-################################################################################################
-def createKmlFile(notams, title1='', city1='') -> None:
-    kml = Kml()
-    lastStartDate = ''
-    lastEndDate = ''
-    lastCity = ''
-    highestPoint = []
-    lowestPoint = []
-    coordsList = []
-    seaCoord = {}
-
-    for number, item in notams.items():
-        itemArray = item.split(';')
-        # if itemArray[2] == 'RJJJ' and number.startswith('Q'):
-        #     continue
-        startDate = itemArray[0]
-        endDate = itemArray[1]
-        loc = itemArray[2]
-        city = convertLocation(itemArray[2]) if city1 == '' else city1
-        coordsArray = itemArray[3].split('-')
-
-        # plot range with all coords for special case
-        if len(coordsArray) > 1:
-            coordsAll = itemArray[3].replace('-', '|')
-            coordsArray.append(coordsAll)
-
-        for arr in coordsArray:
-            coords = arr.split('|')
-            # if len(coords) == 5: coords.pop(0)
-            coordsList = [convertDMS2DD(c) for c in coords]
-
-            if lastStartDate == '' or isNearTime(lastStartDate, startDate, 59):
-                # if len(coordsList) > 2:
-                coords = drawStages(kml, coordsList, city, f'{loc}/{number}')
-                if loc == 'MSAC' or len(coordsList) > 3:
-                    lastCity, highestPoint, lowestPoint = getFirstLastPoint(lowestPoint, highestPoint, coords, lastCity, city)
-                if len(coordsList) == 1:
-                    seaCoord['海上']= coordsList[0]
-                    lowestPoint = coordsList[0]
-                elif loc == 'ZSHA':
-                    seaCoord['海上']= highestPoint
-            else:
-                drawRoutes(kml, lastCity, highestPoint, lowestPoint, seaCoord)
-                title = convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
-                updateKmlFile(kml, title, KML_PATH, notams)
-                highestPoint = []
-                seaCoord = {}
-
-                kml = Kml()
-                # if len(coordsList) > 2:
-                coords = drawStages(kml, coordsList, city, f'{loc}/{number}')
-                if loc == 'MSAC' or len(coordsList) > 3:
-                    lastCity, highestPoint, lowestPoint = getFirstLastPoint(lowestPoint, highestPoint, coords, lastCity, city)
-                if len(coordsList) == 1:
-                    seaCoord['海上']= coordsList[0]
-                    lowestPoint = coordsList[0]
-                elif loc == 'ZSHA':
-                    seaCoord['海上']= highestPoint
-            lastStartDate = startDate
-            lastEndDate = endDate
-
-    drawRoutes(kml, lastCity, highestPoint, lowestPoint, seaCoord)
-    title = convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
-    updateKmlFile(kml, title, KML_PATH, notams)
 
 ################################################################################################
 def getNotamDates(content) -> tuple:
@@ -779,7 +562,7 @@ def getNotamDates(content) -> tuple:
 
 ################################################################################################
 def convertMonthToNumber(month:str):
-    monthDict = {month: f'{index:02d}' for index, month in enumerate(calendar.month_abbr) if month}
+    monthDict = {month: f'{index:02d}' for index, month in enumerate(month_abbr) if month}
     return monthDict[month.capitalize()]
 
 ################################################################################################
@@ -800,7 +583,7 @@ def convertToDate(d: str):
             d = f'{d}01'
         return parser.parse(d)
     except:
-        pritnExceptionTrace() 
+        myExcept.printExceptionTrace() 
 
 ################################################################################################
 def getYYYYMMDD(year):
@@ -847,38 +630,6 @@ def getMsaDates(content: str) -> tuple:
     return startDates, endDates
 
 ################################################################################################
-def createNsfKmlFile(title, notams) -> None:
-    kml = Kml()
-    lastCity = ''
-    highestPoint = ()
-    lowestPoint = ()
-
-    #2022年10月09日07時43分酒泉長征二号丁
-    #01234 567 890 123 456 7 8 9 0 1 2 3
-    launchTime, city, _ = title[:17], title[17:19], title[19:]
-    _, notamList = notams[0], notams[1]
-    usedCoordinates = set()
-
-    for _, item in notamList.items():
-        itemArray = item.split(';')
-        startDate = itemArray[0]
-        endDate = itemArray[1]
-        coordinates = itemArray[3]
-        if startDate != '' and coordinates not in usedCoordinates and isNsfNearTime(launchTime, startDate, endDate, 600):
-            loc = itemArray[2]
-            coordsGroups = coordinates.split('-')
-            for coordGroup in coordsGroups:
-                usedCoordinates.add(coordGroup)
-                coords = coordGroup.split('|')
-                coordsList = [convertDMS2DD(c) for c in coords]
-                coords = drawStages(kml, coordsList, city, loc)
-                if loc == 'MSAC' or len(coordsList) > 3:
-                    lastCity, highestPoint, lowestPoint = getFirstLastPoint(lowestPoint, highestPoint, coords, lastCity, city)
-
-    drawRoutes(kml, lastCity, highestPoint, lowestPoint)
-    updateKmlFile(kml, f'{title}', NSF_PATH)
-
-################################################################################################
 def convertNotamDate(oldDate):
     if oldDate == 'PERM':
         return oldDate
@@ -898,38 +649,12 @@ def convertNotamDate(oldDate):
         return datetime.strptime(oldDate, '%m/%d/%Y %H%M').strftime("%Y/%m/%d %H:%M")
     
 ################################################################################################
-def createFirBoundaryKmlFile(title, boundary):
-    kml = Kml()
-    for city, coordinates in boundary.items():
-        if coordinates:
-            pol = kml.newpolygon(name=city)
-            res = [(sub[1], sub[0]) for sub in coordinates]
-            pol.outerboundaryis = res
-            pol.style.polystyle.outline = 1
-    updateKmlFile(kml, title, NSF_PATH)
-
-################################################################################################
 def hasCoordinates(city) -> bool:
     if city != '':
         lat, lon = getCityCoordinate(city)
         if isinstance(lat, float) and isinstance(lon, float):
             return True
     return False
-
-################################################################################################
-#coords(lon経度, lat緯度)
-def getFirstLastPoint(lowestPoint, highestPoint, coords, lastCity, city) -> tuple:
-    p2 = getAreaCenter(coords)
-    if not highestPoint:
-        return city, p2, p2
-    else:
-        p0, p1 = lowestPoint, highestPoint
-
-        if p2[1] > p1[1]:
-            highestPoint, lastCity = p2, city
-        if p2[1] < p0[1]:
-            lowestPoint = p2
-        return lastCity, highestPoint, lowestPoint
 
 ################################################################################################
 # timeDiff = minutes
@@ -954,35 +679,6 @@ def isNsfNearTime(date1, date21, date22, timeDiff) -> bool:
     return False
 
 ################################################################################################
-def drawStages(kml, coords, city, location) -> None:
-    if coords:
-        cities = [city[i:i + 2] for i in range(0, len(city), 2)]
-        count = len(coords)
-        for c in cities:
-            color = constants.CITIES[c].split('|')[2]
-            if count == 1:
-                drawCircle(kml, coords, location, color, 10.0)
-            elif count == 2:
-                drawLine(kml, coords, location, color)
-            else: #if  location == 'MSAC':
-                lon1, lat1, lon2, lat2 = coords[0][0], coords[0][1], coords[-1][0], coords[-1][1]
-                distance = haversine(lon1, lat1, lon2, lat2)
-                if distance < 150 or location != 'MSAC': # distance less than 150km between first and last point
-                    drawPolygon(kml, coords, location, color)
-                else:
-                    drawLine(kml, coords, location, color)
-            break
-    return coords
-
-################################################################################################
-# distance in kilo metres
-def drawCircle(kml, coords, location, color=constants.COLOR_SEA, radius=3):
-    circle = circleByPoint(coords[0][1], coords[0][0], radius)
-    # circle = [(lon, lat) for lat, lon in buffer]
-    drawLine(kml, circle, location, color)
-    # drawPolygon(kml, circle, location, color)
-
-################################################################################################
 def drawPoint(kml, coords, location) -> None:
     p = kml.newpoint(name=location)
     p.coords = coords
@@ -991,17 +687,6 @@ def drawPoint(kml, coords, location) -> None:
         p.style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/pal5/icon18l.png'
     else:
         p.style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/pal5/icon43l.png'
-
-################################################################################################
-def drawDottedLine(kml, coords, location, color) -> None:
-    for i in range(len(coords) - 1):
-        for j in range(1, len(coords)):
-            coordsDiff = [(coords[j][0] - coords[i][0]) / 50, (coords[j][1] - coords[i][1]) / 50]
-            for k in range(0, 50, 2):
-                lat1, lon1 = coords[i][0] + coordsDiff[0] * k, coords[i][1] + coordsDiff[1] * k
-                lat2, lon2 = lat1 + coordsDiff[0], lon1 + coordsDiff[1]
-                dotted = ((lat1, lon1), (lat2, lon2))
-                drawLine(kml, dotted, location, color)
 
 ################################################################################################
 def openConfig(section=None) -> tuple:
@@ -1119,68 +804,6 @@ def readConfig(keys:list=None, returnList=True) -> tuple:
             return values
 
 ################################################################################################
-def drawLine(kml, coords, location=None, color=None) -> None:
-    line = kml.newlinestring(name=location)
-    line.coords = coords
-    line.style.linestyle.color = color if color is not None else constants.COLOR_SEA
-    line.style.linestyle.width = 1
-
-################################################################################################
-def drawPolygon(kml, coords, location, color=None) -> None:
-    pol = kml.newpolygon(name=location)
-    pol.outerboundaryis = coords
-    pol.style.polystyle.color = color if color is not None else constants.COLOR_SEA
-    pol.style.polystyle.outline = 0
-
-################################################################################################
-def drawRoutes(kml, city, highestPoint, lowestPoint=None, seaCoord=None) -> None:
-    cities = [city[i:i + 2] for i in range(0, len(city), 2)]
-    if seaCoord:
-        cities.append('海上')
-
-    for c in cities:
-        if c == '海上':
-            cityCoord = seaCoord[c]
-        else:
-            cityCoord = getCityCoordinate(c)
-
-        if len(highestPoint) == 0:
-            highestPoint = lowestPoint
-
-        if cityCoord[0] == '' or cityCoord[1] == '':
-            cityCoord = highestPoint
-        
-        lon0, lat0 = map(float, cityCoord)
-        lon1, lat1 = map(float, highestPoint)
-        lon2, lat2 = map(float, lowestPoint)
-
-        if highestPoint == lowestPoint:
-            lon1, lat1 = lon0, lat0
-
-        # bearingRoute = great_circle_bearing(lat0, lon0, lat2, lon2)
-        # bearingRange = great_circle_bearing(lat1, lon1, lat2, lon2)
-        # if abs(bearingRoute - bearingRange) < 5.0:
-        angle = great_circle_angle(lat0, lon0, lat2, lon2)
-        if (lon0, lat0) == (lon1, lat1):
-            lastPoint = great_circle_point(lat0, lon0, lat2, lon2, fromSea=True)
-        elif angle > 90:
-            lastPoint = great_circle_point(lat0, lon0, lat2, lon2, distance=None)
-        else:
-            lastPoint = great_circle_point(lat0, lon0, lat2, lon2)
-        
-        # angle = 90 - angle if angle < 90 else angle 
-        ls = kml.newlinestring(name=f'{c}{angle:.1f}°轨道')
-        ls.style.linestyle.color = 'ff000000'
-        ls.style.linestyle.width = 1
-        ls.coords = [cityCoord, lastPoint]
-
-        # change all polygon or linestyle color
-        color = constants.CITIES[c].split('|')[2]
-        for feature in kml.features:
-            feature.style.polystyle.color = color
-            # feature.style.linestyle.color = color
-
-################################################################################################
 def checkArgv() -> tuple:
     if len(argv) <= 1 or not checkCommand(argv[1]):
         print(f'Usage: python {argv[0]}"Location"|"Free Text"')
@@ -1204,10 +827,6 @@ def checkCommand(inputCommand) -> bool:
         if command == inputCommand or inputCommand[:3] == command:
             return True
     return False
-
-################################################################################################
-def pritnExceptionTrace():
-    print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
 
 ################################################################################################
 # def getChromeDriver():
@@ -1270,7 +889,7 @@ def runCommand(command):
         ret = subprocess.run(command, encoding='utf8', check=True, shell=True, text = True, capture_output=True)
         return ret
     except subprocess.CalledProcessError as cpe:
-        pritnExceptionTrace()
+        myExcept.printExceptionTrace()
         raise cpe
 
 ################################################################################################
@@ -1278,15 +897,18 @@ def maxOfLists(lists):
     return max([max(sublist, default=float('-inf')) for sublist in lists])
 
 ################################################################################################
-def printNotamDict(d):
+def getNotamDictString(d):
+    msg = ''
     for i, (key, value) in enumerate(d.items()):
-        msg = f'{i + 1:02} {key}:{value}'
-        print(msg)
+        items = value.split(';')
+        msg += f'{i + 1:02}: {items[2]},{key},{items[0]},{items[1]};{items[3]}\n'
+    # print(msg)
+    return msg[:-1]
 
 ################################################################################################
 def splitNotam(item):
-    items = item[1].split(';') 
-    return items[0] + items[1] + items[2] + item[0]
+    items = item[1].split(';')
+    return (items[0], items[1], -float(items[3].split('°')[0][1:]), items[2], item[0])
 
 ################################################################################################
 def sortDictByValue(d: dict) -> dict:
@@ -1307,27 +929,18 @@ def sortDictByKey(d: dict):
     return  {k : v for k, v in sorted(d.items(), key=lambda x: x[0])}
 
 ####################################################################
-def sendEmail(subject: str, body: str, toEmail='zhengrong.zang@gmail.com'):
-    if isMacOS() or isLinux():
-        sender = 'mikezang2008@gmail.com'
-        password = 'New@20230831'
-        msg = []#MIMEText(body)
-        msg['Subject'] = subject
-        msg['From'] = sender
-        msg['To'] = toEmail
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
-       smtp_server.login(sender, password)
-       smtp_server.sendmail(sender, toEmail, msg.as_string())
-    print("Message sent!")
-
-################################################################################################
-# def list_files_recursive(path='.'):
-#     for entry in os.listdir(path):
-#         full_path = os.path.join(path, entry)
-#         if os.path.isdir(full_path):
-#             list_files_recursive(full_path)
-#         else:
-#             print(full_path)
+# def sendEmail(subject: str, body: str, toEmail='zhengrong.zang@gmail.com'):
+#     if isMacOS() or isLinux():
+#         sender = 'mikezang2008@gmail.com'
+#         password = 'New@20230831'
+#         msg = []#MIMEText(body)
+#         msg['Subject'] = subject
+#         msg['From'] = sender
+#         msg['To'] = toEmail
+#     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
+#        smtp_server.login(sender, password)
+#        smtp_server.sendmail(sender, toEmail, msg.as_string())
+#     print("Message sent!")
 
 ################################################################################################
 def getImageSize(filename: str) -> tuple:
@@ -1385,16 +998,16 @@ def swapListItems(swapList: list, swapIndex1: int, swapIndex2: int) -> list:
 ################################################################################################
 # TODO: remove selected files when re-enter this folder
 def listFoldersFiles(curPath: str='.', extension: str='*.*'):
-    oldPath = os.path.abspath(os.curdir)
-    folders = os.listdir(curPath[:-1] if curPath.endswith('/') else curPath)
-    os.chdir(curPath)
-    dirList = sorted([f'{x}/' for x in folders if os.path.isdir(x)])
-    fileList = sorted([x for x in folders if os.path.isfile(x)])
+    oldPath = path.abspath(curdir)
+    folders = listdir(curPath[:-1] if curPath.endswith('/') else curPath)
+    chdir(curPath)
+    dirList = sorted([f'{x}/' for x in folders if path.isdir(x)])
+    fileList = sorted([x for x in folders if path.isfile(x)])
     result = dirList
     result.extend(fileList)
 
     if extension == '*.*':
-        extSet = set(['*' + os.path.splitext(item)[1] if os.path.isfile(item) else '*.*' for item in result])
+        extSet = set(['*' + path.splitext(item)[1] if path.isfile(item) else '*.*' for item in result])
         extSet.add('*.*')
         extList = sorted(list(extSet))
         result.insert(0, '..')
@@ -1407,20 +1020,20 @@ def listFoldersFiles(curPath: str='.', extension: str='*.*'):
         
         resultFiles = []
         for item in result:
-            if os.path.splitext(item)[1] == ext:
+            if path.splitext(item)[1] == ext:
                 resultFiles.append(item)
 
-        extSet = set(['*' + os.path.splitext(item)[1] if os.path.isfile(item) else '*.*' for item in result])
+        extSet = set(['*' + path.splitext(item)[1] if path.isfile(item) else '*.*' for item in result])
         extList = sorted(list(extSet))
         resultFiles.insert(0, '..')
-    os.chdir(oldPath)
+    chdir(oldPath)
     return resultFiles, extList
 
 ################################################################################################
 def parseFileInfo(filenameOrig: str): # filename='video/01.mp4'
-    baseName = os.path.basename(filenameOrig)
-    folderName = os.path.dirname(filenameOrig)
-    absFolder = os.path.abspath(folderName)
+    baseName = path.basename(filenameOrig)
+    folderName = path.dirname(filenameOrig)
+    absFolder = path.abspath(folderName)
     fileName = baseName[:-4]
     extension = baseName[-4:]
     fileInfo = FileInfo(filenameOrig, baseName, folderName, absFolder, fileName, extension)
@@ -1432,8 +1045,8 @@ def isFloat(str):
 
 ################################################################################################
 def listFiles(folder: str='.', extension: str=None, excludeFile=None, onlyFilename=False, includeSubFolder=True, prefix: str=None):
-    absPath = os.path.abspath(folder)
-    for root, dirs, files in os.walk(absPath):
+    absPath = path.abspath(folder)
+    for root, dirs, files in walk(absPath):
         if not includeSubFolder and root != absPath:
             continue
         for file in files:
@@ -1441,20 +1054,19 @@ def listFiles(folder: str='.', extension: str=None, excludeFile=None, onlyFilena
                 continue
             if extension == None or file.endswith(extension):
                 if file != excludeFile:
-                    filepath = file if onlyFilename else os.path.join(root, file) 
+                    filepath = file if onlyFilename else path.join(root, file) 
                     yield filepath
     
 ################################################################################################
 def updateTempFile(notams: dict):
-    # filename = f'./data/notam{getJapanTime("%Y%m%d-%H%M%S")}.txt'
     filename = f'./data/notam{getJapanTimeFilename()}.txt'
     createFolder(filename)
-    # newText = f"NOTAM发射预测{getJapanTime()}\n"
     newText = f"NOTAM发射预测\n"
     newText += "================================\n"
-    for i, (key, value) in enumerate(notams.items()):
-        items = value.split(';')
-        newText += f'{i + 1:02}: {items[2]},{key},{items[0]},{items[1]};{items[3]}\n'
+    newText += getNotamDictString(notams)
+    # for i, (key, value) in enumerate(notams.items()):
+    #     items = value.split(';')
+    #     newText += f'{i + 1:02}: {items[2]}/{key},{items[0]},{items[1]};{items[3]}\n'
 
     try:
         isNew = True
@@ -1484,7 +1096,7 @@ def saveTextFile(filename: str, newText: str, openFile=True, noSound=False, show
 
     # Opening the text file in its default editor
     if isWindows() and openFile:
-            os.system(f'start {filename}')
+            system(f'start {filename}')
     if not noSound:
         if isWindows():
             playSound('Alarm03.wav')
@@ -1509,35 +1121,6 @@ def playSound(filename:str=None):
 
     from playsound import playsound
     playsound(f'{path}{filename}')
-
-################################################################################################
-def updateKmlFile(kml: Kml, title: str, filePath='', notams=None):
-    try:
-        createFolder(filePath)
-        with open(f'{filePath}{title}.kml', encoding='utf-8') as f:
-            kmlOld = f.read()
-            kml.document.name = title
-            kmlNew = kml.kml()
-            if kmlOld != kmlNew:
-                saveKmlFile(kml, title, filePath)
-                if notams:
-                    updateTempFile(notams)
-            else:
-                print(f'Not update to file "{filePath}{title}.kml"')
-    except FileNotFoundError:
-        saveKmlFile(kml, title, filePath)
-        if notams:
-            updateTempFile(notams)
-
-################################################################################################
-def saveKmlFile(kml: Kml, title: str, filePath=''):
-    print(f'Save to file "{filePath}{title}.kml"')
-    kml.document.name = title
-    kml.save(f'{filePath}{title}.kml') # this is for check content
-    kml.save('doc.kml') # this is for zip to kmz file
-    with zipfile.ZipFile(f'{filePath}{title}.kmz', mode='w') as zf:
-        zf.write('doc.kml')
-    os.remove('doc.kml')
 
 ################################################################################################
 def updateNsfNotamJsonFile(nsf_new, filename):
@@ -1692,7 +1275,7 @@ def loadDictFromJsonFile(filename):
 ################################################################################################
 def isPastTime(utcDate):
     localDate = convertToLocalDate(utcDate, "Asia/Tokyo")
-    timeNow = datetime.now(pytz.timezone("Asia/Tokyo"))
+    timeNow = datetime.now(timezone("Asia/Tokyo"))
     if timeNow >= localDate:
         return True
     else:
@@ -1701,10 +1284,10 @@ def isPastTime(utcDate):
 ################################################################################################
 def convertToLocalDate(utcDate, tz, isLocalTime=False):
     if not isLocalTime:
-        utcDate1 = datetime.strptime(utcDate, "%Y/%m/%d %H:%M").replace(tzinfo=pytz.UTC)
+        utcDate1 = datetime.strptime(utcDate, "%Y/%m/%d %H:%M").replace(tzinfo=UTC)
     else:
-        utcDate1 = datetime.strptime(utcDate, "%Y/%m/%d %H:%M").replace(tzinfo=pytz.timezone(tz))
-    return utcDate1.astimezone(pytz.timezone(tz))
+        utcDate1 = datetime.strptime(utcDate, "%Y/%m/%d %H:%M").replace(tzinfo=timezone(tz))
+    return utcDate1.astimezone(timezone(tz))
 
 ################################################################################################
 def convertPatterns(s, p) -> str:
@@ -1917,38 +1500,6 @@ def pointIsInsidePolygon(p: tuple, points: list) -> bool:
     return count % 2 == 1# Return true if count is odd, false otherwise
 
 ################################################################################################
-# def circleByPointOld(lat, lon, km=5):
-#     proj_wgs84 = Proj('+proj=longlat +datum=WGS84')
-#     proj_aeqd = Proj('+proj=aeqd +lat_0={lat} +lon_0={lon} +x_0=0 +y_0=0'.format(lat=lat, lon=lon))
-#     project = partial(shapely.transform, proj_aeqd, proj_wgs84)
-#     buf = Point(0, 0).buffer(km * 1000)  # distance in metres
-#     return transform(project, buf).exterior.coords[:]
-
-################################################################################################
-def circleByPoint(lat, lon, km=5):
-    proj_wgs84 = CRS('EPSG:4326')
-    proj_aeqd = CRS(f'+proj=aeqd +lat_0={lat} +lon_0={lon} +x_0=0 +y_0=0')
-    transformer = Transformer.from_crs(proj_aeqd, proj_wgs84, always_xy=True)
-    buf = Point(0, 0).buffer(km * 1000)  # distance in metres
-    return transform(transformer.transform, buf).exterior.coords[:]
-
-# Calculate the great circle distance between two points
-# on the earth (specified in decimal degrees)
-# calculate distance between points
-################################################################################################
-def haversine(lon1, lat1, lon2, lat2):
-    # convert decimal degrees to radians
-    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
-    # haversine formula
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-    c = 2 * asin(sqrt(a))
-    # Radius of earth in kilometers is 6371
-    km = 6371 * c
-    return km
-
-################################################################################################
 # def getGreatCircleCoodinates(lon1, lat1, lon2, lat2):
 #     g = pyproj.Geod(ellps='WGS84')
 #     _, _, dist = g.inv(lon1, lat1, lon2, lat2)
@@ -1959,107 +1510,6 @@ def haversine(lon1, lat1, lon2, lat2):
 
 #     # npts doesn't include start/end points, so prepend/append them
 #     return lonlats
-
-################################################################################################
-# angle is started from equator
-def great_circle_angle(lat1, lon1, lat2, lon2):
-    return great_circle_bearing(lat1, lon1, lat2, lon2) - 90
-
-################################################################################################
-# Formula: θ = atan2( sin Δλ ⋅ cos φ2 , cos φ1 ⋅ sin φ2 − sin φ1 ⋅ cos φ2 ⋅ cos Δλ )
-# where	φ1,λ1 is the start point, φ2,λ2 the end point (Δλ is the difference in longitude)
-# θ is started from North
-def great_circle_bearing(lat1, lon1, lat2, lon2):
-    # Convert latitude and longitude to radians
-    φ1, λ1, φ2, λ2 = map(radians, [lat1, lon1, lat2, lon2])
-    y = sin(λ2 - λ1) * cos(φ2)
-    x = cos(φ1) * sin(φ2) - sin(φ1) * cos(φ2) * cos(λ2 - λ1)
-    θ = atan2(y, x)
-    bearing = degrees(θ) % 360 # in degrees
-    return bearing
-
-################################################################################################
-# Haversine: a = sin²(Δφ/2) + cos φ1 ⋅ cos φ2 ⋅ sin²(Δλ/2)
-#   formula: c = 2 ⋅ atan2( √a, √(1−a) )
-#            d = R ⋅ c
-# where	φ is latitude, λ is longitude, R is earth’s radius (mean radius = 6,371km);
-# note that angles need to be in radians to pass to trig functions!
-def great_circle_distance(lat1, lon1, lat2, lon2):
-    R = 6371000; # metres
-
-    # convert decimal degrees to radians 
-    φ1, λ1, φ2, λ2 = map(radians, [lat1, lon1, lat2, lon2])
-    Δφ = φ2 - φ1
-    Δλ = λ2 - λ1
-
-    a = sin(Δφ / 2) * sin(Δφ / 2) + cos(φ1) * cos(φ2) * sin(Δλ / 2) * sin(Δλ / 2)
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    d = R * c # in metres
-    return d
-
-################################################################################################
-def great_circle_point(lat1, lon1, lat2, lon2, distance=1000000, distanceRatio=1.1, fromSea=False):
-    bearing = great_circle_bearing(lat1, lon1, lat2, lon2)
-    d = great_circle_distance(lat1, lon1, lat2, lon2)
-    if fromSea:
-        d += 500000
-    else:
-        d = max(distance, d) if distance != None else d * distanceRatio
-    point = great_circle_point_by_distance(lat1, lon1, bearing, d)
-    return point
-
-################################################################################################
-# Formula:	φ2 = asin( sin φ1 ⋅ cos δ + cos φ1 ⋅ sin δ ⋅ cos θ )
-#           λ2 = λ1 + atan2( sin θ ⋅ sin δ ⋅ cos φ1, cos δ − sin φ1 ⋅ sin φ2 )
-# where	φ is latitude, λ is longitude, θ is the bearing (clockwise from north), δ is the angular distance d/R; 
-# d being the distance travelled, R the earth’s radius
-def great_circle_point_by_distance(lat1, lon1, bearing, distance):
-    R = 6371000; # metres
-    φ1, λ1 = map(radians, [lat1, lon1])
-    δ = distance / R
-    θ = radians(bearing)
-    φ2 = asin(sin(φ1) * cos(δ) + cos(φ1) * sin(δ) * cos(θ))
-    λ2 = λ1 + atan2(sin(θ) * sin(δ) * cos(φ1), cos(δ) - sin(φ1) * sin(φ2))
-    return [degrees(λ2), degrees(φ2)]
-
-################################################################################################
-def compare_kml_files(oldFile, newFile):
-    # %% 
-    supported_drivers['KML'] = 'rw'
-    oldPolys = gpd.read_file(oldFile, driver='KML')
-    newPolys = gpd.read_file(newFile, driver='KML')
-
-    # %% 
-    plt.imshow(zeros((100, 100)))
-    oldPolys.plot(facecolor='orange')
-    plt.show()
-    return 1
-
-################################################################################################
-def kml2Shapely(kml):
-    # Load the KML file and get the first polygon feature
-    with open('file.kml', 'rt') as f:
-        k = kml.KML()
-        k.from_string(f.read())
-        feature = list(k.features())[0]
-        polygon = feature.geometry
-
-    # Extract the coordinates of the polygon
-    outer_coords = list(polygon.exterior.coords)
-    inner_coords = [list(interior.coords) for interior in polygon.interiors]
-
-    # Create the Shapely polygon object
-    shapely_polygon = Polygon(outer_coords, inner_coords)
-
-################################################################################################
-# box_1 = [[511, 41], [577, 41], [577, 76], [511, 76]]
-# box_2 = [[544, 59], [610, 59], [610, 94], [544, 94]]
-# print(calculate_iou(box_1, box_2))
-def calculate_iou(box_1, box_2):
-    poly_1 = Polygon(box_1)
-    poly_2 = Polygon(box_2)
-    iou = poly_1.intersection(poly_2).area / poly_1.union(poly_2).area
-    return iou
 
 ################################################################################################
 def readNotamDictDetailFromTextFile(filename):

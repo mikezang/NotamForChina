@@ -77,6 +77,10 @@ def findElementsByClass(driver: webdriver.Firefox, className: str):
     return driver.find_elements(By.CLASS_NAME, className)
 
 ################################################################################################
+def findElementByCssSelector(driver: webdriver.Firefox, cssSelector: str):
+    return driver.find_element(By.CSS_SELECTOR, cssSelector)
+
+################################################################################################
 def findElementByClass(driver: webdriver.Firefox, className: str):
     return driver.find_element(By.CLASS_NAME, className)
 
