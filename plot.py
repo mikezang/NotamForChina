@@ -2,13 +2,9 @@ from sys import path
 from timeit import timeit
 from datetime import timedelta
 from openpyxl import load_workbook as loadXLSX
-# os.environ['PySimpleGUI_license'] = 'eJydJFMkaPWINVlobcn0NylzVgHUlKw8ZUSjIu6eIWkRRXlKdCm3VTsMbM3NBQl3cwiKIGsSIMkHxcpXYQ2OVTulcW27VCJnROCDIH6MMMToc6xpM7z1Qi08MPjxYa2AMYirwJiETUGKlcjKZFWY5tzKZkUiRQl7cuG8xWvBeHWL1hl4bin6RSWaZUXCJjztaKWP9UujInjRogxvLSCVJ6OSYBWJ1KlVRcmVlgy1cO3fQJiiO8i9JUN9aYW0tZlyIEinwdigT2mIFWtWZcUqxEh6cx3PQOiEOci5JOa7YJWg5HnaIZikwyipQD2a9HtfcRGbFyuyeRSNIy6GIPiRItsaIXkANB1CcY3XRPvSbGWTVKyDS7UrQ8iRORi2IcxoNVTbg0xENBSSIFsZIVkxRVhjdMGMVqJOcC3JNX11ZgWvQ2iPOMihIDwWNeCY8hxNOyCf8cy3MjDcI60CIqipwZiiR4GZFf0VZUU7Vz43cmGplHy3ZYX8MOiyO0imIKwoNWCG8VxwOkCz8Xy6MoD6Ia1bIwiNwqi0RYWh1whtaRWixrBrZiGlRPyCZQXPNtz9IwjVotiIenmRhHlNbRmtdpyRb3295pn4LWn9pShXb8mLd7AEZK2b1MhgaNWGwmuzYb2Z9RtkINiZwVibSTVEBbB9ZKGERVyQZVXTNjz5IPjyobi6MVT0MI2ALHjFIay0N8i745yuMWzukGuLNvzkEYiDf3QQ=8=M6cfd0f1ce97942ac714563c6eb9fff4e5e17ea366f2ebecb029772015e49bcd7bc099d9c7eba082b5b88e6510e4a82b0e9042ae87198c187d1ff2e9545990ed71bc7b29cab288cfc566d92ac9f7d406d99607ddff6a531dfffcbbe68283f84843ef67b4f4d78ca7bf44e67fae0980da79a54038e2526ad79c873978c868ed6c079da54d6fad6b10e9d0c71a264410a2217bd9e000bdc8660fb523fc5595864f46fb13598bfb86399871dec8fe916a8145a2f74bfa47731c6315455fae07ab6f2155c6df4d682c4cc522336af8c69e8161e9850af6281bdbffa3724c90a6d8da8c945ead1ca0d8ed3729a991264e4e61bd83f19438fe57effa07f4a1841c37ec4578bad12875c77404947b50ea5790d323dc1e9d88f48b6b38a16fada115a6ea902c6d62a61e81cfe1fe67a93e09f73bc86556d194c9b38727f61906d9da320b5dd7da5e713ab4e139fad910dc876d377ba267a3e1f532c505b3e801bea7c388c5ad9bb5bcc184a5e31be3f717a6890a2f01c75c1d054c0dcbd884787fca43fdc58142a0621f8bb71ff693da112ab38c4815e0e81c4cfaa689129539d1ac5d272689949484b0aeb9f189bd3529383823af517c97273a92066d28af58b5603094b773b42bf17fccb557e691ff5d2fcb31649fb1a3d6e08aa582a335967891bd65e92a757968816e21675566f698838096094352b7187366a6856f9cabcf50b6923'
 import PySimpleGUI as sg
-# import pandas as pd
 
-path.append('./')
-
-from myModules import constants
+from myModules import myExcel
 from myModules import myUtils
 from myModules import myPlot
 import plotLaunchByDate
@@ -18,6 +14,8 @@ import plotLaunchByYearMonth
 import plotLaunchBarChartRace
 
 CHROME = r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+BUTTON1_LABEL = '统计条形图作成'
+BUTTON2_LABEL = '动态条形图作成'
 
 ################################################################################################
 def splitStringToList(text, n=10):
@@ -44,7 +42,7 @@ def splitStringToListByText(text: str):
 
 ################################################################################################
 def getYearsFrame(years:str, lastYear):
-    subYears = splitStringToList(years)
+    subYears = splitStringToList(years, 15)
     yearsTitle = [sg.Checkbox('选择全发射期间', key='year01', enable_events=True)]
     layout1 = [yearsTitle]
     for i, subYear in enumerate(subYears):
@@ -161,8 +159,8 @@ def getPayloadsFrame(payloads):
 ################################################################################################
 def getButton():
     button = [
-        sg.Button(constants.BUTTON1_LABEL, font=("Helvetica", 14)), 
-        sg.Button(constants.BUTTON2_LABEL, font=("Helvetica", 14)), 
+        sg.Button(BUTTON1_LABEL, font=("Helvetica", 14)), 
+        sg.Button(BUTTON2_LABEL, font=("Helvetica", 14)), 
         # sg.Push(), 
         # sg.Button('Show Chart Pictures', font=("Helvetica", 14)), 
         # sg.Button('Play Bar Chart Race Videos', font=("Helvetica", 14)), 
@@ -256,12 +254,12 @@ def getSelectedItems(values, items, prefix) -> list:
 ################################################################################################
 def getLastLaunch(dfLastLaunch, series, privates, dictUpperStage):
     lastYear = myUtils.getJapanDate()[:4]
-    lastRocket = dfLastLaunch[constants.EXCEL_COLUMN_ROCKET]
-    lastNumber = dfLastLaunch[constants.EXCEL_COLUMN_NUMBER]
-    lastResult = True if dfLastLaunch[constants.EXCEL_COLUMN_RESULT] == '成功' else False
+    lastRocket = dfLastLaunch[myExcel.EXCEL_COLUMN_ROCKET]
+    lastNumber = dfLastLaunch[myExcel.EXCEL_COLUMN_NUMBER]
+    lastResult = True if dfLastLaunch[myExcel.EXCEL_COLUMN_RESULT] == '成功' else False
     lastUpperStage = (lastRocket+lastNumber) in dictUpperStage
     lastSeries = getLastSeries(lastRocket, series, privates, lastUpperStage)
-    lastLocation = dfLastLaunch[constants.EXCEL_COLUMN_LOCATION]
+    lastLocation = dfLastLaunch[myExcel.EXCEL_COLUMN_LOCATION]
     lastLaunch = [lastYear, lastRocket, lastNumber, lastUpperStage, lastSeries, lastLocation, lastResult]
     return lastLaunch
 
@@ -363,7 +361,7 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
         toogleAllCheckbox(window, values, 'category-')
     elif event == 'payload01':
         toogleAllCheckbox(window, values, 'payload-')
-    elif event == constants.BUTTON1_LABEL:
+    elif event == BUTTON1_LABEL:
         window.minimize()
         cn_font = myPlot.init()
         yearsChecked = getSelectedItems(values, years, 'year')
@@ -441,7 +439,7 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
             plotLaunchByDate.plot5(cn_font, df, payloadsChecked, dictUpperStage, payloadPrintLast)
         myUtils.playSound()
 
-    elif event == constants.BUTTON2_LABEL:
+    elif event == BUTTON2_LABEL:
         window.minimize()
         cn_font = myPlot.init(True)
         yearsChecked = getSelectedItems(values, years, 'year')

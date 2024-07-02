@@ -1,16 +1,15 @@
-import sys
-import geopandas as gpd
-import PySimpleGUI as sg
-import matplotlib.pyplot as plt
+from sys import argv
 from os import path
 from timeit import timeit
 from datetime import timedelta
+import PySimpleGUI as sg
+import matplotlib.pyplot as plt
+from simplekml import Kml
 
-sys.path.append("")
-
-from myModules import constants
 from myModules import myUtils
 from myModules import myPlot
+from myModules import myShape
+from myModules import myKml
 import notam
 import nsf
 
@@ -19,7 +18,7 @@ def plotLaunchCenter(axs):
     cities = ('酒泉', '太原', '西昌', '文昌')
     names = ('酒泉卫星发射中心', '太原卫星发射中心', '西昌卫星发射中心', '文昌航天发射场')
     for i, lc in enumerate(cities):
-        _, lonlat, color = constants.CITIES[lc].split('|')
+        _, lonlat, color = myShape.CITIES[lc].split('|')
         lon, lat = lonlat.split(',')
 
 ################################################################################################
@@ -29,13 +28,12 @@ def compareNotam(newFile, cn_font):
         print(f'{newFile} not included {locations}')
         return
     
-    newGdf = gpd.read_file(newFile, driver='KML')
+    newGdf = myKml.readKmlFile(newFile)
     if newGdf.empty:
         print(f"No Data in {newFile}!")
         return 
 
-    newGdf = newGdf[(newGdf.geometry.type=='Polygon') | (newGdf.geometry.type=='LineString')]    
-    folder = path.abspath(constants.KML_FOLDERS[location])
+    folder = path.abspath(myShape.KML_FOLDERS[location])
     filename = path.basename(newFile)
 
     # delete files
@@ -56,21 +54,20 @@ def compareNotam(newFile, cn_font):
 
             # Use geopandas to read old NOTAM kml file to shapely.geometry
             try:
-                oldGdf = gpd.read_file(oldFile, driver='KML')
+                oldGdf = myKml.readKmlFile(oldFile)
                 if oldGdf.empty:
                     continue
-
-                oldGdf = oldGdf[(oldGdf.geometry.type=='Polygon') | (oldGdf.geometry.type=='LineString')]
-                fig, ax = myPlot.getFigure(setAspectEqual=True)
+                fig, ax = myShape.getFigure(setAspectEqual=True, plotGrid=True)
             except Exception as e:
                 print(f"No Data in {oldFile}!")
                 print(f'Exception: {e}\n')
 
-            myPlot.plotTwoNoatms(ax, newGdf, oldGdf)
+            myShape.plotTwoNoatms(ax, newGdf, oldGdf)
             newTitle = myUtils.getTitle(newFile)
             newTitle = newTitle if '时' in newTitle else newTitle.replace('日', '日??时??分')
             oldTitle = myUtils.getTitle(oldFile)
-            ious = myPlot.plotPolygonsIntersection(fig, ax, cn_font, newGdf, newTitle, oldGdf, oldTitle)
+            ious, title = myShape.plotPolygonsIntersection(fig, ax, cn_font, newGdf, newTitle, oldGdf, oldTitle)
+            myShape.plotTitleXYLabels(fig, ax, cn_font, title, 'Longitude（经度）', 'Latitude（纬度）')
             # myPlot.showBackend()
 
             # Save the plot to a file
@@ -78,7 +75,7 @@ def compareNotam(newFile, cn_font):
             filename = basename.replace(".kml", ".png")
 
             if ious:
-                print(f'{newTitle} vs {oldTitle}')
+                print(f'{newTitle} IoU {oldTitle}')
                 for iou in ious:
                     print(f'    {iou}') 
                 myPlot.saveFig(fig, f'{savePath}/{filename}', False, False)
@@ -94,7 +91,7 @@ def main():
     myPlot.setScreenDpiAware()
     cn_font = myPlot.init()
 
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         window = sg.Window('Select file to process...',
                         [[sg.Text('file to open')],
                         [sg.In(), sg.FileBrowse()],
@@ -113,7 +110,7 @@ def main():
                 window.Normal()
                 newFile = ''
     else:
-        newFile = sys.argv[1]
+        newFile = argv[1]
         proceeFile(cn_font, newFile)
 
     window.close()
@@ -124,7 +121,7 @@ def proceeFile(window, cn_font, newFile):
         print("No filename supplied")
     elif '.xls' in newFile:
         print('Filename: ', newFile)
-        myUtils.createShipTrackLinesKmlFile(newFile)
+        myShape.createShipTrackLinesKmlFile(newFile)
         myUtils.playSound()
     elif '.kml' in newFile:
         print('The filename you chose was: ', newFile)
@@ -132,7 +129,7 @@ def proceeFile(window, cn_font, newFile):
         compareNotam(newFile, cn_font)
     elif '.txt' in newFile and 'MSA' in newFile:
         print('The filename you chose was: ', newFile)
-        myUtils.createMsaDropZonesKmlFile(newFile)
+        createMsaDropZonesKmlFile(newFile)
     elif '.txt' in newFile:
         notamDict = myUtils.readNotamDictDetailFromTextFile(newFile)
         if notamDict:
@@ -155,7 +152,7 @@ def createMsaDropZonesKmlFile(oldFile):
         location, number, startDates, endDates, areas = notam.parseMsa(content)
         lastStart = ''
         lastEnd = ''
-        kml = kml()
+        kml = Kml()
         notams = {}
 
         for i, area in enumerate(areas):
@@ -172,13 +169,13 @@ def createMsaDropZonesKmlFile(oldFile):
                 coordsList = [myUtils.convertDMS2DD(c) for c in coords]
                 if len(coordsList) == 1:
                     radius = myUtils.parseRadius(content)
-                    myUtils.drawCircle(kml, coordsList, f'{location}/{number}', radius=radius)
+                    myShape.drawCircle(kml, coordsList, f'{location}/{number}', radius=radius)
                 else:
-                    myUtils.drawPolygon(kml, coordsList, f'{location}/{number}')
+                    myShape.drawPolygon(kml, coordsList, f'{location}/{number}')
                 notams = notam.getNoatmDict(notams, number, startDate, endDate, location, area)
                 lastStart = startDate
                 lastEnd = endDate
-        myUtils.updateKmlFile(kml, title, myUtils.KML_PATH, notams)
+        myShape.updateKmlFile(kml, title, myShape.KML_PATH, notams)
 
 ################################################################################################
 def showRunTime(func):

@@ -7,27 +7,35 @@ from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
 from timeit import timeit
 
-from myModules import constants
 from myModules import myUtils
+from myModules import myExcept
+from myModules import myShape
 from myModules import myNet
 import nsf
 
+NEW_NOTAM_URL = "https://www.notams.faa.gov/dinsQueryWeb/"
+XPATH_SPAN_DETAIL = "//span[@ng-bind-html='globalScope.selectedNOTAM.icaoMessage']"
+NEW_CSS_SELECTOR_BUTTON_DISCLAIMER = ".ui-state-default.ui-corner-all"
+NEW_XPATH_RADIO_TYPE = "//input[@name='reportType' and @value='Raw']"
+NEW_XPATH_TEXTAREA = "//textarea[@name='retrieveLocId']"
+NEW_XPATH_SEARCH_BUTTON = "//input[@name='submit' and @value='View NOTAMs']"
+
 ################################################################################################
-def getConditionDetail(driver, tdCondition) -> str:
-    tdCondition.click()
-    sleep(1)
-    condition = myNet.elementXPath(driver, 30, constants.XPATH_SPAN_DETAIL).text
-    index = condition.index("E)")
-    if index:
-        condition = condition[(index + 3):] # exclude 'E) '
-    driver.back()
-    return condition
+# def getConditionDetail(driver, tdCondition) -> str:
+#     tdCondition.click()
+#     sleep(1)
+#     condition = myNet.elementXPath(driver, 30, XPATH_SPAN_DETAIL).text
+#     index = condition.index("E)")
+#     if index:
+#         condition = condition[(index + 3):] # exclude 'E) '
+#     driver.back()
+#     return condition
 
 ###############################################################################################
 def printNotam(dictData, start):
     print(f"\nNOTAM发射预测{start}")
     print("================================")
-    myUtils.printNotamDict(dictData)
+    print(myUtils.getNotamDictString(dictData))
     print("================================")
     print(f"NOTAM发射预测{start}\n")
 
@@ -57,20 +65,21 @@ def getNotamDetail(driver, command, searchLocaltions):
     notam = {}
     
     try:
-        driver.get(constants.NEW_NOTAM_URL)
+        driver.get(NEW_NOTAM_URL)
         # myNet.checkVPN(driver)
         radio = ''
 
         sleep(1)
-        button = driver.find_element(By.CSS_SELECTOR, constants.NEW_CSS_SELECTOR_BUTTON_DISCLAIMER)
+        button = myNet.findElementByCssSelector(driver, NEW_CSS_SELECTOR_BUTTON_DISCLAIMER)
+        # button = driver.find_element(By.CSS_SELECTOR, NEW_CSS_SELECTOR_BUTTON_DISCLAIMER)
         if button:
             button.click()
-            radio = myNet.elementXPath(driver, 30, constants.NEW_XPATH_RADIO_TYPE)
+            radio = myNet.elementXPath(driver, 30, NEW_XPATH_RADIO_TYPE)
 
             if radio:
                 radio.click()
-                myNet.elementInput(driver, 30, constants.NEW_XPATH_TEXTAREA, searchLocaltions)
-                myNet.elementClick(driver, 30, constants.NEW_XPATH_SEARCH_BUTTON)
+                myNet.elementInput(driver, 30, NEW_XPATH_TEXTAREA, searchLocaltions)
+                myNet.elementClick(driver, 30, NEW_XPATH_SEARCH_BUTTON)
                 sleep(5)
 
                 window_after = driver.window_handles[-1]
@@ -81,6 +90,7 @@ def getNotamDetail(driver, command, searchLocaltions):
                 if form:
                     sleep(5)
                     driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+                    sleep(15)
                     table1 = myNet.findElementByTag(form, "table")
                 
                     if table1:
@@ -103,9 +113,9 @@ def getNotamDetail(driver, command, searchLocaltions):
                                                 endDate = nsf.convertDate(endDate)
                                                 area = nsf.formatLatitudeLongitude(area)
                                                 notam = getNoatmDict(notam, number, startDate, endDate, location, area)
-                myUtils.isTempFileSaved = False
+                # myUtils.isTempFileSaved = False
     except :
-        myUtils.pritnExceptionTrace()
+        myExcept.printExceptionTrace()
         pass
     return notam, start
 
@@ -155,12 +165,9 @@ def main():
         if notam_data:
             notam_data =  myUtils.sortDictByValue(notam_data)
             printNotam(notam_data, start)
-            # subject = f"NOTAM发射预测{myUtils.getJapanTime()}"
-            # body = [f'{i + 1:02} {k}:{v}\n' for i, (k, v) in enumerate(notam_data.items())]
-            # myUtils.sendEmail(subject, body)
-            myUtils.createKmlFile(notam_data)
+            myShape.createKmlFile(notam_data)
     except:
-        myUtils.pritnExceptionTrace()
+        myExcept.printExceptionTrace()
 
     if driver:
         driver.quit()

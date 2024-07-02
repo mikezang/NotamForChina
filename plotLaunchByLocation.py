@@ -4,16 +4,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
-from sys import path
 from datetime import datetime, timedelta
-from openpyxl import load_workbook as loadXLSX
 from matplotlib.lines import Line2D
-
-path.append('./')
 
 from myModules import constants
 from myModules import myUtils
 from myModules import myPlot
+from myModules import myShape
 
 def parseExcelSheetToDataFrame(excelSheet, headers, startYear=None, endYear=None):
     # Convert data to list of lists
@@ -233,7 +230,7 @@ def plotGraphByMonthLocations(cn_font, excelSheet, title, startYear, endYear=Non
                '酒泉发射数', '太原发射数', '海上发射数', '西昌发射数', '文昌发射数', '合计发射数', '月合计发射数']
     df = parseExcelSheetToDataFrame(excelSheet, headers)
     # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
-    fig, axLeft =  myPlot.getFigure()
+    fig, axLeft =  myShape.getFigure()
     czSumList, nczSumList = plotBarByMonthLocations(cn_font, axLeft, df, startYear) # Plot bar graph on right axis
     plotTitleLegendByMonthLocations(cn_font, title, czSumList, nczSumList) # plot legend
     myPlot.showBackend()
@@ -245,7 +242,7 @@ def plotGraphByLocations(cn_font, df, title, startYear=None, rocket=None):
     else:
         path = f'./images/{title}.png'        
     df = myPlot.parseToDataFrame(df, rocket=rocket, startYear=startYear, plotLocation=True)
-    fig, axLeft =  myPlot.getFigure()
+    fig, axLeft =  myShape.getFigure()
     plotBarByLocations(cn_font, axLeft, df) # Plot bar graph on right axis
     plotTitleLegendByLocations(cn_font, title) # plot legend
     myPlot.showBackend()

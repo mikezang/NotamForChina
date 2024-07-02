@@ -1,8 +1,7 @@
 ################################################################################################
 import argparse
 from glob import glob
-from sys import path
-import os
+from os import path
 from datetime import timedelta
 from timeit import timeit
 from time import sleep
@@ -12,10 +11,9 @@ import warnings
 # Suppress specific warning
 warnings.filterwarnings("ignore", message="invalid value encountered in exp2")
 
-path.append("")
-
 from myModules import myUtils
 from myModules import myNet
+from myModules import myExcept
 from myModules import m3u8_downloader
 
 CNYS = 'CNYS'
@@ -119,7 +117,7 @@ def parseVideoIdCNYS(driver, videoName: str) -> dict:
                 # nId = dataId.get_attribute("data-mid")
                 videoDict[f'CNYS-{videoId}'] = f'{area}-{year}-{category}-{title}-{actor}-{desc}'
         except:
-            myUtils.pritnExceptionTrace()
+            myExcept.printExceptionTrace()
             pass
         page += 1
         videoUrl = CNYS_SEARCH_PAGE_URL.format(page, videoName)
@@ -171,7 +169,7 @@ def parseVideoIdWJYS(driver, videoName: str) -> dict:
                 desc = item5[0].text
                 videoDict[f'WJYS-{int(videoId):06}'] = f'{area}-{year}-{category}-{title}-{actor}-{desc}'
         except:
-            myUtils.pritnExceptionTrace()
+            myExcept.printExceptionTrace()
             pass
         page += 1
         videoUrl = WJYS_SEARCH_PAGE_URL.format(page, videoName)
@@ -204,7 +202,7 @@ def parseVideoIdCTV(driver, videoName: str) -> dict:
                     year = elements[3]
                     videoDict[f'C-TV-{videoId}'] = f'{area}-{year}-{category}-{title}-{actor}'
                 except:
-                    myUtils.pritnExceptionTrace()
+                    myExcept.printExceptionTrace()
                     pass
 
             for videoId, value in videoDict.items():
@@ -347,7 +345,7 @@ def parseUrlListCNYS(base, videoId):
 
             page += 2
     except:
-        myUtils.pritnExceptionTrace()
+        myExcept.printExceptionTrace()
         pass
 
     driver.quit()
@@ -393,7 +391,7 @@ def parseUrlListCTV(base: str, videoId: int):
 
             page += 2
     except:
-        myUtils.pritnExceptionTrace()
+        myExcept.printExceptionTrace()
         pass
 
     driver.quit()
@@ -414,7 +412,7 @@ def parseUrlListWJYS(base: str, videoId: int, sId: int) -> list:
         tabs = myNet.findElementsByXPath(driver, '//a[@class="module-tab-item tab-item"]')
         href = ''
         for i, tab in enumerate(tabs):
-            href += tab.get_property('href').split('-')[1]
+            href += tab.get_property('href').split('-')[1] + ', '
         print(f'sIds: {href}')
 
         while True:
@@ -457,8 +455,7 @@ def parseUrlListWJYS(base: str, videoId: int, sId: int) -> list:
                 else:
                     break
     except:
-        myUtils.pritnExceptionTrace()
-        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+        myExcept.printExceptionTrace()
         pass
     driver.quit()
     return videoName, year, urls, sId
@@ -493,22 +490,26 @@ def downloadVideoFiles(urls: dict, mergedFolder:str, filename: str, reverse=Fals
                 downloadMP4(url, key, filename, count, existFiles, mergedFolder)
                 filename = ''
     except:
-        myUtils.pritnExceptionTrace()
+        myExcept.printExceptionTrace()
         pass
+
+################################################################################################
+def showUsage():
+    print('1. Search videoIds')
+    print(f'Usage: python {argv[0]} site videoName\n')
+    print('2 .Download video url list')
+    print(f'Usage: python {argv[0]} site videoId\n')
+    print('3 .Download drama files to 001.mp4, 002.mp4,...')
+    print(f'Usage: python {argv[0]} site videoId sId outputFolder\n')
+    print('4 .Download movie file to filename')
+    print(f'Usage: python {argv[0]} site videoId sId outputFolder/filename.mp4\n')
 
 ################################################################################################
 def checkArgv() -> list:
     site, videoName, videoIds, sId, folder, filename = '', '', '', '2', '', ''
     count = len(argv)
     if  count <= 1:
-        print('1. Search videoIds')
-        print(f'Usage: python {argv[0]} site videoName\n')
-        print('2 .Download video url list')
-        print(f'Usage: python {argv[0]} site videoId\n')
-        print('3 .Download drama files to 001.mp4, 002.mp4,...')
-        print(f'Usage: python {argv[0]} site videoId sId outputFolder\n')
-        print('4 .Download movie file to filename')
-        print(f'Usage: python {argv[0]} site videoId sId outputFolder/filename.mp4\n')
+        showUsage()
     elif count == 2 and argv[1] not in ['all', CNYS, WJYS, CTV]:
         site = 'all'
         videoName = argv[1]
@@ -527,10 +528,12 @@ def checkArgv() -> list:
     elif count >= 5:
         site, videoIds, sId, folder = argv[1].upper(), argv[2], argv[3], argv[4]
         if folder.endswith('.mp4'):
-            filename = os.path.basename(folder)
-            folder = os.path.dirname(folder)
+            filename = path.basename(folder)
+            folder = path.dirname(folder)
         if not folder.startswith('/'):
             folder = f'/Users/mikezang/movies/{folder}'
+    else:
+        showUsage()
     return site, videoName, videoIds, sId, folder, filename
 
 def showRunTime(func):
@@ -550,6 +553,10 @@ def parseUrlList(site:str, videoId: int, sId: int) -> list:
 ################################################################################################
 def main() -> None:
     site, videoNames, videoIds, sId, mergedFolder, filename = checkArgv()
+    if site not in ['all', CNYS, WJYS, CTV]:
+        print(f"The site is not in ['all', {CNYS}, {WJYS}, {CTV}]")
+        showUsage()
+        return
     videoId = videoIds if videoIds == '' or videoIds[0] != '-' else videoIds[1:]
     urls = {}
     

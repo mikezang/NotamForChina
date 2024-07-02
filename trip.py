@@ -5,15 +5,14 @@
 """
 # pylint: disable=W0703,C0103,C0116,C0301
 
-import os
 from time import sleep
-from re import findall
+from re import findall, finditer
 from datetime import date, datetime, timedelta
 from timeit import timeit
-import traceback
 
-from myModules import constants
+from myModules import myExcel
 from myModules import myUtils
+from myModules import myExcept
 from myModules import myNet
 
 BASE_CTRIP_URL = "https://m.ctrip.com/webapp/vacations/tour/detail?productid="
@@ -56,7 +55,7 @@ def getDayDiff(title_text):
 ################################################################################################
 def getCity(title_text):
     city = ""
-    for key, value in constants.CITIES.items():
+    for key, value in myExcel.CITIES.items():
         if key in title_text:
             city = value.split('|', maxsplit=1)[0]
             break
@@ -118,7 +117,7 @@ def getCTripList(driver):
             break
         except:
             if i == 9:
-                myUtils.pritnExceptionTrace()
+                myExcept.printExceptionTrace()
             else:
                 print('...', end='', flush=True)
                 sleep(3)
@@ -150,8 +149,9 @@ def parseTripDate(driver, this_city, day_diff):
     html = driver.page_source
     thisYear = myUtils.getThisYear()
     nextYear = int(thisYear) + 1
-    pattern = rf'(({thisYear}|{nextYear})\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01]))'
+    pattern = rf'(?<!=)(({thisYear}|{nextYear})\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01]))'
     matches = findall(pattern, html)
+    # matches = finditer(pattern, html)
     for match in matches:
         launchDay = myUtils.getDateAfterDays(match[0], day_diff)
         launchData[launchDay.replace('-', '/')] = this_city
@@ -163,7 +163,7 @@ def parseTripDateOld(driver, this_city, day_diff):
     launch_temp = {}
     last_day = 0
     html = driver.page_source
-    pattern = rf'{myUtils.getThisYear()}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])'
+    pattern = rf'(?<!=){myUtils.getThisYear()}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])'
     matches = findall(pattern, html)
     for match in matches:
         month_int, day_int = int(match[0].replace(',', '')), int(match[1])
@@ -219,7 +219,7 @@ def getCTripDetail(driver, urls, titles):
                 launch_temp = parseTripDate(driver, this_city, day_diff)
                 launch_date = myUtils.combineValuesForSameDictKey(launch_date, launch_temp)
         except:
-            myUtils.pritnExceptionTrace()
+            myExcept.printExceptionTrace()
             pass
     return launch_date
 
@@ -252,7 +252,7 @@ def getENiuTripList(driver):
                 if not title.text in urls:
                     urls[title.text] = url
     except:
-        myUtils.pritnExceptionTrace()
+        myExcept.printExceptionTrace()
         pass
     return urls
 
@@ -272,7 +272,7 @@ def getENiuTripDetail(driver, urls):
             for item in items:
                 launch_date[convertDate1(item)] = city
     except:
-        myUtils.pritnExceptionTrace()
+        myExcept.printExceptionTrace()
     return launch_date
 
 ################################################################################################
@@ -327,7 +327,7 @@ def main():
         driver = myNet.getFirefoxDriver(disableImage=False)
         getCTrip(driver)
     except:
-        print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+        myExcept.printExceptionTrace()
     if driver:
         driver.quit()
 

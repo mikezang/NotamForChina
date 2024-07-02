@@ -1,14 +1,11 @@
 import logging
 import time
-
 import numpy as np
 import bar_chart_race as bcr
 import pandas as pd
 from datetime import timedelta
 from timeit import timeit
-from openpyxl import load_workbook as loadXLSX
 
-# import constants
 from myModules import myUtils
 from myModules import myPlot
 
@@ -176,7 +173,7 @@ def getBarLabel(taikonaut, iDate, use_pinyin=False):
             daysList.append(realDays)
             shipDaysList.append(f'{ship}({realDays})')
 
-    no = noList[0]
+    no = int(noList[0])
     age = myUtils.getAge(bornList[0], iDate)
     realDays = int(sum(daysList))
     ships = '+'.join(reversed(shipDaysList))

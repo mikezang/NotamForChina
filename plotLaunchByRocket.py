@@ -3,14 +3,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from math import sqrt
-from sys import path
 from datetime import timedelta
-from openpyxl import load_workbook as loadXLSX
 from matplotlib.lines import Line2D
 
-path.append("")
-
 from myModules import myPlot
+from myModules import myShape
 from myModules import myUtils
 
 ################################################################################################
@@ -177,7 +174,7 @@ def plotTitleLegendByRocket(cn_font, title, hasGreyLabel=False):
 
 def plotByRocket(cn_font, df, title, path, startYear):
     # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) 
-    fig, axLeft =  myPlot.getFigure()
+    fig, axLeft =  myShape.getFigure()
     retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
     hasGreyLabel = plotLineGraphByRocket(cn_font, axLeft, df, retiredRocketsDict, startYear=startYear)
     axRight = axLeft.twinx()

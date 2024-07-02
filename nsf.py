@@ -7,10 +7,11 @@
 from re import findall, finditer, search, sub, IGNORECASE
 from datetime import date, datetime, timedelta
 from timeit import timeit
-import pytz
+from pytz import UTC, timezone
 
 from myModules import constants
 from myModules import myUtils
+from myModules import myExcept
 from myModules import myNet
 
 ################################################################################################
@@ -19,7 +20,7 @@ def splitTitle(item: list) -> str:
     count = len(items)
     if count == 4:
         titleDate = getDateFromTitle(item[1])
-        localDate = convertNsfDate(titleDate, constants.TIMEZONE_BEIJING)
+        localDate = convertNsfDate(titleDate, constants.TIMEZONE_SHANGHAI)
         localDateStr = localDate.strftime("%Y年%m月%d日%H時%M分") if localDate else items[3]
         key = items[1] + localDateStr + items[2] + items[0]
     elif count == 3:
@@ -36,18 +37,16 @@ def sortByTitle(d: dict) -> dict:
 
 ################################################################################################
 def writeNsfToFile(nsfDict):
-    # filename = f'./data/notam{getJapanTime("%Y%m%d-%H%M%S")}.txt'
     filename = f'./data/nsfLinkList.html'
-    newText = f"<H2>NSF Link List</H2>"
+    newText = f"<H2>Chinese Launchers POST List</H2>"
     nsfDict = sortByTitle(nsfDict)
     for i, (key, value) in enumerate(nsfDict.items()):
-        # items = value.split(';')
-        newText += f'<a target=_blank href={key}>{i + 1:03}: {value}</a><br>'
+        values = value.split(':')
+        newText += f'{i + 1:03}-{values[0]}: <a target=_blank href={key}>{':'.join(values[1:])}</a><br>'
     myUtils.saveTextFile(filename, newText)
 
 ################################################################################################
 def isPastDate(oldDate) -> bool:
-#    baseDate = datetime(2021, 12, 31).astimezone(pytz.timezone(constants.TIMEZONE_TOKYO))
     baseDate = date.today()
     if baseDate >= oldDate.date():
         return True
@@ -627,8 +626,8 @@ def convertNsfDate(utcDateStr, tz) -> datetime:
     utcDateStr = utcDateStr.replace('Sept.', 'Sep')
     for fmt in constants.NSF_DATE_FORMATS:
         try:
-            utcDate = datetime.strptime(utcDateStr, fmt).replace(tzinfo=pytz.UTC)
-            return utcDate.astimezone(pytz.timezone(tz))
+            utcDate = datetime.strptime(utcDateStr, fmt).replace(tzinfo=UTC)
+            return utcDate.astimezone(timezone(tz))
         except ValueError:
             pass
     return None
@@ -677,7 +676,10 @@ def formatLatitudeLongitude(oldData) -> str:
         llList = ll.split('|')
 
         for oldll in llList:
-            newll = findConvertLatitudeLongitude(oldll)
+            radius = oldll.split('+')
+            newll = findConvertLatitudeLongitude(radius[0])
+            if len(radius) == 2:
+                newll += f'+{radius[1]}'
             newData += newll + '|'
     return newData[:-1]
 
@@ -751,12 +753,13 @@ def printTitlePages(title, lastPage, i) -> None:
 def main():
     try:
         driver = myNet.getFirefoxDriver()
-        print('Create all NSF launched urls from site...')
+        print('Create all NSF launched urls from Chinese Launchers')
+        print('https://forum.nasaspaceflight.com/index.php?board=40.0')
         page = 'url'
         nsfDict = getNsfUrlList(driver, page)
         writeNsfToFile(nsfDict)
     except:
-        myUtils.pritnExceptionTrace()
+        myExcept.printExceptionTrace()
         # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
 
 ################################################################################################

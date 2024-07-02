@@ -2,14 +2,11 @@ from timeit import timeit
 import pandas as pd
 import matplotlib.pyplot as plt
 from cn2an import an2cn
-from sys import path
 from datetime import datetime, timedelta
-from openpyxl import load_workbook as loadXLSX
 from matplotlib.lines import Line2D
 
-path.append("")
-
 from myModules import myPlot
+from myModules import myShape
 from myModules import myUtils
 
 ################################################################################################
@@ -697,7 +694,7 @@ def plotBarGraphByYearMonthNew(cn_font, ax, dfList, startYear, rocketType='', by
     rightYLabel = '发射数'
 
     width = 0.3
-    allTotal, czTotal, nczTotal = totalList[0], totalList[1], totalList[2]
+    # allTotal, czTotal, nczTotal = totalList[0], totalList[1], totalList[2]
     allOk, czOk, nczOk = okList[0], okList[1], okList[2]
     allNg, czNg, nczNg = ngList[0], ngList[1], ngList[2]
 
@@ -783,7 +780,7 @@ def plotGraphByWeek(cn_font, df, title, startYear=None, rocketList=None):
         newTitle = myPlot.getPlotTitle(f'中国{title}', startYear)
         savePath = f'./images/年度别发射周统计/{newTitle}.png'
         # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
-        fig, axLeft =  myPlot.getFigure()
+        fig, axLeft =  myShape.getFigure()
         # plotLineGraphByTime(cn_font, axLeft, dfList, False)
         plotBarGraphByTime(cn_font, axLeft, dfList, False)
         plotTitleLegendByTime(cn_font, newTitle)
@@ -794,7 +791,7 @@ def plotGraphByWeek(cn_font, df, title, startYear=None, rocketList=None):
             newTitle = myPlot.getPlotTitle(f'中国全部{title}')
             savePath = f'./images/{newTitle}.png'
             # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
-            fig, axLeft =  myPlot.getFigure()
+            fig, axLeft =  myShape.getFigure()
             # plotLineGraphByTime(cn_font, axLeft, dfList, False)
             plotBarGraphByTime(cn_font, axLeft, dfList, False)
             plotTitleLegendByTime(cn_font, newTitle)
@@ -810,7 +807,7 @@ def plotGraphByMonth(cn_font, df, title, startYear=None, rocketList=None):
         newTitle = myPlot.getPlotTitle(f'中国{title}', startYear)
         savePath = f'./images/年度别发射月统计/{newTitle}.png'
         # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
-        fig, axLeft =  myPlot.getFigure()
+        fig, axLeft =  myShape.getFigure()
         # newTitle = myPlot.getPlotTitle(f'中国全部{title}')
         # plotLineGraphByTime(cn_font, axLeft, dfList)
         plotBarGraphByTime(cn_font, axLeft, dfList)
@@ -822,7 +819,7 @@ def plotGraphByMonth(cn_font, df, title, startYear=None, rocketList=None):
             newTitle = myPlot.getPlotTitle(f'中国全部{title}')
             savePath = f'./images/{newTitle}.png'
             # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
-            fig, axLeft =  myPlot.getFigure()
+            fig, axLeft =  myShape.getFigure()
             # newTitle = myPlot.getPlotTitle(f'中国全部{title}')
             # plotLineGraphByTime(cn_font, axLeft, dfList)
             plotBarGraphByTime(cn_font, axLeft, dfList)
@@ -851,7 +848,7 @@ def plotGraphByYearMonth(cn_font, df, title, startYear=None, endYear=None, byYea
         for rocket in rocketListNew:
             if rocket not in ',长征,其他':
                 continue
-            fig, axLeft =  myPlot.getFigure()
+            fig, axLeft =  myShape.getFigure()
             newTitle = myPlot.getPlotTitle(f'{prefix}{rocket}{title}', startYear, endYear, byYear=byYear, mom=mom)
             if startYear is None and '长征' not in newTitle and '其他' not in newTitle:
                 newTitle = newTitle.replace('中国', '中国全部')
@@ -865,7 +862,7 @@ def plotGraphByYearMonth(cn_font, df, title, startYear=None, endYear=None, byYea
             myPlot.saveFig(fig, f'./images/{path}{newTitle}.png') 
     else:
         # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
-        fig, axLeft =  myPlot.getFigure()
+        fig, axLeft =  myShape.getFigure()
         newTitle = myPlot.getPlotTitle(f'{prefix}{title}', startYear, endYear, byYear=byYear)
 
         plotLineGraphByYearMonthNew(cn_font, axLeft, dfList, startYear, rocketType=rocketListNew)
@@ -889,7 +886,7 @@ def plot1(cn_font, df, years=None, seriesList=None):
             plotGraphByMonth(cn_font, df, title2, year)
 
         for year in years:
-            if seriesList:
+            if year == myUtils.getThisYear() and seriesList:
                 today = datetime.today()
                 startYYMMMM = f'{year}01'
                 endYYMMMM = f'{year}12' if today.year < int(year) else f'{year}{today.strftime("%m")}'
