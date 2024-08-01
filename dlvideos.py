@@ -21,8 +21,8 @@ WJYS = 'WJYS'
 CTV = 'CTV'
 
 CNYS_BASE_URL = 'https://cnys.tv/'
-WJYS_BASE_URL = 'https://www.wjys.cc/'
 CTV_BASE_URL = 'https://c-tv.tv/'
+WJYS_BASE_URL = 'https://www.wjys.cc/'
 
 CNYS_SEARCH_URL = CNYS_BASE_URL + 'vodsearch.html?wd={}'
 CTV_SEARCH_URL = CTV_BASE_URL + 'tag/?wd={}'
@@ -36,11 +36,11 @@ CNYS_ACTOR_URL = CNYS_BASE_URL + 'vodsearch-actor-{}.html'
 
 CNYS_VIDEO_URL = CNYS_BASE_URL + 'vodplay-{}-sid-{}-nid-{}.html'
 CTV_VIDEO_URL = CTV_BASE_URL + 'dyplay/{}-1-1/'
-WJYS_VIDEO_URL = WJYS_BASE_URL + 'vodplay/{}-{}-{}.html'
+WJYS_PLAY_URL = WJYS_BASE_URL + 'vodplay/{}-{}-{}.html'
 
 CNYS_DETAIL_URL = CNYS_BASE_URL + 'voddetai-{}.html'
 CTV_DETAIL_URL = CTV_BASE_URL + 'dy/{}/'
-WJYS_DETAIL_URL = WJYS_BASE_URL + 'voddetai-{}.html'
+WJYS_DETAIL_URL = WJYS_BASE_URL + 'voddetail/{}.html'
 
 SITE_BASE_URL = {
     CNYS : CNYS_BASE_URL,
@@ -62,7 +62,7 @@ SITE_SEARCH_PAGE_URL = {
 
 SITE_VIDEO_URL = {
     CNYS : CNYS_VIDEO_URL,
-    WJYS : WJYS_VIDEO_URL,
+    WJYS : WJYS_PLAY_URL,
     CTV : CTV_VIDEO_URL,
 }
 
@@ -398,7 +398,27 @@ def parseUrlListCTV(base: str, videoId: int):
     return videoName, year, urls, sId
 
 ################################################################################################
-def parseUrlListWJYS(base: str, videoId: int, sId: int) -> list:
+XPATH_TAB0 = './/div[@class="module-list module-player-list tab-list sort-list selected"]'
+XPATH_TABS = './/div[@class="module-list module-player-list tab-list sort-list"]'
+XPATH_TABS_REAL = '//div[@class="scroll-content"]'
+def parseTabList(driver, detailUrl, videoId):
+    link = detailUrl.format(videoId) 
+    driver.get(link)
+    module = myNet.findElementByXPath(driver, '//div[@class="module"]')
+    tab0 = myNet.findElementByXPath(module, XPATH_TAB0)
+    tabs = myNet.findElementsByXPath(module, XPATH_TABS)
+    tabs.insert(0, tab0)
+    sIds = ''
+    sIdList = []
+    for i, tab in enumerate(tabs):
+        sId = tab.get_property('id').split('-')[1]
+        sIdList.append(sId)
+        sIds += f"tab[{i}]={sId}, "
+    print(f'sIds: {sIds}')
+    return sIdList
+    
+################################################################################################
+def parseUrlListWJYS(detailUrl: str, playUrl: str, videoId: int, sId: int) -> list:
     videoName, year = '', ''
     page = 1
     urls = {}
@@ -406,14 +426,13 @@ def parseUrlListWJYS(base: str, videoId: int, sId: int) -> list:
     print(f'Parsing {videoId} url list on {WJYS_BASE_URL}...')
 
     try:
+        sIdList = parseTabList(driver, detailUrl, videoId)
+        sId = sId if sId else sIdList[0]
+
         tabIndex = 0
-        link = base.format(videoId, sId, page)
+        link = playUrl.format(videoId, sId, page) 
         driver.get(link)
         tabs = myNet.findElementsByXPath(driver, '//a[@class="module-tab-item tab-item"]')
-        href = ''
-        for i, tab in enumerate(tabs):
-            href += tab.get_property('href').split('-')[1] + ', '
-        print(f'sIds: {href}')
 
         while True:
             if not videoName:
@@ -442,16 +461,15 @@ def parseUrlListWJYS(base: str, videoId: int, sId: int) -> list:
                 print(f'{sId}-{id}: {url_next}')
 
                 page += 2
-                link = base.format(videoId, sId, page)
+                link = playUrl.format(videoId, sId, page)
                 driver.get(link)
             else:
-                tabIndex += 1
                 if len(tabs) > tabIndex:
-                    # loop to multiple tabls for not vip url
                     link = tabs[tabIndex].get_property('href')
                     links = link.split('-')
                     sId = links[1]
                     driver.get(link)
+                    tabIndex += 1
                 else:
                     break
     except:
@@ -506,7 +524,7 @@ def showUsage():
 
 ################################################################################################
 def checkArgv() -> list:
-    site, videoName, videoIds, sId, folder, filename = '', '', '', '2', '', ''
+    site, videoName, videoIds, sId, folder, filename = '', '', '', '', '', ''
     count = len(argv)
     if  count <= 1:
         showUsage()
@@ -547,7 +565,7 @@ def parseUrlList(site:str, videoId: int, sId: int) -> list:
     elif site.upper() == CTV:
         videoName, year, urls, sId = parseUrlListCTV(CTV_VIDEO_URL, videoId)
     elif site.upper() == WJYS:
-        videoName, year, urls, sId = parseUrlListWJYS(WJYS_VIDEO_URL, videoId, sId)
+        videoName, year, urls, sId = parseUrlListWJYS(WJYS_DETAIL_URL, WJYS_PLAY_URL, videoId, sId)
     return videoName, year, urls, sId
 
 ################################################################################################

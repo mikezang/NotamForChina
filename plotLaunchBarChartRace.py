@@ -124,7 +124,7 @@ def plotRocketChartRaceAnimation(df, rocket, startYear=None, endYear=None, no=''
         period_template=periodTemplate, filter_column_colors=True, 
         tick_label_font=labelFontSize, bar_label_font=labelFontSize, n_bars=rocketsCount)
 
-    myUtils.playSound()
+    # myUtils.playSound()
     myLogger.info(f'End ploting bar char race: ---------------------------')
 
 ################################################################################################
@@ -276,7 +276,7 @@ def plotShenzhouChartRaceAnimation(df, plotStartYear='', use_pinyin=False):
                        tick_template=tickFunc, period_summary_func=sumFunc, bar_texttemplate=barFunc, 
                        period_template=periodTemplate, filter_column_colors=True)
 
-    myUtils.playSound()
+    # myUtils.playSound()
     myLogger.info(f'End ploting bar char race: ---------------------------')
 
 ################################################################################################

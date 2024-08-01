@@ -43,7 +43,7 @@ def printNotam(dictData, start):
 def parseMsa(text):
     location = 'MSA'
     number = myUtils.getMsaLocation(text)
-    text = text.replace('\n', '').replace(' ', '').replace('/', '').replace('、', '')
+    text = text.replace('\n', '').replace(' ', '').replace('/', '').replace('、', ',')
     startDates, endDates = myUtils.getMsaDates(text)
     areas = myUtils.getMsaArea(text)
     return location, number, startDates, endDates, areas
@@ -88,9 +88,12 @@ def getNotamDetail(driver, command, searchLocaltions):
                 form = driver.find_element(By.XPATH, "//form[@name='NotamRetrievalForm']")
 
                 if form:
-                    sleep(5)
+                    try:
+                        myNet.waitForPageLoaded(driver, 60)
+                    except:
+                        pass
+
                     driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
-                    sleep(15)
                     table1 = myNet.findElementByTag(form, "table")
                 
                     if table1:
@@ -113,7 +116,6 @@ def getNotamDetail(driver, command, searchLocaltions):
                                                 endDate = nsf.convertDate(endDate)
                                                 area = nsf.formatLatitudeLongitude(area)
                                                 notam = getNoatmDict(notam, number, startDate, endDate, location, area)
-                # myUtils.isTempFileSaved = False
     except :
         myExcept.printExceptionTrace()
         pass
@@ -121,19 +123,21 @@ def getNotamDetail(driver, command, searchLocaltions):
 
 ################################################################################################
 def getNoatmDict(notamDict, number, startDate, endDate, location, area):
-    if number in notamDict:
-        location1 = notamDict[number].split(";")[2]
-        location = location1 + "/" + location if location != location1 else location
+    key = location + '/' + number
+    if key in notamDict:
+        items = notamDict[key].split(";")
+        if startDate == items[0] and location != items[2]:
+            location = items[2] + "/" + location
         c1 = [m.find(location) for m in notamDict.values()]
         c2 = [m.find(startDate) for m in notamDict.values()]
         c3 = [m.find(endDate) for m in notamDict.values()]
         if max(c1)>= 0 and max(c2) >= 0 and max(c3) >= 0:
-            area1 = notamDict[number].split(";")[3]
+            area1 = notamDict[key].split(";")[3]
             area = area1 + "-" + area if area != area1 else area
-    notamDict[number] = startDate + ";"
-    notamDict[number] = notamDict[number] + endDate + ";"
-    notamDict[number] = notamDict[number] + location + ";"
-    notamDict[number] = notamDict[number] + area
+    notamDict[key] = startDate + ";"
+    notamDict[key] = notamDict[key] + endDate + ";"
+    notamDict[key] = notamDict[key] + location + ";"
+    notamDict[key] = notamDict[key] + area
     return notamDict
 
 ################################################################################################

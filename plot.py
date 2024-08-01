@@ -425,10 +425,9 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
                     plotLaunchByDate.plot6(cn_font, df, seriesChecked, dictUpperStage, seriesPrintLast)
                 if seriesRetired:
                     plotLaunchByDate.plot7(cn_font, df, retired[0].split(','), retired[1].split(','), dictUpperStage, seriesPrintLast)
-            else:
-                plotLaunchByRocket.plot1(cn_font, df, seriesList=seriesChecked)
-                seriesChecked = removeSeriesText(seriesChecked)
-                plotLaunchByDate.plot2(cn_font, df, seriesChecked, dictUpperStage, seriesPrintLast, dfLastLaunch)
+            plotLaunchByRocket.plot1(cn_font, df, seriesList=seriesChecked)
+            seriesChecked = removeSeriesText(seriesChecked)
+            plotLaunchByDate.plot2(cn_font, df, seriesChecked, dictUpperStage, seriesPrintLast, dfLastLaunch)
 
         if locationsChecked:
             print(f'\nLocation Checked: {locationsChecked}')
@@ -437,6 +436,7 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
         if payloadsChecked:
             print(f'\nPayload Checked: {payloadsChecked}')
             plotLaunchByDate.plot5(cn_font, df, payloadsChecked, dictUpperStage, payloadPrintLast)
+        print('Plot finished!')
         myUtils.playSound()
 
     elif event == BUTTON2_LABEL:
@@ -470,6 +470,8 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
                     else:
                         if not yearsChecked:
                             plotLaunchBarChartRace.plot2(df, category)
+        print('Plot finished!')
+        myUtils.playSound()
 
 ################################################################################################
 def main():
