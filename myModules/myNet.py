@@ -12,6 +12,13 @@ import lxml.html
 
 from myModules import constants
 
+
+################################################################################################
+def waitForPageLoaded(driver, timeout):
+    WebDriverWait(driver, timeout).until(
+        lambda driver: driver.execute_script('return document.readyState') == 'complete'
+    )
+
 ################################################################################################
 def scrollBottom(driver: webdriver.Firefox):
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
@@ -87,6 +94,10 @@ def findElementByClass(driver: webdriver.Firefox, className: str):
 ################################################################################################
 def findElementsByXPath(driver: webdriver.Firefox, xPath: str):
     return driver.find_elements(By.XPATH, xPath)
+
+################################################################################################
+def findElementByXPath(driver: webdriver.Firefox, xPath: str):
+    return driver.find_element(By.XPATH, xPath)
 
 ################################################################################################
 def findElementsByLinkText(driver: webdriver.Firefox, linkText: str):

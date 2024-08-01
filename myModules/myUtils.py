@@ -380,9 +380,7 @@ def getMsaLocation(content) -> str:
 def getNsfLocation(content) -> str:
     firNames = readConfigFirNames()
     pattern = getFirRegExPattern(firNames)
-    # pattern = getFirRegExPattern(constants.FIR_LOCATIONS)
     locations = finditer(pattern, content)
-    # locations = finditer(constants.PATTERN_LOCATION_ONLY, content)
     if locations:
         loc = ''
         lastEnd = 0
@@ -400,21 +398,13 @@ def getNsfLocation(content) -> str:
 def getNotamLocation(content) -> str:
     firNames = readConfigFirNames()
     pattern = getFirRegExPattern(firNames)
-    # pattern = getFirRegExPattern(constants.FIR_LOCATIONS)
-    locations = finditer(pattern, content)
-    # locations = finditer(constants.PATTERN_LOCATION_ONLY, content)
-    if locations:
-        loc = ''
-        lastEnd = 0
-        for m in locations:
-            if lastEnd == 0 or m.start() - lastEnd < 10:
-                if loc != '':
-                    loc += '/'
-                loc += m.group()
-            lastEnd = m.end()
-        return loc
+    locations = sorted(set(findall(pattern, content)))
+    loc = ''
+    if len(locations) > 1:
+        loc = '/'.join(locations)
     else:
-        return ''
+        loc = locations[0]
+    return loc 
 
 ################################################################################################
 def getNsfArea(contentSection) -> str:
@@ -901,7 +891,7 @@ def getNotamDictString(d):
     msg = ''
     for i, (key, value) in enumerate(d.items()):
         items = value.split(';')
-        msg += f'{i + 1:02}: {items[2]},{key},{items[0]},{items[1]};{items[3]}\n'
+        msg += f'{i + 1:02}: {items[2]},{key[-8:]},{items[0]},{items[1]};{items[3]}\n'
     # print(msg)
     return msg[:-1]
 

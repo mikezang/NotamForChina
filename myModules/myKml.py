@@ -13,7 +13,7 @@ def readKmlFile(kmlFile, excludePoint=True):
             gdf = getGdfPolygonsLines(gdf)
     except:
         gdf = None
-        myExcept.printExceptionTrace()
+        myExcept.printExceptionTrace(limit=0)
     return gdf 
 
 ################################################################################################

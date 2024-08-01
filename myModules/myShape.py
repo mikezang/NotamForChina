@@ -315,7 +315,7 @@ def createKmlFile(notams, title1='', city1='') -> None:
             coordsList = [myUtils.convertDMS2DD(c) for c in coords]
 
             if lastStartDate == '' or myUtils.isNearTime(lastStartDate, startDate, 59):
-                drawStages(kml, coordsList, city, f'{loc}/{number}', int(radius[1]))
+                drawStages(kml, coordsList, city, number, int(radius[1]))
                 lastCity, highestPoint, lowestPoint, seaCoord = getSatrtEndCoords(lowestPoint, highestPoint, coordsList, lastCity, city, loc, seaCoord)
             else:
                 drawRoutes(kml, lastCity, highestPoint, lowestPoint, seaCoord)
@@ -327,7 +327,7 @@ def createKmlFile(notams, title1='', city1='') -> None:
                 lastCity = ''
 
                 kml = Kml()
-                drawStages(kml, coordsList, city, f'{loc}/{number}', int(radius[1]))
+                drawStages(kml, coordsList, city, number, int(radius[1]))
                 lastCity, highestPoint, lowestPoint, seaCoord = getSatrtEndCoords(lowestPoint, highestPoint, coordsList, lastCity, city, loc, seaCoord)
             lastStartDate = startDate
             lastEndDate = endDate

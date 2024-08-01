@@ -419,7 +419,7 @@ def plotPayloadInsideBar(cn_font, ax, yDataList, rocketList, payloadList, colorD
                 for l in labels:
                     label += l + '／'    
             label = label[:-1].split(',')[0].split('(')[0].split('（')[0]
-            label = label.replace('-', '|')
+            label = label.replace('-', '|').replace('~', '|')
             if payload == '吉林一号':
                 label = label.replace(payload, '')
             plotRocketNumber(cn_font, ax, x, y, gap, label[:16], fontsize, color)
@@ -1004,8 +1004,8 @@ def getEndRow(row):
 
 ################################################################################################
 def convertDataFrame2TimeSeries(df, use_pinyin=False):
-    # myUtils.setStartTime()
-    removeColumns = ['发射日期', '着陆日期', '在轨日数', '载人飞船', 'Ship', '备注']  
+    df.dropna(subset=['航天员'], inplace=True)
+    removeColumns = ['发射日期', '着陆日期', '着陆地点', '在轨日数', '载人飞船', 'Ship']  
     removeColumns += ['出生日期', '年龄', '入选年', '批次', '日差']
     removeColumns.append('航天员') if use_pinyin else removeColumns.append('Pinyin')
 

@@ -227,12 +227,16 @@ def download(m3u8_link, output):
             msg = video_decoder(ts_fname)
             if msg:
                 print(msg)
+                os.chdir(mergedDIR)
+                shutil.rmtree(ts_folder)
                 return
 
     # check video type
     skipHeader, msg = isVideoWithPNGHeader(downloaded_ts[0])
     if msg:
         print(msg)
+        os.chdir(mergedDIR)
+        shutil.rmtree(ts_folder)
         return
 
     mergingFile = f'{ts_folder}/merging.txt'
