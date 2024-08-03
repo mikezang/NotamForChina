@@ -1,3 +1,4 @@
+chcp 65001
 cd \zang\python\Rocket*
 
 call merge mergelist\ListImageThisYear.txt videos\中国运载火箭发射统计（今年）.mp4
