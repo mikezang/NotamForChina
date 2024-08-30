@@ -448,7 +448,7 @@ def parseUrlListWJYS(detailUrl: str, playUrl: str, videoId: int, sId: int) -> li
             if not url:
                 break
 
-            if not 'vip' in url:
+            if not 'vip' in url or True:
                 id = f'{page:02}'
                 urls[id] = url
                 print(f'{sId}-{id}: {url}')
@@ -495,14 +495,14 @@ def downloadVideoFiles(urls: dict, mergedFolder:str, filename: str, reverse=Fals
         existFiles = sorted(list(myUtils.listFiles(mergedFolder, '.mp4', onlyFilename=True, includeSubFolder=False)))
         if reverse:
             for key, url in reversed(urls.items()):
-                if 'vip.' in url:
+                if 'vip.' in url and False:
                     print(f'Inaccessible url {url}')
                     break
                 downloadMP4(url, key, filename, count, existFiles, mergedFolder)
                 filename = ''
         else:
             for key, url in urls.items():
-                if 'vip.' in url:
+                if 'vip.' in url and False:
                     print(f'Inaccessible url {url}')
                     break
                 downloadMP4(url, key, filename, count, existFiles, mergedFolder)
