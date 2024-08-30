@@ -68,6 +68,10 @@ def elementXPathFocus(driver: webdriver.Firefox, xpath: str, preventScroll: bool
   driver.execute_script(JavaScriptFocusToElement, element, preventScroll)
 
 ################################################################################################
+def windowOpened(driver, time, windowHandles):
+    WebDriverWait(driver, time).until(EC.new_window_is_opened(windowHandles))
+
+################################################################################################
 def elementClick(driver, time, xPath):
     elementXPath(driver, time, xPath).click()
 

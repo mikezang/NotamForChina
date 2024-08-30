@@ -18,7 +18,7 @@ from pytz import timezone, UTC
 from time import localtime, strftime, time
 from datetime import datetime, timedelta, date
 from calendar import monthrange, month_abbr
-from re import compile, findall, finditer, match, sub
+from re import compile, findall, finditer, match, sub, search
 from os import path, linesep, curdir, makedirs, remove, chdir, listdir, walk, system
 from typing import NamedTuple
 
@@ -887,12 +887,21 @@ def maxOfLists(lists):
     return max([max(sublist, default=float('-inf')) for sublist in lists])
 
 ################################################################################################
+def getDDMM(ddmmss):
+    if '|' in ddmmss:
+        ddmmss = ddmmss.split('|')
+        ddmmList = [f'{dms[:7]},{dms[-11:-3]}' if len(dms.split('+')[0]) > 16 else dms for dms in ddmmss]
+        return '|'.join(ddmmList)
+    else:
+        ddmm = f'{ddmmss[:7]},{ddmmss[-11:-3]}' if len(ddmmss.split('+')[0]) > 16 else ddmmss
+        return ddmm
+
+################################################################################################
 def getNotamDictString(d):
     msg = ''
     for i, (key, value) in enumerate(d.items()):
         items = value.split(';')
-        msg += f'{i + 1:02}: {items[2]},{key[-8:]},{items[0]},{items[1]};{items[3]}\n'
-    # print(msg)
+        msg += f'{i + 1:02}: {items[2]},{key[-8:]},{items[0]},{items[1]};{getDDMM(items[3])}\n'
     return msg[:-1]
 
 ################################################################################################
@@ -1500,6 +1509,126 @@ def pointIsInsidePolygon(p: tuple, points: list) -> bool:
 
 #     # npts doesn't include start/end points, so prepend/append them
 #     return lonlats
+
+################################################################################################
+def parseNotamFromTextFile(filename):
+    texts = []
+    notam = {}
+    lines = ''
+    with open(filename, encoding='UTF-8') as f:
+        for line in f:
+            if line == '\n':
+                texts.append(lines)
+                lines = ''
+            else:
+                lines += line
+        texts.append(lines)
+    for text in texts:
+        notam = parseNotamText(notam, text)
+    return notam
+
+################################################################################################
+def parseNotamText(notam, text):
+    if isChinaNotam(text):
+        location, number, startDate, endDate, area = parseNotam(text)
+        if location == 'RJJJ' and number.startswith('Q'):
+            return notam
+        if area != '':
+            startDate = convertDate(startDate)
+            endDate = convertDate(endDate)
+            area = formatLatitudeLongitude(area)
+            notam = getNoatmDict(notam, number, startDate, endDate, location, area)
+    return notam
+
+################################################################################################
+def convertDate(oldDate) -> str:
+    for pattern, fmt in constants.FORMAT_DATE.items():
+        if search(pattern, oldDate):
+            return datetime.strptime(oldDate, fmt).strftime("%Y/%m/%d %H:%M")
+    return oldDate
+
+################################################################################################
+def formatLatitudeLongitude(oldData) -> str:
+    newData = ''
+    llListGroup = oldData.split('-')
+    for ll in llListGroup:
+        if newData != '':
+            newData = newData[:-1] + '-'
+        llList = ll.split('|')
+
+        for oldll in llList:
+            radius = oldll.split('+')
+            newll = findConvertLatitudeLongitude(radius[0])
+            if len(radius) == 2:
+                newll += f'+{radius[1]}'
+            newData += newll + '|'
+    return newData[:-1]
+
+################################################################################################
+def parseNotam(text):
+    location = getNotamLocation(text)
+    numbers = getNotamNumbers(text)
+    text = text.replace('\n', '').replace(' ', '')
+    startDates, endDates = getNotamDates(text)
+    area = getNotamArea(text)
+    return location, numbers, startDates, endDates, area
+
+################################################################################################
+def getNoatmDict(notamDict, number, startDate, endDate, location, area):
+    key = location + '/' + number
+    if key in notamDict:
+        items = notamDict[key].split(";")
+        if startDate == items[0] and location != items[2]:
+            location = items[2] + "/" + location
+        c1 = [m.find(location) for m in notamDict.values()]
+        c2 = [m.find(startDate) for m in notamDict.values()]
+        c3 = [m.find(endDate) for m in notamDict.values()]
+        if max(c1)>= 0 and max(c2) >= 0 and max(c3) >= 0:
+            area1 = notamDict[key].split(";")[3]
+            area = area1 + "-" + area if area != area1 else area
+    notamDict[key] = startDate + ";"
+    notamDict[key] = notamDict[key] + endDate + ";"
+    notamDict[key] = notamDict[key] + location + ";"
+    notamDict[key] = notamDict[key] + area
+    return notamDict
+
+################################################################################################
+def parseMsa(text):
+    location = 'MSA'
+    number = getMsaLocation(text)
+    text = text.replace('\n', '').replace(' ', '').replace('/', '').replace('、', ',')
+    startDates, endDates = getMsaDates(text)
+    areas = getMsaArea(text)
+    return location, number, startDates, endDates, areas
+
+################################################################################################
+def formatMSALatitudeLongitude(oldData) -> str:
+    newData = []
+    # llListGroup = oldData.split('-')
+    for data in oldData:
+        oldllList = data.split('|')
+
+        newllList = ''
+        for oldll in oldllList:
+            newll = findConvertLatitudeLongitude(oldll)
+            newllList += newll + '|'
+        newData.append(newllList[:-1])
+    return newData
+
+################################################################################################
+def findConvertLatitudeLongitude(latlon):
+    for p in constants.PATTERNS:
+        if search(p, latlon):
+            return convertPatterns(latlon, p)
+    return latlon
+
+###############################################################################################
+def printNotam(dictData, start=''):
+    print(f"\nNOTAM发射预测{start}")
+    print("================================")
+    print(getNotamDictString(dictData))
+    print("================================")
+    print(f"NOTAM发射预测{start}\n")
 
 ################################################################################################
 def readNotamDictDetailFromTextFile(filename):
