@@ -20,7 +20,7 @@ CTRIP_URL = "https://m.ctrip.com/webapp/vacations/shop/home?productid=31375689&b
 ENIUTRIP_URL = "https://mp.sohu.com/profile?xpt=ZW5pdXBsYW5ldEBzaW5hLmNvbQ==&_f=index_pagemp_1&spm=smpc.content-abroad.author.1.1659536786116JJXcGX9"
 
 DAYS_DIFF = {
-    '房车·中国海南文昌3日2晚跟团游' : 2,
+    '房车·中国海南文昌3日2晚跟团游' : 3,
     '酒泉4天3晚' : 2,
     # '酒泉3天2晚' : 2,
     "酒泉2日" : 1,
