@@ -10,8 +10,6 @@ from myModules import myUtils
 from myModules import myPlot
 from myModules import myShape
 from myModules import myKml
-import notam
-import nsf
 
 ################################################################################################
 def plotLaunchCenter(axs):
@@ -42,7 +40,8 @@ def compareNotam(newFile, cn_font):
 
     # List all kml files in specific foder except newFile
     oldFiles = myUtils.listFiles(folder, extension=".kml", excludeFile=filename)
-    savePath = f'./temp/match/{filename[:-4]}'
+    savePath1 = f'./temp/match/{filename[:-4]}'
+    savePath2 = f'./temp/unmatch/{filename[:-4]}'
     
     for oldFile in oldFiles:
         if '\\old\\' in oldFile:
@@ -78,13 +77,13 @@ def compareNotam(newFile, cn_font):
                 print(f'{newTitle} IoU {oldTitle}')
                 for iou in ious:
                     print(f'    {iou}') 
-                myPlot.saveFig(fig, f'{savePath}/{filename}', False, False)
+                myPlot.saveFig(fig, f'{savePath1}/{filename}', False, False)
                 print('')
             else:
-                myPlot.saveFig(fig, f'./temp/unmatch/{filename}', False, False)
+                myPlot.saveFig(fig, f'{savePath2}/{filename}', False, False)
         except Exception as e:
             print(f'Exception: {e}\n')
-    print('\nFnished comparing!')
+    print('\nFinished comparing!')
 
 ################################################################################################
 def main():
@@ -131,10 +130,12 @@ def proceeFile(window, cn_font, newFile):
         print('The filename you chose was: ', newFile)
         createMsaDropZonesKmlFile(newFile)
     elif '.txt' in newFile:
-        notamDict = myUtils.readNotamDictDetailFromTextFile(newFile)
+        notamDict = myUtils.parseNotamFromTextFile(newFile)
+        # notamDict = myUtils.readNotamDictDetailFromTextFile(newFile)
         if notamDict:
-            notam.printNotam(notamDict)
-            myUtils.createKmlFile(notamDict)
+            notamDict =  myUtils.sortDictByValue(notamDict)
+            myUtils.printNotam(notamDict)
+            myShape.createKmlFile(notamDict)
     else:
         print("Unknown type filename supplied")
 
@@ -149,7 +150,7 @@ def createMsaDropZonesKmlFile(oldFile):
         for line in lines:
             if line != '' and line[0:1] != '#':
                 content += line
-        location, number, startDates, endDates, areas = notam.parseMsa(content)
+        location, number, startDates, endDates, areas = myUtils.parseMsa(content)
         lastStart = ''
         lastEnd = ''
         kml = Kml()
@@ -164,7 +165,7 @@ def createMsaDropZonesKmlFile(oldFile):
             title = myUtils.convertTitle(startDate, endDate, title, isLocalTime=True)
 
             if area:
-                area = nsf.formatMSALatitudeLongitude([area])[0]
+                area = myUtils.formatMSALatitudeLongitude([area])[0]
                 coords = area.split('|')
                 coordsList = [myUtils.convertDMS2DD(c) for c in coords]
                 if len(coordsList) == 1:
@@ -172,7 +173,7 @@ def createMsaDropZonesKmlFile(oldFile):
                     myShape.drawCircle(kml, coordsList, f'{location}/{number}', radius=radius)
                 else:
                     myShape.drawPolygon(kml, coordsList, f'{location}/{number}')
-                notams = notam.getNoatmDict(notams, number, startDate, endDate, location, area)
+                notams = myUtils.getNoatmDict(notams, number, startDate, endDate, location, area)
                 lastStart = startDate
                 lastEnd = endDate
         myShape.updateKmlFile(kml, title, myShape.KML_PATH, notams)
