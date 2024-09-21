@@ -113,7 +113,8 @@ def drawRoutePolyline(kml, city, centerCoords, highestPoint, lowestPoint=None, s
             coordsListCity.insert(0, myUtils.getCityCoordinate(c))
 
         # Generate a curve through the specified points 
-        points = interpolatePolylines(coordsListCity, 20)
+        # points = interpolatePolylines(coordsListCity)
+        points = coordsListCity
     
         lon0, lat0 = points[0]
         lon2, lat2 = points[-1]
