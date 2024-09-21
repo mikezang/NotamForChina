@@ -22,11 +22,7 @@ ENIUTRIP_URL = "https://mp.sohu.com/profile?xpt=ZW5pdXBsYW5ldEBzaW5hLmNvbQ==&_f=
 DAYS_DIFF = {
     '房车·中国海南文昌3日2晚跟团游' : 3,
     '酒泉4天3晚' : 2,
-    # '酒泉3天2晚' : 2,
     "酒泉2日" : 1,
-    # "西昌2日" : 0,
-    # "文昌3日" : 2,
-    # "半日" : 0,
     "2天" : 1,
     "3天" : 1,
     "3日" : 1,
@@ -141,6 +137,8 @@ def parseUrls(div1, div2):
                     locations.append('西昌')
                 elif '酒泉' in title or '东方航天城' in title:
                     locations.append('酒泉')
+                elif '海阳' in title:
+                    locations.append('海阳')
     return urls, titles, locations
 
 ################################################################################################
@@ -314,7 +312,7 @@ def createHtmlpage(urls, titles, locations) -> None:
     filename = 'data/LaunchTravels.html'
 
     with open(filename, 'w', encoding='utf-8') as f:
-        f.write(f'<a target=_blank href={mainUrl}><h1>CTRIP火箭发射观礼旅行</H1></a><br>\n\n')
+        f.write(f'<a target=_blank href={mainUrl}><h1>CTRIP火箭发射观礼旅行</H1></a>\n')
 
         for i, (url, title, location) in enumerate(zip(urls, titles, locations)):
             city = writeTitle(f, title, location, city)

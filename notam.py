@@ -22,10 +22,10 @@ NEW_FORM_XPATH = "//form[@name='NotamRetrievalForm']"
 SCROLL_WINDOW = "window.scrollTo(0, document.body.scrollHeight)"
 
 ################################################################################################
-def getNotamDetail(driver, command, searchLocaltions):
+def getNotamDetail(driver, searchLocaltions):
     start = myUtils.getJapanTime()
     print(f"{start}")
-    print(f"Searching {command}: {searchLocaltions}")
+    print(f"Searching Location: {searchLocaltions}")
     notam = {}
     
     try:
@@ -58,7 +58,8 @@ def getNotamDetail(driver, command, searchLocaltions):
                             for table2 in myNet.findElementsByTag(td1, "table"):
                                 if myUtils.isChinaNotam(table2.text):
                                     for td2 in myNet.findElementsByTag(table2, "td"):
-                                        notam = myUtils.parseNotamText(notam, td2.text)
+                                        if myUtils.isChinaNotam(td2.text):
+                                            notam = myUtils.parseNotamText(notam, td2.text)
     except :
         myExcept.printExceptionTrace()
         pass
@@ -85,10 +86,9 @@ def convertDate(oldDate):
     
 def main():
     driver = myNet.getFirefoxDriver()
-    command = 'Location'
     try:
         firLocations = myUtils.readConfigFirNames()
-        notam_data, start = getNotamDetail(driver, command, firLocations)
+        notam_data, start = getNotamDetail(driver, firLocations)
 
         if notam_data:
             notam_data =  myUtils.sortDictByValue(notam_data)
