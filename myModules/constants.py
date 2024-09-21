@@ -105,10 +105,10 @@ PATTERM_QUESTION = r'/(\d{4,6}[NS]\d{5,7}[EW])\d{3}'
 
 # MSA_PATTERN_LATITUDE_LONGITUDE = r'(\d{2}\-\d{2}[.-]\d{2}[NS])(\d{3}\-\d{2}[.-]\d{2}[EW])'
 # MSA_PATTERN_LATITUDE_LONGITUDE = r'(\d{2}[°-]\d{2}[′.-]\d{1,3}"?[NS])/?(\d{2,3}[°-]\d{2}[′.-]\d{1,3}"?[EW])'
-MSA_PATTERN_LATITUDE_LONGITUDE =  r'(\d{2}[°-]\d{2}[\′.-]?\d{0,3}″?[NS][ \/]?\d{2,3}[°-]\d{2}[′.-]?\d{0,3}"?[EW])'
-MSA_PATTERN_LATITUDE_LONGITUDE1 = r'(\d{2}[°-]\d{2}[′.-]\d{1,3}″?[NS]/?\d{2,3}[°-]\d{2}[′.-]\d{1,3}"?[EW])'
+MSA_PATTERN_LATITUDE_LONGITUDE =  r'(\d{2}[°-]\d{2}[\′.-]?\d{0,3}″?[NS][ \/]?\d{2,3}[°-]\d{1,2}[′.-]?\d{0,3}"?[EW])'
+MSA_PATTERN_LATITUDE_LONGITUDE1 = r'(\d{2}[°-]\d{2}[′.-]\d{1,3}″?[NS]/?\d{2,3}[°-]\d{1,2}[′.-]\d{1,3}"?[EW])'
 MSA_PATTERN_DATE = r'FROM(\d{0,2})(\d{0,4})[UTC]{0,3}([A-Z]{0,4})\.?(\d{0,2})TO(\d{0,2})(\d{0,4})[UTC]{0,3}([A-Z]{0,4})\.?(\d{0,2})'
-MSA_PATTERN_NUMBER = r'([A-Z][A-Z]|鲁航警)(\d{1,3}\/\d{2})'
+MSA_PATTERN_NUMBER = r'([A-Z][A-Z]|鲁航警|粤航警|琼航警)(\d{1,3}\/\d{2})'
 
 # MSA_PATTERN_DATE_CHINA1 = r'(\d{1,2})月(\d{1,4})日(\d{1,4})时至(\d{1,4})时'
 MSA_PATTERN_DATE_CHINA = r'(?:(\d{1,2})月)?(\d{1,2})日(?:(\d{1,4})时)?至(?:(\d{1,2})月)?(?:(\d{1,2})日)?(?:(\d{1,4})时)?'

@@ -1,3 +1,4 @@
+import numpy as np
 from shapely.ops import transform
 from shapely.geometry import Polygon, LineString, Point
 from pyproj import Transformer, CRS
@@ -80,11 +81,57 @@ environ['PYPROJ_GLOBAL_CONTEXT'] = 'ON'
 #                 coords = drawStages(kml, coordsList, city, loc)
 #                 lastCity, highestPoint, lowestPoint, _ = getSatrtEndCoords(lowestPoint, highestPoint, coords, lastCity, city)
 
-#     drawRoutes(kml, lastCity, highestPoint, lowestPoint)
+#     drawRouteLine(kml, lastCity, highestPoint, lowestPoint)
 #     updateKmlFile(kml, f'{title}', NSF_PATH)
 
 ################################################################################################
-def drawRoutes(kml, city, highestPoint, lowestPoint=None, seaCoord=None) -> None:
+def interpolatePolylines(coordsListCity, num_points_per_segment=20):
+    points = []
+
+    # Adjust for smoother curves
+    for i in range(len(coordsListCity) - 1): 
+        lng1, lat1 = coordsListCity[i] 
+        lng2, lat2 = coordsListCity[i + 1] 
+    
+        # Create a bezier-like curve (for simplicity, we just interpolate)
+        for t in np.linspace(0, 1, num_points_per_segment): 
+            lat = (1 - t) * lat1 + t * lat2 # Linear interpolation 
+            lng = (1 - t) * lng1 + t * lng2 
+            points.append((lng, lat)) 
+    return points
+
+#TODO: draw a polyline from launch spot to drop zones
+################################################################################################
+def drawRoutePolyline(kml, city, centerCoords, highestPoint, lowestPoint=None, seaCoord=None):
+    cities = [city[i:i + 2] for i in range(0, len(city), 2)]
+    coordsListSort = sorted(centerCoords, key=lambda x: x[1], reverse=True)
+    for c in cities:
+        coordsListCity = coordsListSort.copy()
+        if c == '海上':
+            coordsListCity.insert(0, seaCoord[c])
+        else:
+            coordsListCity.insert(0, myUtils.getCityCoordinate(c))
+
+        # Generate a curve through the specified points 
+        points = interpolatePolylines(coordsListCity, 20)
+    
+        lon0, lat0 = points[0]
+        lon2, lat2 = points[-1]
+        angle = myMath.great_circle_angle(lat0, lon0, lat2, lon2)
+
+        # Add a polyline string to the KML
+        ls = kml.newlinestring(name=f'{c}{angle:.1f}°轨道')
+        ls.style.linestyle.color = 'ff000000'
+        ls.style.linestyle.width = 1
+        ls.coords = points
+
+        # change all polygon color
+        color = myExcel.CITIES[c].split('|')[2]
+        for feature in kml.features:
+            feature.style.polystyle.color = color
+
+################################################################################################
+def drawRouteLine(kml, city, highestPoint, lowestPoint=None, seaCoord=None) -> None:
     cities = [city[i:i + 2] for i in range(0, len(city), 2)]
     for c in cities:
         if c == '海上':
@@ -107,7 +154,7 @@ def drawRoutes(kml, city, highestPoint, lowestPoint=None, seaCoord=None) -> None
         ls.style.linestyle.width = 1
         ls.coords = [cityCoord, lowestPoint]
 
-        # change all polygon
+        # change all polygon color
         color = myExcel.CITIES[c].split('|')[2]
         for feature in kml.features:
             feature.style.polystyle.color = color
@@ -226,7 +273,7 @@ def showRouteAngle(newFile, newNames):
 #                 coordsDict[f'{loc}/{number}'] = coordsList
 #                 lastCity, highestPoint, lowestPoint, _ = getSatrtEndCoords(lowestPoint, highestPoint, coords, lastCity, city)
 #             else:
-#                 drawRoutes(kml, lastCity, highestPoint, lowestPoint)
+#                 drawRouteLine(kml, lastCity, highestPoint, lowestPoint)
 #                 title = myUtils.convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
 #                 updateKmlFile(kml, title, KML_PATH)
 #                 highestPoint = []
@@ -236,7 +283,7 @@ def showRouteAngle(newFile, newNames):
 #             lastStartDate = startDate
 #             lastEndDate = endDate
 
-#     drawRoutes(kml, lastCity, highestPoint, lowestPoint)
+#     drawRouteLine(kml, lastCity, highestPoint, lowestPoint)
 #     title = myUtils.convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
 #     updateKmlFile(kml, title, KML_PATH)
 
@@ -290,6 +337,7 @@ def createKmlFile(notams, title1='', city1='') -> None:
     lowestPoint = []
     coordsList = []
     seaCoord = {}
+    centerCoords = []
 
     for number, item in notams.items():
         itemArray = item.split(';')
@@ -315,24 +363,34 @@ def createKmlFile(notams, title1='', city1='') -> None:
             coordsList = [myUtils.convertDMS2DD(c) for c in coords]
 
             if lastStartDate == '' or myUtils.isNearTime(lastStartDate, startDate, 59):
+                center = getAreaCenter(coordsList)
+                if center not in centerCoords:
+                    centerCoords.append(center)
                 drawStages(kml, coordsList, city, number, int(radius[1]))
                 lastCity, highestPoint, lowestPoint, seaCoord = getSatrtEndCoords(lowestPoint, highestPoint, coordsList, lastCity, city, loc, seaCoord)
             else:
-                drawRoutes(kml, lastCity, highestPoint, lowestPoint, seaCoord)
+                drawRoutePolyline(kml, lastCity, centerCoords, highestPoint, lowestPoint, seaCoord)
+                # drawRouteLine(kml, lastCity, highestPoint, lowestPoint, seaCoord)
                 title = myUtils.convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
                 updateKmlFile(kml, title, KML_PATH, notams)
+
+                centerCoords = []
                 highestPoint = []
                 lowestPoint = []
                 seaCoord = {}
                 lastCity = ''
 
                 kml = Kml()
+                center = getAreaCenter(coordsList)
+                if center not in centerCoords:
+                    centerCoords.append(center)
                 drawStages(kml, coordsList, city, number, int(radius[1]))
                 lastCity, highestPoint, lowestPoint, seaCoord = getSatrtEndCoords(lowestPoint, highestPoint, coordsList, lastCity, city, loc, seaCoord)
             lastStartDate = startDate
             lastEndDate = endDate
 
-    drawRoutes(kml, lastCity, highestPoint, lowestPoint, seaCoord)
+    drawRoutePolyline(kml, lastCity, centerCoords, highestPoint, lowestPoint, seaCoord)
+    # drawRouteLine(kml, lastCity, highestPoint, lowestPoint, seaCoord)
     title = myUtils.convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
     updateKmlFile(kml, title, KML_PATH, notams)
 
@@ -363,6 +421,7 @@ def drawPolygon(kml, coords, location, color=None) -> None:
     pol.outerboundaryis = coords
     pol.style.polystyle.color = color if color is not None else myExcel.COLOR_SEA
     pol.style.polystyle.outline = 0
+    pol.style.linestyle.width = 0
 
 ################################################################################################
 def drawDottedLine(kml, coords, location, color) -> None:

@@ -396,14 +396,14 @@ def getNsfLocation(content) -> str:
 
 ################################################################################################
 def getNotamLocation(content) -> str:
-    firNames = readConfigFirNames()
-    pattern = getFirRegExPattern(firNames)
-    locations = sorted(set(findall(pattern, content)))
+    # firNames = readConfigFirNames()
+    # pattern = getFirRegExPattern(firNames)
+    # locations = sorted(set(findall(pattern, content)))
+    pattern = r'A\) ((?:[A-Z]{4} ?){0,3})'
+    locations = findall(pattern, content)
     loc = ''
-    if len(locations) > 1:
-        loc = '/'.join(locations)
-    else:
-        loc = locations[0]
+    if len(locations) > 0:
+        loc = '/'.join(locations[0].split())
     return loc 
 
 ################################################################################################
@@ -471,6 +471,7 @@ def getMsaArea(contentSection) -> str:
     area = ''
     lastEnd = 0
     areas = []
+    contentSection = contentSection.replace('N，', 'N')
     latlons = finditer(constants.MSA_PATTERN_LATITUDE_LONGITUDE, contentSection)
     for m in latlons:
         if lastEnd > 0 and m.start() > lastEnd + 4:
@@ -888,13 +889,18 @@ def maxOfLists(lists):
 
 ################################################################################################
 def getDDMM(ddmmss):
-    if '|' in ddmmss:
-        ddmmss = ddmmss.split('|')
-        ddmmList = [f'{dms[:7]},{dms[-11:-3]}' if len(dms.split('+')[0]) > 16 else dms for dms in ddmmss]
-        return '|'.join(ddmmList)
-    else:
-        ddmm = f'{ddmmss[:7]},{ddmmss[-11:-3]}' if len(ddmmss.split('+')[0]) > 16 else ddmmss
-        return ddmm
+    ddmm = ''
+    for ddmmssItem in ddmmss.split('-'):
+        ddmm += '-' if ddmm != '' else ddmm
+        if '|' in ddmmssItem:
+            ddmmssList = ddmmssItem.split('|')
+            ddmmList = [f'{dms[:7]},{dms[-11:-3]}' if len(dms.split('+')[0]) > 16 else dms for dms in ddmmssList]
+            ddmm += '|'.join(ddmmList)
+        else:
+            plus = ddmmssItem.split('+')
+            ddmm += f'{plus[0][:7]},{plus[0][-11:-3]}' if len(plus[0]) > 16 else plus[0]
+            ddmm += '+' + plus[1] if len(plus) > 1 else ''
+    return ddmm
 
 ################################################################################################
 def getNotamDictString(d):
@@ -1190,9 +1196,11 @@ def isInvalidEndDateUtc(endDateUtc):
 
 ################################################################################################
 def isChinaNotam(condition):
+    if condition.strip() == '':
+        return False
+    isChinaNotam = False
     section = openConfig()
     count = int(section.get('FirCount'))
-    isChinaNotam = False
     for i in range(count):
         withCondition = False
         firNames = section.get(f'FirName{i + 1}').split(',')
@@ -1524,20 +1532,20 @@ def parseNotamFromTextFile(filename):
                 lines += line
         texts.append(lines)
     for text in texts:
-        notam = parseNotamText(notam, text)
+        if isChinaNotam(text):
+            notam = parseNotamText(notam, text)
     return notam
 
 ################################################################################################
 def parseNotamText(notam, text):
-    if isChinaNotam(text):
-        location, number, startDate, endDate, area = parseNotam(text)
-        if location == 'RJJJ' and number.startswith('Q'):
-            return notam
-        if area != '':
-            startDate = convertDate(startDate)
-            endDate = convertDate(endDate)
-            area = formatLatitudeLongitude(area)
-            notam = getNoatmDict(notam, number, startDate, endDate, location, area)
+    location, number, startDate, endDate, area = parseNotam(text)
+    if location == 'RJJJ' and number.startswith('Q'):
+        return notam
+    if area != '':
+        startDate = convertDate(startDate)
+        endDate = convertDate(endDate)
+        area = formatLatitudeLongitude(area)
+        notam = getNoatmDict(notam, number, startDate, endDate, location, area)
     return notam
 
 ################################################################################################
