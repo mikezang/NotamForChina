@@ -413,11 +413,14 @@ def plotPayloadInsideBar(cn_font, ax, yDataList, rocketList, payloadList, colorD
 
             # pattern = r'(天宫.*|梦天.*|问天.*|巡天.*|神舟.*|天舟.*)' if payload == '空间站' else f'{payload}.*'
             pattern = r'(.*)' if payload == '空间站' else f'{payload}.*'
-            label = ''
             labels = findall(pattern, payload1)
             if labels:
-                for l in labels:
-                    label += l + '／'    
+                if payload == '空间站':
+                    label = labels[0] + '／'
+                else:
+                    label = ''
+                    for l in labels:
+                        label += l + '／'    
             label = label[:-1].split(',')[0].split('(')[0].split('（')[0]
             label = label.replace('-', '|').replace('~', '|')
             if payload == '吉林一号':
@@ -425,15 +428,15 @@ def plotPayloadInsideBar(cn_font, ax, yDataList, rocketList, payloadList, colorD
             plotRocketNumber(cn_font, ax, x, y, gap, label[:16], fontsize, color)
 
 ################################################################################################
-def plotRocketNumberInsideBar(cn_font, ax, yDataList, xuhaoList, rocketList, colorDict, fontsize, upperSrage=None, spotList=None, title=''):
+def plotRocketNumberInsideBar(cn_font, ax, yDataList, xuhaoList, rocketList, upperList, colorDict, fontsize, upperStages=None, spotList=None, title=''):
     gap = 0.065
-    for x, (c, xuhaos, rockets, spots) in enumerate(zip(yDataList, xuhaoList, rocketList, spotList)):
-        for i, (xuhao, rocket, spot) in enumerate(zip(xuhaos.split('/'), rockets.split('/'), str(spots).split('/'))):
+    for x, (c, xuhaos, rockets, uppers, spots) in enumerate(zip(yDataList, xuhaoList, rocketList, upperList, spotList)):
+        for i, (xuhao, rocket, upper, spot) in enumerate(zip(xuhaos.split('/'), rockets.split('/'), uppers.split('/'), str(spots).split('/'))):
             color = 'white' if isDarkColor(colorDict[rocket]) else 'black'
             y = c / 2 if c == 1 else c / 4 + i * c / 2
             y = y * 3.5 if rocket == '春节' else y
-            if f'{rocket}{xuhao}' in upperSrage:
-                upperStage = upperSrage[f'{rocket}{xuhao}'].split('|')
+            if f'{rocket}{xuhao}/{upper}' in upperStages:
+                upperStage = upperStages[f'{rocket}{xuhao}/{upper}'].split('|')
                 if isSingleRocket(ax) and '(火箭)' not in title:
                     withUpperStage = xuhao + '/' + upperStage[0]
                 else:
@@ -513,7 +516,7 @@ def plotVLineBetweenYearsMonths(ax, xDataList, dx=0.5, yMin=-0.24, yMax=0.8, mus
 
 ################################################################################################
 def getLogList(y):
-    yList1 = [0.5, 1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 40, 50, 60, 90, 120, 150, 200, 250, 300, 400, 500]
+    yList1 = [0.5, 1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 50, 90, 150, 200, 250, 300, 400, 500]
     # yList1 = np.array([0.5, 1, 2, 3, 4, 5, 6, 8, 10, 20, 30, 40, 50, 60, 80, 100, 150, 200, 250, 300, 400, 500])
     yList2 = [800, 1000]
     # yList2 = np.array([600, 700, 800, 900, 1000])
@@ -576,6 +579,7 @@ def countDataFrameByDate(dfList):
             dfCount[myExcel.EXCEL_COLUMN_LOCATION] = dfCount.groupby([myExcel.EXCEL_COLUMN_DATE])[myExcel.EXCEL_COLUMN_LOCATION].transform(lambda x: '/'.join(x))
             dfCount[myExcel.EXCEL_COLUMN_RESULT] = dfCount.groupby([myExcel.EXCEL_COLUMN_DATE])[myExcel.EXCEL_COLUMN_RESULT].transform(lambda x: '/'.join(x))
             dfCount[myExcel.EXCEL_COLUMN_SPOT] = dfCount.groupby([myExcel.EXCEL_COLUMN_DATE])[myExcel.EXCEL_COLUMN_SPOT].transform(lambda x: '/'.join(str(i) for i in x))
+            dfCount[myExcel.EXCEL_COLUMN_REMARKS] = dfCount.groupby([myExcel.EXCEL_COLUMN_DATE])[myExcel.EXCEL_COLUMN_REMARKS].transform(lambda x: '/'.join(str(i) for i in x))
         except:
             pass
         dfCount = dfCount.groupby('日期').first().reset_index()
@@ -761,21 +765,21 @@ def duplicateLastRow(df, today):
     df = df.set_index(indexName)
     return df
 
-################################################################################################
-def readUpperStageDictOld(excelSheet, headers=None):
-    dfList = parseExcelSheetToDataFrame(excelSheet, headers=headers, rocket='上面级+最后发射')
-    dfUpperStages = dfList[:-1] # 上面级
-    dfLastLaunch = dfList[-1] # 最后的发射
-    dictUpperStage = getUpperStageDict(dfUpperStages)
-    return dictUpperStage, dfLastLaunch
+# ################################################################################################
+# def readUpperStageDictOld(excelSheet, headers=None):
+#     dfList = parseExcelSheetToDataFrame(excelSheet, headers=headers, rocket='上面级+最后发射')
+#     dfUpperStages = dfList[:-1] # 上面级
+#     dfLastLaunch = dfList[-1] # 最后的发射
+#     dictUpperStages = getUpperStageDict(dfUpperStages)
+#     return dictUpperStages, dfLastLaunch
 
 ################################################################################################
 def readUpperStageDict(df):
     dfList = parseToDataFrame(df, rocket='上面级+最后发射')
     dfUpperStages = dfList[:-1] # 上面级
     dfLastLaunch = dfList[-1] # 最后的发射
-    dictUpperStage = getUpperStageDict(dfUpperStages)
-    return dictUpperStage, dfLastLaunch
+    dictUpperStages = getUpperStageDict(dfUpperStages)
+    return dictUpperStages, dfLastLaunch
 
 ################################################################################################
 def getUpperStageDict(dfList, columnRocket='火箭', columnNumber='序号', columnRemark='备注'):
@@ -783,7 +787,8 @@ def getUpperStageDict(dfList, columnRocket='火箭', columnNumber='序号', colu
     result_dict = {}
     for df in dfList:
         for i in range(len(df)):
-            key = df.iloc[i][columnRocket] + df.iloc[i][columnNumber]
+            # key = df.iloc[i][columnRocket] + df.iloc[i][columnNumber]
+            key = f'{df.iloc[i][columnRocket]}{df.iloc[i][columnNumber]}/{df.iloc[i][columnRemark]}'
             value = df.iloc[i][columnRemark]
             result_dict[key] = value
     return result_dict
@@ -1169,6 +1174,9 @@ def parseToDataFrame(dfOld, rocket:str=None, location=None, payload=None, startY
         if not isinstance(rocket, list) and rocket.find('上面级') >= 0:
             df.reset_index(drop=True, inplace=True)
             cond1 = df['备注'].str.startswith('远征')
+            cond1 |= df['备注'].str.startswith('SD')
+            cond1 |= df['备注'].str.startswith('SM')
+            # cond1 |= df['备注'].str.startswith('SMA')
             dfUpperStage = df[cond1]
             dfList = split50perPage(dfUpperStage)
             if rocket == '上面级+最后发射':
@@ -1193,12 +1201,11 @@ def parseToDataFrame(dfOld, rocket:str=None, location=None, payload=None, startY
                 cond1 = df[columnPayload].isin(payload)
             else:
                 if payload == '空间站':
-                    cond1 = df[columnPayload].str.startswith('天宫')
-                    cond1 |= df[columnPayload].str.startswith('梦天')
-                    cond1 |= df[columnPayload].str.startswith('问天')
-                    cond1 |= df[columnPayload].str.startswith('巡天')
-                    cond1 |= df[columnPayload].str.startswith('神舟')
-                    cond1 |= df[columnPayload].str.startswith('天舟')
+                    cms = myUtils.readConfig(['CMS'])
+                    cond1 = None
+                    for c in cms:
+                        d = df[columnPayload].str.startswith(c)
+                        cond1 = d if cond1 is None else cond1 | d
                 else:
                     startswith = False
                     if payload[:1] == '^':

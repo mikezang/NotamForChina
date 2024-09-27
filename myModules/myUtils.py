@@ -51,10 +51,11 @@ def getFileDuration(filename: str) -> float:
 ################################################################################################
 def getDateAfterDays(startDate, days: int):
     if isinstance(startDate, str):
-        startDate1 = datetime.strptime(startDate.replace('-', '/'), "%Y/%m/%d")
-    endDate = startDate1 + timedelta(days=days)
-    if isinstance(startDate, str):
+        startDate1 = datetime.strptime(startDate, "%Y-%m-%d")
+        endDate = startDate1 + timedelta(days=days)
         endDate = endDate.strftime('%Y/%m/%d')
+    else:
+        endDate = startDate + timedelta(days=days)
     return endDate
 
 ################################################################################################
@@ -364,18 +365,6 @@ def getFirRegExPattern(fir:str):
     pattern = '(' + fir.replace(' ', '|') + ')'
     return pattern
 
-MSA_LOCATIONS = {'鲁航警': 'SD', '粤航警': 'GD', '琼航警': 'HN'}
-################################################################################################
-def getMsaLocation(content) -> str:
-    locations = finditer(constants.MSA_PATTERN_NUMBER, content)
-    for m in locations:
-        if m.group(1) in MSA_LOCATIONS:
-            return f'{MSA_LOCATIONS[m.group(1)]}{m.group(2)}'
-        else:
-            return m.groups()
-    else:
-        return ''
-
 ################################################################################################
 def getNsfLocation(content) -> str:
     firNames = readConfigFirNames()
@@ -467,26 +456,6 @@ def getNotamArea(contentSection) -> str:
     return area
 
 ################################################################################################
-def getMsaArea(contentSection) -> str:
-    area = ''
-    lastEnd = 0
-    areas = []
-    contentSection = contentSection.replace('N，', 'N')
-    latlons = finditer(constants.MSA_PATTERN_LATITUDE_LONGITUDE, contentSection)
-    for m in latlons:
-        if lastEnd > 0 and m.start() > lastEnd + 4:
-            areas.append(area)
-            area = m.group()
-        else:
-            if area != '':
-                area += '|'
-            area += m.group()
-        lastEnd = m.end()
-    if area:
-        areas.append(area)
-    return areas
-
-################################################################################################
 def removeChars(d):
     return d.replace('-', '').replace(' ', '').replace(':', '')
 
@@ -518,14 +487,6 @@ def readShipMoveData(excelFile, sheetName=None, skipRows=None, headers=None):
     df = df[df['速度'] > 1.0]
     return df
 
-
-MSA_RADIUS_PATTERN = r'为中心、半径(\d{1,2})公里'
-################################################################################################
-def parseRadius(content):
-    radiusMatch = findall(MSA_RADIUS_PATTERN, content)
-    for m in radiusMatch:
-        return int(m)
-    
 ################################################################################################
 def getNotamNumbers(content) -> tuple:
     numbers = finditer(constants.PATTERN_NOTAM_NUMBER_NEW, content)
@@ -582,43 +543,6 @@ def getYYYYMMDD(year):
         return '20' + year
     else:
         return year
-
-################################################################################################
-def getMsaDates(content: str) -> tuple:
-    startDates, endDates = [], []
-    startEndDates1 = [m for m in finditer(constants.MSA_PATTERN_DATE_CHINA, content)]
-    startEndDates2 = [m for m in finditer(constants.MSA_PATTERN_DATE, content)]
-    if startEndDates1:
-        for m in startEndDates1:
-            startYear = getJapanDate()[:4]
-            startMonth = int(m.group(1)) if m.group(1) else ''
-            startDay = int(m.group(2)) if m.group(2) else ''
-            startTime = convertTime(m.group(3))
-            endYear = startYear
-            endMonth = int(m.group(4)) if m.group(4) else startMonth
-            endDay = int(m.group(5)) if m.group(5) else startDay
-            endTime = convertTime(m.group(6) if len(m.groups()) == 6 else '', False)
-            if startYear and startMonth and startDay and startTime:
-                startDate = f'{startYear}/{startMonth:02}/{int(startDay):02} {startTime}'
-            if endYear and endMonth and endDay and endTime:
-                endDate = f'{endYear}/{endMonth:02}/{endDay:02} {endTime}'
-            startDates.append(startDate)
-            endDates.append(endDate)
-    elif startEndDates2:
-        for m in startEndDates2:
-            startDay = m.group(1) #convert to UTC+()
-            startTime = convertTime(m.group(2)) #convert to UTC+()
-            startMonth = m.group(3)
-            startYear = m.group(4) if m.group(4) else getThisYear()
-            endDay = m.group(5) #convert to UTC+()
-            endTime = convertTime(m.group(6)) #convert to UTC+()
-            endMonth = m.group(7)
-            endYear = m.group(4) if m.group(4) else getThisYear()
-            startDate = f'{startYear}/{startMonth:02}/{startDay:02} {startTime}'
-            endDate = f'{endYear}/{endMonth:02}/{endDay:02} {endTime}'
-            startDates.append(startDate)
-            endDates.append(endDate)
-    return startDates, endDates
 
 ################################################################################################
 def convertNotamDate(oldDate):
@@ -1599,29 +1523,6 @@ def getNoatmDict(notamDict, number, startDate, endDate, location, area):
     notamDict[key] = notamDict[key] + location + ";"
     notamDict[key] = notamDict[key] + area
     return notamDict
-
-################################################################################################
-def parseMsa(text):
-    location = 'MSA'
-    number = getMsaLocation(text)
-    text = text.replace('\n', '').replace(' ', '').replace('/', '').replace('、', ',')
-    startDates, endDates = getMsaDates(text)
-    areas = getMsaArea(text)
-    return location, number, startDates, endDates, areas
-
-################################################################################################
-def formatMSALatitudeLongitude(oldData) -> str:
-    newData = []
-    # llListGroup = oldData.split('-')
-    for data in oldData:
-        oldllList = data.split('|')
-
-        newllList = ''
-        for oldll in oldllList:
-            newll = findConvertLatitudeLongitude(oldll)
-            newllList += newll + '|'
-        newData.append(newllList[:-1])
-    return newData
 
 ################################################################################################
 def findConvertLatitudeLongitude(latlon):
