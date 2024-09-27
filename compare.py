@@ -5,6 +5,7 @@ from datetime import timedelta
 import PySimpleGUI as sg
 import matplotlib.pyplot as plt
 from simplekml import Kml
+from re import finditer, findall
 
 from myModules import myUtils
 from myModules import myPlot
@@ -150,7 +151,8 @@ def createMsaDropZonesKmlFile(oldFile):
         for line in lines:
             if line != '' and line[0:1] != '#':
                 content += line
-        location, number, startDates, endDates, areas = myUtils.parseMsa(content)
+
+        location, number, startDates, endDates, areas = parseMsa(content)
         lastStart = ''
         lastEnd = ''
         kml = Kml()
@@ -165,11 +167,11 @@ def createMsaDropZonesKmlFile(oldFile):
             title = myUtils.convertTitle(startDate, endDate, title, isLocalTime=True)
 
             if area:
-                area = myUtils.formatMSALatitudeLongitude([area])[0]
+                area = formatMSALatitudeLongitude([area])[0]
                 coords = area.split('|')
                 coordsList = [myUtils.convertDMS2DD(c) for c in coords]
                 if len(coordsList) == 1:
-                    radius = myUtils.parseRadius(content)
+                    radius = parseRadius(content)
                     myShape.drawCircle(kml, coordsList, f'{location}/{number}', radius=radius)
                 else:
                     myShape.drawPolygon(kml, coordsList, f'{location}/{number}')
@@ -177,6 +179,111 @@ def createMsaDropZonesKmlFile(oldFile):
                 lastStart = startDate
                 lastEnd = endDate
         myShape.updateKmlFile(kml, title, myShape.KML_PATH, notams)
+
+################################################################################################
+MSA_RADIUS_PATTERN = r'为中心[、，]半径(\d{1,4})([公里米])'
+def parseRadius(content):
+    radiusMatch = findall(MSA_RADIUS_PATTERN, content)
+    for m in radiusMatch:
+        return int(m[0]) if m[1] == '公里' else  int(m[0]) // 1000
+    
+################################################################################################
+def parseMsa(text):
+    location = 'MSA'
+    number = getMsaLocation(text)
+    text = text.replace('\n', '').replace(' ', '').replace('/', '').replace('、', ',')
+    startDates, endDates = getMsaDates(text)
+    areas = getMsaArea(text)
+    return location, number, startDates, endDates, areas
+
+################################################################################################
+MSA_PATTERN_LATITUDE_LONGITUDE =  r'(\d{2}[°-]\d{2}[\′.-]?\d{0,3}″?[NS][ \/]?\d{2,3}[°-]\d{1,2}[′.-]?\d{0,3}"?[EW])'
+def getMsaArea(contentSection) -> str:
+    area = ''
+    lastEnd = 0
+    areas = []
+    contentSection = contentSection.replace('N，', 'N')
+    latlons = finditer(MSA_PATTERN_LATITUDE_LONGITUDE, contentSection)
+    for m in latlons:
+        if lastEnd > 0 and m.start() > lastEnd + 4:
+            areas.append(area)
+            area = m.group()
+        else:
+            if area != '':
+                area += '|'
+            area += m.group()
+        lastEnd = m.end()
+    if area:
+        areas.append(area)
+    return areas
+
+################################################################################################
+# MSA_PATTERN_DATE_CHINA1 = r'(\d{1,2})月(\d{1,4})日(\d{1,4})时至(\d{1,4})时'
+MSA_PATTERN_DATE_CHINA = r'(?:(\d{1,2})月)?(\d{1,2})日(?:(\d{1,4})时)?至(?:(\d{1,2})月)?(?:(\d{1,2})日)?(?:(\d{1,4})时)?'
+MSA_PATTERN_DATE = r'FROM(\d{0,2})(\d{0,4})[UTC]{0,3}([A-Z]{0,4})\.?(\d{0,2})TO(\d{0,2})(\d{0,4})[UTC]{0,3}([A-Z]{0,4})\.?(\d{0,2})'
+def getMsaDates(content: str) -> tuple:
+    startDates, endDates = [], []
+    startEndDates1 = [m for m in finditer(MSA_PATTERN_DATE_CHINA, content)]
+    startEndDates2 = [m for m in finditer(MSA_PATTERN_DATE, content)]
+    if startEndDates1:
+        for m in startEndDates1:
+            startYear = myUtils.getJapanDate()[:4]
+            startMonth = int(m.group(1)) if m.group(1) else ''
+            startDay = int(m.group(2)) if m.group(2) else ''
+            startTime = myUtils.convertTime(m.group(3))
+            endYear = startYear
+            endMonth = int(m.group(4)) if m.group(4) else startMonth
+            endDay = int(m.group(5)) if m.group(5) else startDay
+            endTime = myUtils.convertTime(m.group(6) if len(m.groups()) == 6 else '', False)
+            endTime = endTime if endTime != '24:00' else '23:59'
+            if startYear and startMonth and startDay and startTime:
+                startDate = f'{startYear}/{startMonth:02}/{int(startDay):02} {startTime}'
+            if endYear and endMonth and endDay and endTime:
+                endDate = f'{endYear}/{endMonth:02}/{endDay:02} {endTime}'
+            startDates.append(startDate)
+            endDates.append(endDate)
+    elif startEndDates2:
+        for m in startEndDates2:
+            startDay = m.group(1) #convert to UTC+()
+            startTime = myUtils.convertTime(m.group(2)) #convert to UTC+()
+            startMonth = m.group(3)
+            startYear = m.group(4) if m.group(4) else myUtils.getThisYear()
+            endDay = m.group(5) #convert to UTC+()
+            endTime = myUtils.convertTime(m.group(6)) #convert to UTC+()
+            endTime = endTime if endTime != '24:00' else '23:59'
+            endMonth = m.group(7)
+            endYear = m.group(4) if m.group(4) else myUtils.getThisYear()
+            startDate = f'{startYear}/{startMonth:02}/{startDay:02} {startTime}'
+            endDate = f'{endYear}/{endMonth:02}/{endDay:02} {endTime}'
+            startDates.append(startDate)
+            endDates.append(endDate)
+    return startDates, endDates
+
+################################################################################################
+MSA_LOCATIONS = {'鲁航警': 'SD', '粤航警': 'GD', '琼航警': 'HN'}
+MSA_PATTERN_NUMBER = r'([A-Z][A-Z]|鲁航警|粤航警|琼航警)(\d{1,3}\/\d{2})'
+def getMsaLocation(content) -> str:
+    locations = finditer(MSA_PATTERN_NUMBER, content)
+    for m in locations:
+        if m.group(1) in MSA_LOCATIONS:
+            return f'{MSA_LOCATIONS[m.group(1)]}{m.group(2)}'
+        else:
+            return m.groups()
+    else:
+        return ''
+
+################################################################################################
+def formatMSALatitudeLongitude(oldData) -> str:
+    newData = []
+    for data in oldData:
+        oldllList = data.split('|')
+
+        newllList = ''
+        for oldll in oldllList:
+            newll = myUtils.findConvertLatitudeLongitude(oldll)
+            newllList += newll + '|'
+        newData.append(newllList[:-1])
+    return newData
 
 ################################################################################################
 def showRunTime(func):
