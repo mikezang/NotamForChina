@@ -19,6 +19,9 @@ call copy videos\中国运载火箭发射统计.mp4 videos\中国运载火箭发
 call match videos\中国运载火箭发射统计.mp4 music/歌唱祖国音乐.mp3
 call merge 1 videos\中国运载火箭发射统计.mp4
 
-call match videos\中国运载火箭发射统计-momoe.mp4 "" mergelist\ListMusicMomoe.txt 10
+call match videos\中国运载火箭发射统计-momoe.mp4 "" mergelist\ListMusicMomoe.txt 10 0 200
+
 rem call merge ? videos\中国运载火箭发射统计-momoe.mp4
-echo merge ? videos\中国运载火箭发射统计-momoe.mp4
+rem echo merge ? videos\中国运载火箭发射统计-momoe.mp4
+echo merge momoe's music to video
+echo momoe ?

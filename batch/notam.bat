@@ -1,7 +1,5 @@
 @echo off
 
-chcp 65001
-
 set t=600
 if not "%1" == "" set t=%1
 
@@ -42,17 +40,17 @@ if %filename% LSS %now% echo Delete file %x% & del "%x%"
 exit /b
 
 :sleep
-echo;
+rem echo;
 pushd .
 cd temp
-dir  *.kml
+rem dir  *.kml
 popd
 
-echo;
+rem echo;
 if "%1" == "" goto :eof 
 echo Press Ctrl+C to exit
 timeout /t %t%
-echo;
+rem echo;
 
 goto loop
 
