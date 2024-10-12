@@ -1,6 +1,7 @@
-from sys import path
+import calendar
+from sys import argv
 from timeit import timeit
-from datetime import timedelta
+from datetime import datetime, timedelta
 from openpyxl import load_workbook as loadXLSX
 import PySimpleGUI as sg
 from re import findall 
@@ -60,7 +61,7 @@ def getRocketsFrame(rockets, retired, lastRocket):
         sg.Checkbox('选择全运载火箭', key='rocket01', enable_events=True),
         sg.Checkbox('仅生成最后图表', key='rocket02', default=True),
         sg.Checkbox('退役火箭', key='rocket03', enable_events=True),
-        # sg.Checkbox('发射失败', key='rocket03'),
+        sg.Checkbox('显示发射一览', key='rocket04', default=True),
     ]
     rockets = [rocketsTitle]
     row1, row2 = [], []
@@ -134,7 +135,11 @@ def getLocationsFrame(locations, lastLocation):
 
 def getCategoriesFrame(categories, lastCategory):
     subCategories = splitStringToList(categories)
-    categoriesTitle = [sg.Checkbox('选择全运载火箭分类', key='category01', enable_events=True)]
+    categoriesTitle = [
+        sg.Checkbox('选择全运载火箭分类', key='category01', enable_events=True),
+        sg.Text(f"截止日：{datetime.today().strftime('%Y/%m/%d')}", key='lastDate'),
+        sg.Radio('当日', 'LastDate', key='today', enable_events=True, default=True), 
+        sg.Radio('月末', 'LastDate', key='endOfMonth', enable_events=True)]
     layout2 = [categoriesTitle]
     for i, subCategory in enumerate(subCategories):
         checkbox = [sg.Checkbox(item, key=f'category-{i * 10 + j + 1}', size=(10, 1), 
@@ -289,7 +294,7 @@ def splitYearsChecked(yearsChecked):
     return years
 
 ################################################################################################
-def showRetiredRockets(window, values, rocket):
+def showRetiredRockets(window, values):
     isChecked = values['rocket03']
     window['rockets'].update(visible=not isChecked)
     window['retired'].update(visible=isChecked)
@@ -344,13 +349,19 @@ def splitRetiredRockets(retiredChecked):
     
 ################################################################################################
 def handleEvents(window, event, values, df, years, rockets, retired, series, locations, categories, payloads, dictUpperStages, dfLastLaunch):
-    if event == 'year01':
+    if event == 'today':
+        window['lastDate'].update(f"截止日：{datetime.today().strftime('%Y-%m-%d')}")
+    elif event == 'endOfMonth':
+        today = datetime.today()
+        endOfMonth = f"{today.year}-{today.month:02d}-{calendar.monthrange(today.year, today.month)[1]}"
+        window['lastDate'].update(f"截止日：{endOfMonth}")
+    elif event == 'year01':
         toogleAllCheckbox(window, values, 'year-')
     elif event == 'rocket01':
         toogleAllCheckbox(window, values, 'rocket-')
         toogleAllCheckbox(window, values, 'retired-')
     elif event == 'rocket03':
-        showRetiredRockets(window, values, 'rocket-')
+        showRetiredRockets(window, values)
     elif event == 'series01':
         toogleAllCheckbox(window, values, 'series-')
     elif event in 'series03,series04,series05':
@@ -365,7 +376,17 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
         toogleAllCheckbox(window, values, 'payload-')
     elif event == BUTTON1_LABEL:
         window.minimize()
-        cn_font = myPlot.init()
+        rocketList = values['rocket04']
+        if rocketList:
+            rocketRetired = values['rocket03']
+            if rocketRetired:
+                rocketsChecked = getSelectedItems(values, retired, 'retired')
+            else:
+                rocketsChecked = getSelectedItems(values, rockets, 'rocket')
+            plotLaunchByDate.printRocketsList(df, rocketsChecked)
+            myUtils.playSound()
+            return
+        
         yearsChecked = getSelectedItems(values, years, 'year')
         rocketsChecked = getSelectedItems(values, rockets, 'rocket')
         retiredChecked = getSelectedItems(values, retired, 'retired')
@@ -382,6 +403,7 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
         seriesFirstLast = values['series07']
         locationPrintLast = values['location02']
         payloadPrintLast = values['payload02']
+        cn_font = myPlot.init()
 
         if yearsChecked:
             print(f'\nYear Checked: {yearsChecked}')
@@ -440,6 +462,7 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
             plotLaunchByDate.plot5(cn_font, df, payloadsChecked, dictUpperStages, payloadPrintLast)
         print('Plot finished!')
         myUtils.playSound()
+        window.Normal()
 
     elif event == BUTTON2_LABEL:
         window.minimize()
@@ -474,14 +497,22 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
                             plotLaunchBarChartRace.plot2(df, category)
         print('Plot finished!')
         myUtils.playSound()
+        window.Normal()
 
 ################################################################################################
 def main():
+    excelFile, sheetNames, years, rockets, retired, series, privates, locations, categories, payloads = myUtils.readConfig()
+    df = myPlot.readDataFromSheetNew(excelFile, sheetNames[0])
+
+    if len(argv) > 1:
+        rockets = argv[1].split('/')
+        plotLaunchByDate.printRocketsList(df, rockets)
+        myUtils.playSound()
+        return
+    
     myPlot.setScreenDpiAware()
 
     # TODO read 退役，民营数据 from excel file not from config.ini
-    excelFile, sheetNames, years, rockets, retired, series, privates, locations, categories, payloads = myUtils.readConfig()
-    df = myPlot.readDataFromSheetNew(excelFile, sheetNames[0])
     dictUpperStages, dfLastLaunch = myPlot.readUpperStageDict(df)
     lastLaunch = getLastLaunch(dfLastLaunch, series, privates, dictUpperStages, payloads)
 
@@ -494,7 +525,6 @@ def main():
             break
 
         handleEvents(window, event, values, df, years, rockets, retired, series, locations, categories, payloads, dictUpperStages, dfLastLaunch)
-        window.Normal()
     
     window.close()
 

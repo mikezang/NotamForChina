@@ -237,7 +237,6 @@ def getOkRate(dfList):
 # Plot single rocket
 ################################################################################################
 def plotGraphByRocketDate(cn_font, df, title, rocket, retired=False, upperStages=None, plotLast=True, seriesDict=None):
-    # dfList = myPlot.parseExcelSheetToDataFrame(excelSheet, rocket=rocket, seriesDict=seriesDict)
     dfList = myPlot.parseToDataFrame(df, rocket=rocket, seriesDict=seriesDict)
     dfList = myPlot.countDataFrameByDate(dfList)
     okRate = getOkRate(dfList)
@@ -364,6 +363,41 @@ def plotGraphByLocationDate(cn_font, df, title, location, upperStages=None, plot
             myPlot.showBackend()
             path = f'./images/地点别发射日统计/{newTitle}.png'
             myPlot.saveFig(fig, path) # Save the plot to a file
+
+################################################################################################
+def hasUpperStage(remark):
+    return 'SD' in remark or 'SM' in remark or 'SMA' in remark or '遥' in remark
+
+# Print Rocket List
+################################################################################################
+def printRocketList(df, rocket):
+    dfList = myPlot.parseToDataFrame(df, rocket=rocket)
+    if len(dfList[0]) == 0:
+        print(f'{rocket} not found!\n')
+        return
+    
+    dfList = [dfList[key] for key in sorted(dfList.keys())] if isinstance(dfList, dict) else dfList
+    print(f'Start of {rocket} ***************************************************************')
+    for i, df in enumerate(dfList):
+        for j, (_, row) in enumerate(df.iterrows()):
+            index = i * 50 + j + 1
+            date = str(row['日期'])[:10]
+            time = row['时间\n（UTC+8）'][:6].replace('时',':').replace('分','')
+            rocket = row['火箭']
+            xuhao = row['序号']
+            remark = row['备注']
+            xuhao = f'{xuhao}/{remark}' if hasUpperStage(remark) else xuhao.ljust(4)
+            payloads = row['载荷']
+            location = row['地点']
+            result = row['结果']
+            print(f'{index:03d}: {date} {time} {location} {result} {rocket}{xuhao} {payloads}')
+    print(f'End of {rocket} *****************************************************************\n')
+
+# Print Rockets List
+################################################################################################
+def printRocketsList(df, rockets):
+    for rocket in rockets:
+        printRocketList(df, rocket)
 
 # 年度别发射日统计
 ################################################################################################

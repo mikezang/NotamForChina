@@ -559,8 +559,9 @@ def plotBarGraphByTime(cn_font, axLeft, dfList, byMonth=True):
     myPlot.plotTextOnCenterOfBars(axRight, bar1, okList[0], fontsize=12)
     axRight.bar_label(bar2, fontsize=12, label_type='edge')
 
-    for pos in xTicks3[:-1]:
-        axRight.axvline(pos + 0.2, color='black', linestyle='--')
+    for i in range(-1, len(xTicks3)):
+        pos = xTicks3[0] - 2 * barWidth - 0.2 if i == -1 else xTicks3[i] + 0.2
+        axRight.axvline(pos, color='black', linestyle='--')
 
 ################################################################################################
 def plotBarGraphByYearMonth(cn_font, ax, dfList, startYear, rocketType='', byYear=True, mom=False):
@@ -837,6 +838,18 @@ def plotGraphByYearMonth(cn_font, df, title, startYear=None, endYear=None, byYea
 
     prefix = '中国'
     dfList = countDataFrameByYearMonth(dfList, byYear)
+    date = myUtils.getJapanDate()
+    thisMonth = f'{date[:4]}-{date[4:6]}'
+    if len(dfList) > 1 and dfList[1].日期.iloc[-2] < thisMonth:
+        dfTemp = dfList[1]
+        rowThisMonth = dfTemp.iloc[-2].copy()
+        rowThisMonth.iloc[0] = thisMonth
+        rowThisMonth[1:] = 0
+        newRow = pd.DataFrame([rowThisMonth])
+        row = len(dfTemp) - 1
+        dfLast = pd.concat([dfTemp.iloc[:row], newRow, dfTemp.iloc[row:]], ignore_index=True) 
+        dfList[1] = dfLast
+        
     if rocketList:
         rocketListNew = rocketList.copy()
         if '全部' in rocketListNew:
@@ -885,7 +898,7 @@ def plot1(cn_font, df, years=None, seriesList=None):
             plotGraphByWeek(cn_font, df, title3, year)
             plotGraphByMonth(cn_font, df, title2, year)
 
-        for year in years:
+        # for year in years:
             if year == myUtils.getThisYear() and seriesList:
                 today = datetime.today()
                 startYYMMMM = f'{year}01'

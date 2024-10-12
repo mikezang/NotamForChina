@@ -6,7 +6,7 @@
 # pylint: disable=W0703,C0103,C0116,C0301
 
 from time import sleep
-from re import findall, finditer
+from re import findall, match
 from datetime import date, datetime, timedelta
 from timeit import timeit
 
@@ -19,8 +19,13 @@ BASE_CTRIP_URL = "https://m.ctrip.com/webapp/vacations/tour/detail?productid="
 CTRIP_URL = "https://m.ctrip.com/webapp/vacations/shop/home?productid=31375689&brandId=77691&detailId=31375689&proId=1292581&saleMode=R"
 ENIUTRIP_URL = "https://mp.sohu.com/profile?xpt=ZW5pdXBsYW5ldEBzaW5hLmNvbQ==&_f=index_pagemp_1&spm=smpc.content-abroad.author.1.1659536786116JJXcGX9"
 
+HUAHUO_TRIP_URL = "https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MzkxNDc0MzY1MQ==&action=getalbum&album_id=3621026985251602442"
+BUTTON_XPATH = "//div[@class='album-sort__wrp js_album_sort']"
+LI1_XPATH = "//li[@class='album__list-item js_album_item js_wx_tap_highlight wx_tap_cell']"
+SPAN_XPATH = "//span[@class='js_article_create_time album__item-info-item']"
+
 DAYS_DIFF = {
-    '房车·中国海南文昌3日2晚跟团游' : 3,
+    '房车·中国海南文昌3日2晚跟团游' : 2,
     '酒泉4天3晚' : 2,
     "酒泉2日" : 1,
     "2天" : 1,
@@ -69,8 +74,22 @@ def getCTrip(driver):
     if urls and titles:
         urls, titles, locations = zip(*sorted(zip(urls, titles, locations), key=lambda x: x[2] + x[1]))
         launch_date = getCTripDetail(driver, urls, titles)
-        printTrip(launch_date)
-        createHtmlpage(urls, titles, locations)
+        createHtmlpage('捷程旅行', CTRIP_URL, urls, titles, locations, BASE_CTRIP_URL)
+    return launch_date
+
+################################################################################################
+def getHuahuoTrip(driver):
+    launch_date = {}
+    urls, titles, locations = getHuahuoTripList(driver)
+
+    if urls and titles:
+        sortedData = sorted(zip(urls, titles, locations), key=lambda x: x[1], reverse=True)
+        sortedData = sorted(sortedData, key=lambda x: x[2])
+        urls, titles, locations = zip(*sortedData)
+        launch_date = getHuahuoTripDetail(driver, urls, titles)
+        createHtmlpage('花火亲子旅行', HUAHUO_TRIP_URL, urls, titles, locations)
+        # printTrip(launch_date, '花火亲子旅行')
+    return launch_date
 
 ################################################################################################
 def selectCity(driver, city):
@@ -87,7 +106,7 @@ def selectCity(driver, city):
 ################################################################################################
 def getCTripList(driver):
     urls, titles, locations = [], [], []
-    print(f'Searching...', end='', flush=True)
+    print(f'Searching 捷程旅行...', end='', flush=True)
 
     for i in range(0, 10):
         try:
@@ -108,7 +127,7 @@ def getCTripList(driver):
 
                 div1 = myNet.findElementsByClass(driver, "shop_list_item")
                 div2 = myNet.findElementsByClass(driver, 'shop_tour_content')
-                urls, titles, locations = parseUrls(div1, div2)
+                urls, titles, locations = parseCTripUrls(div1, div2)
             print('\n')
             break
         except:
@@ -120,7 +139,37 @@ def getCTripList(driver):
             pass
     return urls, titles, locations
 
-def parseUrls(div1, div2):
+################################################################################################
+def getHuahuoTripList(driver):
+    urls, titles, locations = [], [], []
+    print(f'Searching 花火亲子旅行...', end='', flush=True)
+
+    for i in range(0, 1):
+        try:
+            driver.get(HUAHUO_TRIP_URL)
+            myNet.elementXPath(driver, 30, BUTTON_XPATH).click()
+            sleep(1)
+
+            for _ in range(4):
+                myNet.scrollBottom(driver)
+                sleep(1)
+
+            li = myNet.findElementsByXPath(driver, LI1_XPATH)
+            span = myNet.findElementsByXPath(driver, SPAN_XPATH)
+            urls, titles, locations = parseHuahuoTripUrls(li, span)
+            print('\n')
+            break
+        except:
+            if i == 0:
+                myExcept.printExceptionTrace()
+            else:
+                print('...', end='', flush=True)
+                sleep(3)
+            pass
+    return urls, titles, locations
+
+################################################################################################
+def parseCTripUrls(div1, div2):
     urls, titles, locations = [], [], []
     for pid, link in zip(div1, div2):
         title = myNet.findElementByTag(link, 'h3').text
@@ -142,7 +191,50 @@ def parseUrls(div1, div2):
     return urls, titles, locations
 
 ################################################################################################
-def parseTripDate(driver, this_city, day_diff):
+def convertToDate(dateStr):
+    today = datetime.today()
+    if dateStr == '昨天':
+        today -= timedelta(days=1) 
+    elif dateStr == '前天':
+        today -= timedelta(days=2) 
+    elif dateStr == '1周前':
+        today -= timedelta(days=8)
+    else:
+        m = match(r'(\d+)天前', dateStr)
+        if m:
+            today -= timedelta(days=int(m.group(1))+1)
+        else:
+            m = match(r'(\d{2})/(\d{2})', dateStr)
+            if m:
+                today = datetime(2024, int(m.group(1)), int(m.group(2)))
+    return today.strftime('%Y-%m-%d')
+
+################################################################################################
+def parseHuahuoTripUrls(li, span):
+    urls, titles, locations = [], [], []
+    for li, span in zip(li, span):
+        title = li.get_attribute('data-title')
+
+        if '观礼' in title:
+            url = li.get_attribute('data-link')
+            dateStr = convertToDate(span.text)
+
+            if url not in urls:
+                titles.append(f'{dateStr}-{title}')
+                urls.append(url)
+
+                if '文昌' in title:
+                    locations.append('文昌')
+                elif '西昌' in title:
+                    locations.append('西昌')
+                elif '酒泉' in title or '东方航天城' in title:
+                    locations.append('酒泉')
+                elif '海阳' in title:
+                    locations.append('海阳')
+    return urls, titles, locations
+
+################################################################################################
+def parseCTripDate(driver, this_city, day_diff):
     launchData = {}
     html = driver.page_source
     thisYear = myUtils.getThisYear()
@@ -150,9 +242,39 @@ def parseTripDate(driver, this_city, day_diff):
     pattern = rf'(?<!=)(({thisYear}|{nextYear})\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01]))'
     matches = findall(pattern, html)
     # matches = finditer(pattern, html)
-    for match in matches:
-        launchDay = myUtils.getDateAfterDays(match[0], day_diff)
+    for m in matches:
+        launchDay = myUtils.getDateAfterDays(m[0], day_diff)
         launchData[launchDay.replace('-', '/')] = this_city
+    return launchData
+
+################################################################################################
+def parseHuahuoTripDate(driver, this_city, day_diff):
+    launchData = {}
+    html = driver.page_source
+    pattern = r'(?<!=)((\d{4})?[年\-])?(0[1-9]|1[012])[月\-](0[1-9]|[12][0-9]|3[01])日'
+    # pattern = r'(?<!=)((\d{4})?[年\-]?(0[1-9]|1[012])[月\-](0[1-9]|[12][0-9]|3[01])日)'
+    matches = findall(pattern, html)
+    today = myUtils.getJapanDate("%Y-%m-%d")
+
+    for i, m1 in enumerate(matches):
+        year1 = int(m1[1]) if m1[1] != '' else 2024
+        month1, day1 = m1[2], m1[3]
+        mDate = f'{year1}-{month1}-{day1}'
+        date1 = datetime(year1, int(month1), int(day1)) + timedelta(days=1)
+        if mDate > today:
+            launchDay = myUtils.getDateAfterDays(mDate, day_diff)
+            launchDay = launchDay.replace('-', '/')
+            m2 = launchDay.split('/')
+            year2, month2, day2 = int(m2[0]), int(m2[1]), int(m2[2])
+            date2 = datetime(year2, month2, day2) + timedelta(days=1)
+            launchData[launchDay] = this_city
+            if i < len(matches) - 1:
+                m3 = matches[i + 1]
+                year3 = int(m3[1]) if m3[1] != '' else 2024
+                month3, day3 = int(m3[2]), int(m3[3])
+                date3 = datetime(year3, month3, day3)
+                if date1 == date3 or date2 == date3:
+                    break
     return launchData
 
 ################################################################################################
@@ -163,8 +285,8 @@ def parseTripDateOld(driver, this_city, day_diff):
     html = driver.page_source
     pattern = rf'(?<!=){myUtils.getThisYear()}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])'
     matches = findall(pattern, html)
-    for match in matches:
-        month_int, day_int = int(match[0].replace(',', '')), int(match[1])
+    for m in matches:
+        month_int, day_int = int(m[0].replace(',', '')), int(m[1])
         day_int += day_diff
 
         if last_day + 1 != day_int:
@@ -214,11 +336,45 @@ def getCTripDetail(driver, urls, titles):
                     break
 
                 day_diff = getDayDiff(title_text)
-                launch_temp = parseTripDate(driver, this_city, day_diff)
+                launch_temp = parseCTripDate(driver, this_city, day_diff)
                 launch_date = myUtils.combineValuesForSameDictKey(launch_date, launch_temp)
         except:
             myExcept.printExceptionTrace()
             pass
+    launch_date = {k: v + '(捷程)' for k, v in launch_date.items()}
+    return launch_date
+
+################################################################################################
+def getHuahuoTripDetail(driver, urls, titles):
+    launch_date = {}
+    lastCity = ''
+    i = 0
+    for url, title_text in zip(urls, titles):
+        try:
+            if title_text != "":
+                this_city = getCity(title_text)
+                if this_city != '' and lastCity != this_city:
+                    print(f'Title{i + 1:02}: {title_text}')
+                    print(f' Link{i + 1:02}: {url}', end='', flush=True)
+                    i += 1
+                    lastCity = this_city
+                    day_diff = 0
+
+                    myNet.setTimeout(driver, 20)
+                    try:
+                        driver.get(url)
+                        print('\n')
+                        sleep(3)
+                    except:
+                        print('(Timeout)\n ')
+                        pass
+                    day_diff = getDayDiff(title_text)
+                    launch_temp = parseHuahuoTripDate(driver, this_city, day_diff)
+                    launch_date = myUtils.combineValuesForSameDictKey(launch_date, launch_temp)
+        except:
+            myExcept.printExceptionTrace()
+            pass
+    launch_date = {k: v + '(花火)' for k, v in launch_date.items()}
     return launch_date
 
 ################################################################################################
@@ -283,10 +439,11 @@ def convertDate1(oldDate) -> str:
     return d.strftime("%Y/%m/%d")
 
 ################################################################################################
-def printTrip(d) -> None:
-    print(f"\n携程旅行发射预测{myUtils.getJapanTime()}")
-    print("===================================")
-    launch_date = myUtils.sortDictByKey(d)
+def printTrip(d, title='各旅行社', reverse=False) -> None:
+    title = f"{title}发射预测{myUtils.getJapanTime()}"
+    print(f'\n{title}')
+    print("=" * myUtils.lenFullWidth(title), end="\n")
+    launch_date = myUtils.sortDictByKey(d, reverse=reverse)
     myUtils.printDict(launch_date)
 
 ################################################################################################
@@ -305,25 +462,29 @@ def sortListByTitle(urls, titles):
     return urls, titles
 
 ################################################################################################
-def createHtmlpage(urls, titles, locations) -> None:
-    mainUrl = "https://m.ctrip.com/webapp/vacations/shop/home?productid=31375689&brandId=77691&detailId=31375689&proId=1292581&saleMode=R"
-    baseUrl = "https://m.ctrip.com/webapp/vacations/tour/detail?productid="
+def createHtmlpage(htmlFile, mainUrl, urls, titles, locations, baseUrl='') -> None:
     city = ''
-    filename = 'data/LaunchTravels.html'
+    filename = f'data/{htmlFile}.html'
 
     with open(filename, 'w', encoding='utf-8') as f:
-        f.write(f'<a target=_blank href={mainUrl}><h1>CTRIP火箭发射观礼旅行</H1></a>\n')
+        f.write(f'<a target=_blank href={mainUrl}><h1>{htmlFile}火箭发射观礼</H1></a>\n')
 
         for i, (url, title, location) in enumerate(zip(urls, titles, locations)):
             city = writeTitle(f, title, location, city)
             f.write(f'{i + 1:02}: <a target=_blank href={baseUrl}{url}>{title}</a><br>\n')
+        f.write('<BR>')
+        print(f'Saved to {filename}!\n')
 
-        print(f'Saved to {filename}!')
-
+################################################################################################
 def main():
     try:
         driver = myNet.getFirefoxDriver(disableImage=False)
-        getCTrip(driver)
+        date2 = getCTrip(driver)
+        date1 = getHuahuoTrip(driver)
+        launch_date = myUtils.combineValuesForSameDictKey(date1, date2)
+        printTrip(launch_date)
+        # printTrip(date1, '花火亲子旅行')
+        # printTrip(date2, '携程旅行')
     except:
         myExcept.printExceptionTrace()
     if driver:
