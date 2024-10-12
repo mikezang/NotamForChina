@@ -5,7 +5,7 @@ import io
 import random
 import subprocess
 from math import log, sqrt
-from re import findall
+from re import findall, search
 from datetime import datetime
 import PySimpleGUI as sg
 import numpy as np
@@ -180,7 +180,7 @@ def getImage(filename, resize=True, size=myExcel.IMAGE_SIZE):
         resize = map(int, resize)
         # ration = max(size[0]/im.size[0], size[1]/im.size[1])
         # resize = (int(size[0] * ration), int(size[1] * ration))
-        im = im.resize(resize, Image.LANCZOS)
+        im = im.resize(tuple(resize), Image.LANCZOS)
     with io.BytesIO() as buffer:
         im.save(buffer, format='PNG')
         image = buffer.getvalue()
@@ -204,7 +204,7 @@ def saveFig(fig, filename, isPrint=True, resize=True, dpi=300):
         img = Image.open(buf)
         figsize = fig.get_size_inches()
         size = figsize * dpi # size in pixels
-        img_resize = img.resize(size.astype(int))
+        img_resize = img.resize(tuple(size.astype(int)))
         img_resize.save(filename)
     else:
         fig.savefig(filename, bbox_inches='tight')
@@ -516,7 +516,7 @@ def plotVLineBetweenYearsMonths(ax, xDataList, dx=0.5, yMin=-0.24, yMax=0.8, mus
 
 ################################################################################################
 def getLogList(y):
-    yList1 = [0.5, 1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 50, 90, 150, 200, 250, 300, 400, 500]
+    yList1 = [0.5, 1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 90, 150, 200, 250, 300, 400, 500]
     # yList1 = np.array([0.5, 1, 2, 3, 4, 5, 6, 8, 10, 20, 30, 40, 50, 60, 80, 100, 150, 200, 250, 300, 400, 500])
     yList2 = [800, 1000]
     # yList2 = np.array([600, 700, 800, 900, 1000])
@@ -650,6 +650,7 @@ def readDataFromSheetNew(excelFile, sheetName, onlyFailed=False):
     cond2 = ~df[myExcel.EXCEL_COLUMN_RESULT].isna()
     # cond3 = df[myExcel.EXCEL_COLUMN_RESULT] != '成功'
     df = df[cond1 & cond2]
+    pd.set_option('future.no_silent_downcasting', True)
     df.replace('-', np.nan, inplace=True) # Replace '-' with NaN
     df.replace([None, np.nan], '', inplace=True) # Replace None with empty string
     return df
@@ -1032,7 +1033,8 @@ def convertDataFrame2TWideTaikonaut(dfOld, use_pinyin=False):
     dfPivot = df.pivot_table(index='日期', columns='航天员', 
                              values='count', aggfunc='sum', fill_value=0)[column_order]
     dfPivot.reset_index(inplace=True)
-    dfPivot['日期'].iloc[-1] = dfPivot['日期'].iloc[-1].replace(hour=23, minute=59, second=59)
+    # dfPivot['日期'].iloc[-1] = dfPivot['日期'].iloc[-1].replace(hour=23, minute=59, second=59)
+    dfPivot.loc[dfPivot.index[-1], '日期'] = dfPivot['日期'].iloc[-1].replace(hour=23, minute=59, second=59)
     dfPivot = dfPivot.set_index('日期').cumsum()
 
     dfRank = dfPivot.copy()
@@ -1201,21 +1203,22 @@ def parseToDataFrame(dfOld, rocket:str=None, location=None, payload=None, startY
                 cond1 = df[columnPayload].isin(payload)
             else:
                 if payload == '空间站':
-                    cms = myUtils.readConfig(['CMS'])
+                    cms = myUtils.readConfig([payload])
                     cond1 = None
                     for c in cms:
-                        d = df[columnPayload].str.startswith(c)
-                        cond1 = d if cond1 is None else cond1 | d
+                        d1 = df[columnPayload].str.startswith(c)
+                        cond1 = d1 if cond1 is None else cond1 | d1
                 else:
-                    startswith = False
-                    if payload[:1] == '^':
-                        startswith = True
-                        payload = payload[1:]
-                    arr = payload.split('~')
-                    cond1 = df[columnPayload].str.startswith(arr[0]) if startswith else df[columnPayload].str.contains(arr[0])
-                    if len(arr) > 1:
-                        cond1 &= ~df[columnPayload].str.contains(arr[1])
-
+                    # #TODO: use Regexp to match
+                    pattern = rf'{payload}.{{1,3}}号'
+                    cond1 = df[columnPayload].apply(lambda text: bool(search(pattern, text)))
+                    # startswith = True
+                    # if payload[:1] == '^':
+                    #     payload = payload[1:]
+                    # arr = payload.split('~')
+                    # cond1 = df[columnPayload].str.startswith(arr[0]) if startswith else df[columnPayload].str.contains(arr[0])
+                    # if len(arr) > 1:
+                    #     cond1 &= ~df[columnPayload].str.contains(arr[1])
             df = df[cond1]
             dfList = split50perPage(df)
 

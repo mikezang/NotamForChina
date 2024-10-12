@@ -81,6 +81,13 @@ def convertToDiacritic(text, mode="NFC"):
     return text
 
 ################################################################################################
+def getTempPath():
+    if isWindows():
+        return 'c:/temp'
+    else:
+        return '/tmp'
+    
+################################################################################################
 def keepOneLineChar():
     if isWindows():
         return '^'
@@ -243,6 +250,13 @@ def getLastdayOfMonth(year, month):
 ##  6 : Cancel | Try Again | Continue
 def msgbox(title, text, style):
     return ctypes.windll.user32.MessageBoxW(0, text, title, style)
+
+################################################################################################
+def lenFullWidth(str):
+    count = 0
+    for char in str:
+        count += 2 if ord(char) > 255 else 1
+    return count
 
 ################################################################################################
 def combineValuesForSameDictKey(d1: dict, d2: dict) -> dict:
@@ -854,8 +868,8 @@ def sortDictByLatitude(d: dict):
     return {k : v for k, v in sorted(d.items(), key=lambda x: x[1])}
 
 ################################################################################################
-def sortDictByKey(d: dict):
-    return  {k : v for k, v in sorted(d.items(), key=lambda x: x[0])}
+def sortDictByKey(d: dict, reverse=False):
+    return  {k : v for k, v in sorted(d.items(), key=lambda x: x[0], reverse=reverse)}
 
 ####################################################################
 # def sendEmail(subject: str, body: str, toEmail='zhengrong.zang@gmail.com'):

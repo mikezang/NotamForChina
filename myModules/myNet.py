@@ -124,6 +124,8 @@ def getFirefoxDriver(headless=1, disableImage=True, log=False) -> webdriver:
     options = FirefoxOptions()
     # options.set_preference("permissions.default.stylesheet", 2)
     # options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", 'false')
+    options.set_preference("intl.accept_languages", "zh-CN,zh")
+    options.set_preference("extensions.translations.disabled", True)
     options.set_preference('general.useragent.override', constants.header['User-Agent'])
     if headless == 1:
         options.headless = True
