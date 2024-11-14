@@ -7,7 +7,6 @@ import subprocess
 from math import log, sqrt
 from re import findall, search
 from datetime import datetime
-import PySimpleGUI as sg
 import numpy as np
 from PIL import Image
 import pandas as pd
@@ -19,7 +18,8 @@ import matplotlib.colors as mcolors
 import matplotlib.image as mpimg
 
 from myModules import myExcel
-from myModules import myUtils
+from myModules import myFile
+from myModules import myDate
 
 ################################################################################################
 def calcDurationByFrames(frames, framerate):
@@ -27,7 +27,7 @@ def calcDurationByFrames(frames, framerate):
 
 ################################################################################################
 def getFileFrameRate(filename: str) -> float:
-    if not myUtils.isVideoFile(filename):
+    if not myFile.isVideoFile(filename):
         print(f'{filename} not video file!')
         return 0
     cmd = f"ffprobe.exe -v error -show_entries stream=avg_frame_rate -of default=nw=1:nk=1 {filename}"
@@ -62,23 +62,6 @@ def getFramesCount(filename):
     return frames
 
 ################################################################################################
-def make_dpi_aware():
-    import ctypes
-    import platform
-    if myUtils.isWindows() and int(platform.release()) >= 8:
-        ctypes.windll.shcore.SetProcessDpiAwareness(True)
-
-def moveWindow(window, x=None, y=None):
-    w0, h0 = sg.Window.get_screen_size()
-    x0, y0 = window.current_location()
-    w, h = window.size
-    if x is None:
-        x = (w0 - w) // 2 - 10
-    if y is None:
-        y = y0
-    window.move(x, y)
-
-################################################################################################
 def get_nearest_row(df, dateIndex):
     try:
         # Try to retrieve the exact row
@@ -91,7 +74,7 @@ def get_nearest_row(df, dateIndex):
 ################################################################################################
 def get_nearest_taikonaut(df, date, taikonaut, use_pinyin=False):
     try:
-        taikoColumn = 'Pinyin' if use_pinyin else '航天员'
+        taikoColumn = '拼音' if use_pinyin else '航天员'
         cond = df[taikoColumn] == taikonaut
         return df[cond]
     except KeyError:
@@ -136,12 +119,14 @@ def init(setDefaultFont=False):
     mpl.rcParams.update(mpl.rcParamsDefault)
 
     # Set the Chinese font
-    if myUtils.isWindows():
+    if myFile.isWindows():
         font_path = 'C:/Windows/Fonts/simhei.ttf'
-    elif myUtils.isLinux():
+        font_path = 'C:/Windows/Fonts/simkai.ttf'
+    elif myFile.isLinux():
         font_path = '//usr//share//fonts//truetype//wqy//wqy-microhei.ttc'
-    elif myUtils.isMacOS():
+    elif myFile.isMacOS():
         font_path = '//usr//local//share//fonts//truetype//SimHei.ttf'
+        font_path = '//usr//local//share//fonts//truetype//SimKai.ttf'
     cn_font = fm.FontProperties(fname=font_path)
 
     if setDefaultFont:
@@ -187,14 +172,8 @@ def getImage(filename, resize=True, size=myExcel.IMAGE_SIZE):
     return image
 
 ################################################################################################
-def setScreenDpiAware():
-    make_dpi_aware()
-    sg.theme('Python')
-    sg.set_options(text_justification='right')      
-
-################################################################################################
 def saveFig(fig, filename, isPrint=True, resize=True, dpi=300):
-    myUtils.createFolder(filename)
+    myFile.createFolder(filename)
     if resize:
         buf = io.BytesIO()
         # fig.savefig(buf, bbox_inches='tight')
@@ -235,17 +214,6 @@ def getPlotTitle(titleBase, startYear=None, endYear=None, byYear=True, mom=False
     if endYear != None:
         if endYear[:4] != startYear[:4]:
             year += f'～{endYear[:4]}'
-    
-    #     if len(endYear) == 4:
-    #         if f'{endYear}年12月31日' >= plotDate:
-    #             title += f'(截止{plotDate})'
-    #     elif len(endYear) == 6:
-    #         y, m, d = endYear[:4], endYear[4:], myUtils.getLastdayOfMonth(endYear[:4], endYear[4:])
-    #         if f'{y}年{m}月{d}日' >= plotDate:
-    #             title += f'(截止{plotDate})'
-    # else:
-    #     if (startYear == None or f'{startYear}年12月31日' >= plotDate) and (retired != True and nodate != True):
-    #         title += f'(截止{plotDate})'
 
     if mom:
         title = f'{title}（去年同期比）'
@@ -516,7 +484,7 @@ def plotVLineBetweenYearsMonths(ax, xDataList, dx=0.5, yMin=-0.24, yMax=0.8, mus
 
 ################################################################################################
 def getLogList(y):
-    yList1 = [0.5, 1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 90, 150, 200, 250, 300, 400, 500]
+    yList1 = [0.5, 1, 10, 30, 90, 150, 200, 250, 300, 400, 500]
     # yList1 = np.array([0.5, 1, 2, 3, 4, 5, 6, 8, 10, 20, 30, 40, 50, 60, 80, 100, 150, 200, 250, 300, 400, 500])
     yList2 = [800, 1000]
     # yList2 = np.array([600, 700, 800, 900, 1000])
@@ -543,7 +511,7 @@ def countRocketWide(df, columnRocket, rocket, startYear, endYear, seriesDict, us
     elif rocket == '其他':
         cond1 = ~df[columnRocket].str.startswith('长征')
     elif rocket == '民营':
-        privates = myUtils.readConfig(['PrivatesPrefix'])
+        privates = myFile.readConfig(['PrivatesPrefix'])
         cond1 = False
         for private in privates:
             cond1 |= df[columnRocket].str.startswith(private)
@@ -556,7 +524,6 @@ def countRocketWide(df, columnRocket, rocket, startYear, endYear, seriesDict, us
     if endYear:
         columnYear = '日期'
         cond1 &= df[columnYear] < pd.to_datetime(f'{endYear}0101')
-#TODO: modify chinese to pinyin when use_pinyin
     return df[cond1]
 
 ################################################################################################
@@ -601,7 +568,7 @@ def countRocket(df, columnRocket, rocket, seriesDict=None):
             cond1 = ~df[columnRocket].str.startswith('长征')
             cond1 &= ~df[columnRocket].str.startswith('远征')
         elif rocket == '民营':
-            privates = myUtils.readConfig(['PrivatesPrefix'])
+            privates = myFile.readConfig(['PrivatesPrefix'])
             cond1 = False
             for private in privates:
                 cond1 |= df[columnRocket].str.startswith(private)
@@ -615,30 +582,6 @@ def countRocket(df, columnRocket, rocket, seriesDict=None):
             cond1 |= df[columnRocket].str.startswith('智神星')
         elif rocket[-2:] == '系列':
             cond1 = df[columnRocket].str.startswith(rocket[:-2])
-        # elif rocket == '长征四号系列':
-        #     cond1 = df[columnRocket].str.startswith('长征四号')
-        # elif rocket == '长征五号系列':
-        #     cond1 = df[columnRocket].str.startswith('长征五号')
-        # elif rocket == '长征六号系列':
-        #     cond1 = df[columnRocket].str.startswith('长征六号')
-        # elif rocket == '长征七号系列':
-        #     cond1 = df[columnRocket].str.startswith('长征七号')
-        # elif rocket == '长征十一号系列':
-        #     cond1 = df[columnRocket].str.startswith('长征十一号')
-        # elif rocket == '快舟系列':
-        #     cond1 = df[columnRocket].str.startswith('快舟')
-        # elif rocket == '朱雀系列':
-        #     cond1 = df[columnRocket].str.startswith('朱雀')
-        # elif rocket == '捷龙系列':
-        #     cond1 = df[columnRocket].str.startswith('捷龙')
-        # elif rocket == '谷神星系列':
-        #     cond1 = df[columnRocket].str.startswith('谷神星')
-        # elif rocket == '力箭系列':
-        #     cond1 = df[columnRocket].str.startswith('力箭')
-        # elif rocket == '天龙系列':
-        #     cond1 = df[columnRocket].str.startswith('天龙')
-        # elif rocket == '引力系列':
-        #     cond1 = df[columnRocket].str.startswith('引力')
         else:
             cond1 = df[columnRocket] == rocket
     return df[cond1] if cond1 is not None else df
@@ -690,7 +633,7 @@ def readDataFromBook(excelBook, sheetName, headers, columnNotNull, columnRocket,
 def mergeData(dfPivot, dfPivotOk, columnYear):
     def custom_logic(row, index):
         result = {} 
-        retiredRocketsDict = myUtils.readConfigRetiredDict() #myExcel.RETIRED_ROCKETS
+        retiredRocketsDict = myFile.readConfigRetiredDict() #myExcel.RETIRED_ROCKETS
         for column, value in row.items():
             if column in retiredRocketsDict:
                 result[column] = f'{value * 1000 + dfPivotOk[column][index]}'    # 退役
@@ -708,14 +651,11 @@ def mergeData(dfPivot, dfPivotOk, columnYear):
     dfResult = pd.DataFrame(result_data, columns=dfPivot.columns)
     dfResult.set_index(columnYear, inplace=True)
     return dfResult
-
-# if __name__ == "__main__":
-#     seriesDict = myUtils.readConfigSeriesDictList()
     
 ################################################################################################
 def ChangeToSeriesName(df, columnRocket, seriesDict):
     if seriesDict is None:
-        seriesDict = myUtils.readConfigSeriesDictList()
+        seriesDict = myFile.readConfigSeriesDictList()
         # seriesDict = myExcel.ROCKET_SERIES
     for series in seriesDict:
         df[columnRocket] = df[columnRocket].replace(series)
@@ -871,7 +811,7 @@ def parseFirstLast(df, columnYear):
 ################################################################################################
 def parseLunarNewYear(df, columnYear, columnRocket, columnLocation, columnNotNull):
     df = df[~df[columnYear].isnull()]
-    lunarNewYearDates = myUtils.readConfig(['LunarNewYear'])
+    lunarNewYearDates = myFile.readConfig(['LunarNewYear'])
     lunarNewYearDates = [pd.Timestamp(x, unit='D') for x in lunarNewYearDates]
     dfLunarNewYears = pd.DataFrame({
         columnRocket: ['春节'] * len(lunarNewYearDates),
@@ -942,7 +882,7 @@ def convertDataFrame2WideRocket(df, columnYear, columnRocket, columnNotNull, roc
     # copy original df to use when plot
     dfAll = dfPivot.copy()
     dfOk = dfPivotOk.copy()
-    retiredRocketsDict = myUtils.readConfigRetiredDict() #myExcel.RETIRED_ROCKETS
+    retiredRocketsDict = myFile.readConfigRetiredDict() #myExcel.RETIRED_ROCKETS
 
     if isAfterRetired:
         dfRank = pd.DataFrame(index=dfPivot.index)
@@ -960,7 +900,6 @@ def convertDataFrame2WideRocket(df, columnYear, columnRocket, columnNotNull, roc
         if dfRank.empty:
             dfRank = dfPivot * 1000 + dfPivotOk / 1000    # convert to float
     elif isAfterRetired == False:
-        # retiredRocketsDict = myUtils.readConfigRetiredDict #myExcel.RETIRED_ROCKETS
         condition = dfPivot.columns.isin(retiredRocketsDict)
         dfTemp = np.where(condition, dfPivot + dfPivotOk / 1000, dfPivot * 1000 + dfPivotOk / 1000)
         dfRank = pd.DataFrame(dfTemp, columns=dfPivot.columns, index=dfPivot.index)
@@ -1011,15 +950,15 @@ def getEndRow(row):
 ################################################################################################
 def convertDataFrame2TimeSeries(df, use_pinyin=False):
     df.dropna(subset=['航天员'], inplace=True)
-    removeColumns = ['发射日期', '着陆日期', '着陆地点', '在轨日数', '载人飞船', 'Ship']  
-    removeColumns += ['出生日期', '年龄', '入选年', '批次', '日差']
-    removeColumns.append('航天员') if use_pinyin else removeColumns.append('Pinyin')
+    removeColumns = ['发射日期', '着陆日期', '着陆经纬度', '在轨', '飞船', '缩写']  
+    removeColumns += ['出生日期', '年龄', '入选', '批次', '日差']
+    removeColumns.append('航天员') if use_pinyin else removeColumns.append('拼音')
 
     df['日期'] = df.apply(lambda row: pd.date_range(row['发射日期'], 
-                      min(pd.to_datetime(myUtils.getJapanDate()), row['着陆日期'])), axis=1)
+                      min(pd.to_datetime(myDate.getJapanDate()), row['着陆日期'])), axis=1)
     df = (df.drop(columns=removeColumns).explode('日期', ignore_index=True)
-          .sort_values(by=['日期', 'Rank']).reset_index(drop=True))
-    df.columns = ['航天员', 'Rank', '日期']
+          .sort_values(by=['日期', '排名']).reset_index(drop=True))
+    df.columns = ['航天员', '排名', '日期']
     return df
 
 ################################################################################################
@@ -1027,18 +966,22 @@ def convertDataFrame2TWideTaikonaut(dfOld, use_pinyin=False):
     dfTimeSeries = convertDataFrame2TimeSeries(dfOld, use_pinyin)
     dfList = []
     df = dfTimeSeries.copy()
-
+    today = pd.Timestamp(myDate.getJapanDate('%Y-%m-%d'))
+    df['日期'] = df['日期'].fillna(today)
     df['count'] = np.where(df.航天员.duplicated(), 1, 0)
     column_order = df['航天员'].unique() # Reorder columns to match the original order
     dfPivot = df.pivot_table(index='日期', columns='航天员', 
                              values='count', aggfunc='sum', fill_value=0)[column_order]
     dfPivot.reset_index(inplace=True)
-    # dfPivot['日期'].iloc[-1] = dfPivot['日期'].iloc[-1].replace(hour=23, minute=59, second=59)
     dfPivot.loc[dfPivot.index[-1], '日期'] = dfPivot['日期'].iloc[-1].replace(hour=23, minute=59, second=59)
-    dfPivot = dfPivot.set_index('日期').cumsum()
+    dfPivot = dfPivot.set_index('日期')
+
+    # change 1 t 0 for all first date of non-segments
+    dfPivot = adjustNonContinuousSegments(dfPivot, column_order)
+    dfPivot = dfPivot.cumsum() # this only cumsum continuous dates
 
     dfRank = dfPivot.copy()
-    columnTaiko = 'Pinyin' if use_pinyin else '航天员'
+    columnTaiko = '拼音' if use_pinyin else '航天员'
     for startDate, endDate, person in zip(dfOld['发射日期'], dfOld['着陆日期'], dfOld[columnTaiko]):
         dfRank.loc[startDate : endDate, person] += 1000 #在轨期间优先排序
 
@@ -1047,28 +990,39 @@ def convertDataFrame2TWideTaikonaut(dfOld, use_pinyin=False):
     return dfList
 
 ################################################################################################
+def adjustNonContinuousSegments(dfPivot, column_order):
+    for taiko in column_order:
+        activeDates = dfPivot[dfPivot[taiko] == 1].index
+        if len(activeDates) > 0:
+            dateDiffs = activeDates.to_series().diff().dt.days
+            for i in range(1, len(dateDiffs)):
+                if dateDiffs.iloc[i] > 1:
+                    dfPivot.at[activeDates[i - 1], taiko] = 0
+    return dfPivot
+
+################################################################################################
 def convertDataFrame2TimeSeriesOld(df):
-    myUtils.setStartTime()
+    myDate.setStartTime()
     newRows = []
 
     # Iterate over each row in the original DataFrame
     for _, row in df.iterrows():
         startDate = row['发射日期']
-        endDate = min(pd.to_datetime(myUtils.getJapanDate()), row['着陆日期'])
+        endDate = min(pd.to_datetime(myDate.getJapanDate()), row['着陆日期'])
         name = row['航天员']
-        rank = row['Rank']
+        rank = row['排名']
         dateRange = pd.date_range(start=startDate, end=endDate)
 
         for date in dateRange:
-            newRow = {'日期' : pd.to_datetime(date), '航天员': name, 'Rank': rank}
+            newRow = {'日期' : pd.to_datetime(date), '航天员': name, '排名': rank}
             newRows.append(newRow)
 
     dfDuplicateDates = pd.DataFrame(newRows)
-    dfDuplicateDates.sort_values(by=['日期', 'Rank'], inplace=True)
+    dfDuplicateDates.sort_values(by=['日期', '排名'], inplace=True)
 
     # Reset index to ensure a clean DataFrame
     dfDuplicateDates.reset_index(drop=True, inplace=True)
-    myUtils.showRunTime()
+    myDate.showRunTime()
     return dfDuplicateDates
 
 ################################################################################################
@@ -1153,7 +1107,7 @@ def parseToDataFrame(dfOld, rocket:str=None, location=None, payload=None, startY
             if len(endYear) == 4:
                 endYMD = f'{endYear}1231'
             elif len(endYear) == 6:
-                lastDay = myUtils.getLastdayOfMonth(int(endYear[:4]), int(endYear[4:]))
+                lastDay = myDate.getLastdayOfMonth(int(endYear[:4]), int(endYear[4:]))
                 endYMD = f'{endYear}{lastDay}'
             else:
                 endYMD = f'{endYear[:4]}1231'
@@ -1203,14 +1157,14 @@ def parseToDataFrame(dfOld, rocket:str=None, location=None, payload=None, startY
                 cond1 = df[columnPayload].isin(payload)
             else:
                 if payload == '空间站':
-                    cms = myUtils.readConfig([payload])
+                    cms = myFile.readConfig([payload])
                     cond1 = None
                     for c in cms:
                         d1 = df[columnPayload].str.startswith(c)
                         cond1 = d1 if cond1 is None else cond1 | d1
                 else:
                     # #TODO: use Regexp to match
-                    pattern = rf'{payload}.{{1,3}}号'
+                    pattern = rf'{payload}' if payload in ['千帆'] else rf'{payload}.{{1,3}}号'
                     cond1 = df[columnPayload].apply(lambda text: bool(search(pattern, text)))
                     # startswith = True
                     # if payload[:1] == '^':
@@ -1277,5 +1231,8 @@ def getUniqueColorList(n: int):
     random.shuffle(colorList)
     return colorList[:n]
 
+def resetMaxRows():
+    pd.set_option('display.max_rows', None)
+    pd.set_option('display.columns', None)
 
 

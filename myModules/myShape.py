@@ -10,9 +10,9 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import geoplot
-from os import environ, walk, path, remove
+from os import environ, walk, path
 from PIL import Image
-from math import ceil, floor
+from math import acos, sqrt, degrees, pi, ceil, floor
 from simplekml import Kml
 import PySimpleGUI as sg
 import io
@@ -22,6 +22,7 @@ from myModules import myExcept
 from myModules import myMath
 from myModules import myExcel
 from myModules import myKml
+from myModules import myFile
 
 KML_FOLDERS = {
     '酒泉' : r'notams/maps/01.酒泉',
@@ -35,6 +36,7 @@ KML_FOLDERS = {
     '南海' : r'notams/maps/10.海上',
 }
 
+TEMP_FILE_PATH = './temp/'
 NSF_PATH = './notams/maps/nsf/'
 KML_PATH = './temp/'
 MAP_SHAPES_FOLDER = './natural_earth_vector'
@@ -53,38 +55,7 @@ environ['PYPROJ_GLOBAL_CONTEXT'] = 'ON'
 
 #coords(longitude経度, latitude緯度)
 
-################################################################################################
-# def createNsfKmlFile(title, notams) -> None:
-#     kml = Kml()
-#     lastCity = ''
-#     highestPoint = ()
-#     lowestPoint = ()
-
-#     #2022年10月09日07時43分酒泉長征二号丁
-#     #01234 567 890 123 456 7 8 9 0 1 2 3
-#     launchTime, city, _ = title[:17], title[17:19], title[19:]
-#     _, notamList = notams[0], notams[1]
-#     usedCoordinates = set()
-
-#     for _, item in notamList.items():
-#         itemArray = item.split(';')
-#         startDate = itemArray[0]
-#         endDate = itemArray[1]
-#         coordinates = itemArray[3]
-#         if startDate != '' and coordinates not in usedCoordinates and myUtils.isNsfNearTime(launchTime, startDate, endDate, 600):
-#             loc = itemArray[2]
-#             coordsGroups = coordinates.split('-')
-#             for coordGroup in coordsGroups:
-#                 usedCoordinates.add(coordGroup)
-#                 coords = coordGroup.split('|')
-#                 coordsList = [myUtils.convertDMS2DD(c) for c in coords]
-#                 coords = drawStages(kml, coordsList, city, loc)
-#                 lastCity, highestPoint, lowestPoint, _ = getSatrtEndCoords(lowestPoint, highestPoint, coords, lastCity, city)
-
-#     drawRouteLine(kml, lastCity, highestPoint, lowestPoint)
-#     updateKmlFile(kml, f'{title}', NSF_PATH)
-
-################################################################################################
+#####################################################################################
 def interpolatePolylines(coordsListCity, num_points_per_segment=20):
     points = []
 
@@ -100,9 +71,8 @@ def interpolatePolylines(coordsListCity, num_points_per_segment=20):
             points.append((lng, lat)) 
     return points
 
-#TODO: draw a polyline from launch spot to drop zones
-################################################################################################
-def drawRoutePolyline(kml, city, centerCoords, highestPoint, lowestPoint=None, seaCoord=None):
+#####################################################################################
+def drawRoutePolyline(kml, city, centerCoords, seaCoord=None):
     cities = [city[i:i + 2] for i in range(0, len(city), 2)]
     coordsListSort = sorted(centerCoords, key=lambda x: x[1], reverse=True)
     for c in cities:
@@ -112,10 +82,7 @@ def drawRoutePolyline(kml, city, centerCoords, highestPoint, lowestPoint=None, s
         else:
             coordsListCity.insert(0, myUtils.getCityCoordinate(c))
 
-        # Generate a curve through the specified points 
-        # points = interpolatePolylines(coordsListCity)
         points = coordsListCity
-    
         lon0, lat0 = points[0]
         lon2, lat2 = points[-1]
         angle = myMath.great_circle_angle(lat0, lon0, lat2, lon2)
@@ -127,11 +94,12 @@ def drawRoutePolyline(kml, city, centerCoords, highestPoint, lowestPoint=None, s
         ls.coords = points
 
         # change all polygon color
-        color = myExcel.CITIES[c].split('|')[2]
-        for feature in kml.features:
-            feature.style.polystyle.color = color
+        # color = myExcel.CITIES[c].split('|')[2]
+        # color = myFile.readConfig(c, False).split(',')[1]
+        # for feature in kml.features:
+        #     feature.style.polystyle.color = color
 
-################################################################################################
+#####################################################################################
 def drawRouteLine(kml, city, highestPoint, lowestPoint=None, seaCoord=None) -> None:
     cities = [city[i:i + 2] for i in range(0, len(city), 2)]
     for c in cities:
@@ -156,15 +124,16 @@ def drawRouteLine(kml, city, highestPoint, lowestPoint=None, seaCoord=None) -> N
         ls.coords = [cityCoord, lowestPoint]
 
         # change all polygon color
-        color = myExcel.CITIES[c].split('|')[2]
-        for feature in kml.features:
-            feature.style.polystyle.color = color
+        # color = myExcel.CITIES[c].split('|')[2]
+        # color = myFile.readConfig(c, False).split(',')[1]
+        # for feature in kml.features:
+        #     feature.style.polystyle.color = color
 
-################################################################################################
+#####################################################################################
 def higherLatitude(coord1, coord2):
     return coord1 if coord1 and coord2 and coord1[1] > coord2[1] else coord2
 
-################################################################################################
+#####################################################################################
 def lowerLatitude(coord1, coord2):
     if not coord1 and not coord2:
         return None, None
@@ -176,26 +145,27 @@ def lowerLatitude(coord1, coord2):
         return coord2
     # return coord1 if coord1 and coord2 and coord1[1] < coord2[1] else coord2
 
-################################################################################################
+#####################################################################################
 def getAreaCenter(coordsList) -> tuple:
     lon, lat = zip(*[(l[0], l[1]) for l in coordsList if l])
     lons, lats = sum(lon)/len(lon), sum(lat)/len(lat)
     return [lons + 180, lats] if lons < 0 and lons > -10 else [lons, lats]
 
-################################################################################################
+#####################################################################################
 def getNorthSideCenter(coordsList) -> tuple:
     sortedByLatitudes = sorted(coordsList, key=lambda x: x[0])
     northSide = sortedByLatitudes[:2]
     centerPoint = ((northSide[0][0] + northSide[1][0]) / 2, (northSide[0][1] + northSide[1][1]) / 2)
     return centerPoint
 
+#####################################################################################
 def getSouthSideCenter(coordsList) -> tuple:
     sortedByLatitudes = sorted(coordsList, key=lambda x: x[0])
     southSide = sortedByLatitudes[2:]
     centerPoint = ((southSide[0][0] + southSide[1][0]) / 2, (southSide[0][1] + southSide[1][1]) / 2)
     return centerPoint
 
-################################################################################################
+#####################################################################################
 def getSatrtEndCoords(lowestPoint, highestPoint, coordsList, lastCity, city, loc=None, seaCoord=[]) -> tuple:
     if len(coordsList) > 2:
         # p1 = getSouthSideCenter(coordsList)
@@ -214,7 +184,7 @@ def getSatrtEndCoords(lowestPoint, highestPoint, coordsList, lastCity, city, loc
             lowestPoint = lowerLatitude(lowestPoint, coordsList[0])
     return lastCity, highestPoint, lowestPoint, seaCoord
 
-################################################################################################
+#####################################################################################
 def showRouteAngle(newFile, newNames):
     gdf = myKml.readKmlFile(newFile)
     if gdf is None:
@@ -222,73 +192,18 @@ def showRouteAngle(newFile, newNames):
     startPoint, endPoint = [], []
 
     for name, geom in zip(gdf.Name, gdf.geometry):
-        # if geom.geom_type == 'Polygon':
-        # point = myUtils.getAreaCenter(list(geom.exterior.coords))
         point = (geom.centroid.x, geom.centroid.y)
         startPoint = higherLatitude(startPoint, point)
         endPoint = lowerLatitude(endPoint, point)
-    # print(f'{startPoint = }, {endPoint = }')
+
     lon0, lat0 = startPoint
     lon1, lat1 = endPoint
     angle2 = myMath.great_circle_angle(lat0, lon0, lat1, lon1)
     lon2, lat2 = myMath.great_circle_point(lat0, lon0, lat1, lon1, distance=100)
-    # angle2d = myMath.calculate_2d_angle(lon0, lat0, lon1, lat1)
     lat3, lon3, angle3, angle3Final = myMath.getBearing(lat0, lon0, lat1, lon1)
     sg.popup_ok(f'The route bearing is {angle2:.1f}°', font=('Noto Serif CJK JP', 18))
-    # print(f'{angle2=}, {lon2=}, {lat2=}')
-    # print(f'{angle3=}, {lon3=}, {lat3=}')
 
-################################################################################################
-# def createKmlFileNew(notams: dict, title1='', city1='') -> None:
-#     # notamFiles = devideToFiles(notams)
-#     kml = Kml()
-#     lastStartDate = ''
-#     lastEndDate = ''
-#     lastCity = ''
-#     highestPoint = []
-#     lowestPoint = []
-#     coordsList = []
-#     coordsDict = {}
-
-#     for number, item in notams.items():
-#         itemArray = item.split(';')
-#         startDate = itemArray[0]
-#         endDate = itemArray[1]
-#         loc = itemArray[2]
-#         city = myUtils.convertLocation(itemArray[2]) if city1 == '' else city1
-#         coordsArray = itemArray[3].split('-')
-
-#         # plot range with all coords for special case
-#         if len(coordsArray) > 1:
-#             coordsAll = itemArray[3].replace('-', '|')
-#             coordsArray.append(coordsAll)
-
-#         for arr in coordsArray:
-#             coords = arr.split('|')
-#             # if len(coords) == 5: coords.pop(0)
-#             coordsList = [myUtils.convertDMS2DD(c) for c in coords]
-
-#             if lastStartDate == '' or myUtils.isNearTime(lastStartDate, startDate, 59):
-#                 # if len(coordsList) > 2:
-#                 coords = drawStages(kml, coordsList, city, f'{loc}/{number}')
-#                 coordsDict[f'{loc}/{number}'] = coordsList
-#                 lastCity, highestPoint, lowestPoint, _ = getSatrtEndCoords(lowestPoint, highestPoint, coords, lastCity, city)
-#             else:
-#                 drawRouteLine(kml, lastCity, highestPoint, lowestPoint)
-#                 title = myUtils.convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
-#                 updateKmlFile(kml, title, KML_PATH)
-#                 highestPoint = []
-#                 kml = Kml()
-#                 coords = drawStages(kml, coordsList, city, f'{loc}/{number}')
-#                 lastCity, highestPoint, lowestPoint, _ = getSatrtEndCoords(lowestPoint, highestPoint, coords, lastCity, city)
-#             lastStartDate = startDate
-#             lastEndDate = endDate
-
-#     drawRouteLine(kml, lastCity, highestPoint, lowestPoint)
-#     title = myUtils.convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
-#     updateKmlFile(kml, title, KML_PATH)
-
-################################################################################################
+#####################################################################################
 def createFirBoundaryKmlFile(title, boundary):
     kml = Kml()
     for city, coordinates in boundary.items():
@@ -299,36 +214,35 @@ def createFirBoundaryKmlFile(title, boundary):
             pol.style.polystyle.outline = 1
     updateKmlFile(kml, title, NSF_PATH)
 
-################################################################################################
+#####################################################################################
 def saveKmlFile(kml: Kml, title: str, filePath=''):
     print(f'Save to file "{filePath}{title}.kml"')
     kml.document.name = title
     kml.save(f'{filePath}{title}.kml') # this is for check content
-    # kml.save('doc.kml') # this is for zip to kmz file
-    # with zipfile.ZipFile(f'{filePath}{title}.kmz', mode='w') as zf:
-    #     zf.write('doc.kml')
-    # remove('doc.kml')
 
-################################################################################################
+#####################################################################################
 def updateKmlFile(kml: Kml, title: str, filePath='', notams=None):
     try:
-        myUtils.createFolder(filePath)
-        with open(f'{filePath}{title}.kml', encoding='utf-8') as f:
+        filename = f'{filePath}{title}.kml'
+        myFile.createFolder(filePath)
+        with open(filename, encoding='utf-8') as f:
             kmlOld = f.read()
             kml.document.name = title
             kmlNew = kml.kml()
             if kmlOld != kmlNew:
                 saveKmlFile(kml, title, filePath)
                 if notams:
-                    myUtils.updateTempFile(notams)
+                    myFile.updateTempFile(notams)
             else:
+                filename = ''
                 print(f'Not update to file "{filePath}{title}.kml"')
     except FileNotFoundError:
         saveKmlFile(kml, title, filePath)
         if notams:
-            myUtils.updateTempFile(notams)
+            myFile.updateTempFile(notams)
+    return filename
 
-################################################################################################
+#####################################################################################
 def createKmlFile(notams, title1='', city1='') -> None:
     kml = Kml()
     lastStartDate = ''
@@ -339,7 +253,8 @@ def createKmlFile(notams, title1='', city1='') -> None:
     coordsList = []
     seaCoord = {}
     centerCoords = []
-
+    kmlFiles = []
+    isFirst = True
     for number, item in notams.items():
         itemArray = item.split(';')
         startDate = itemArray[0]
@@ -361,20 +276,25 @@ def createKmlFile(notams, title1='', city1='') -> None:
                 radius.append(10) if len(radius) == 1 else radius
             else:
                 radius = [0, 10]
-            coordsList = [myUtils.convertDMS2DD(c) for c in coords]
+            coordsList = [myFile.convertDMS2DD(c) for c in coords]
 
             if lastStartDate == '' or myUtils.isNearTime(lastStartDate, startDate, 59):
                 center = getAreaCenter(coordsList)
                 if center not in centerCoords:
                     centerCoords.append(center)
-                drawStages(kml, coordsList, city, number, int(radius[1]))
-                lastCity, highestPoint, lowestPoint, seaCoord = getSatrtEndCoords(lowestPoint, highestPoint, coordsList, lastCity, city, loc, seaCoord)
+                if isFirst:
+                    launchCity, isFirst = getLaunchCity(city, coordsList, loc)
+                                    
+                drawStages(kml, coordsList, launchCity, number, int(radius[1]))
+                lastCity, highestPoint, lowestPoint, seaCoord = getSatrtEndCoords(lowestPoint, highestPoint, coordsList, lastCity, launchCity, loc, seaCoord)
             else:
-                drawRoutePolyline(kml, lastCity, centerCoords, highestPoint, lowestPoint, seaCoord)
-                # drawRouteLine(kml, lastCity, highestPoint, lowestPoint, seaCoord)
-                title = myUtils.convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
-                updateKmlFile(kml, title, KML_PATH, notams)
-
+                # newCity = compareKmls(newKml=kml)
+                drawRoutePolyline(kml, lastCity, centerCoords, seaCoord)
+                isFirst = True
+                title = myFile.convertTitle(lastStartDate, lastEndDate, lastCity, launchCity) if title1 == '' else title1
+                newKmlFile = updateKmlFile(kml, title, KML_PATH, notams)
+                if newKmlFile:
+                    kmlFiles.append(newKmlFile)
                 centerCoords = []
                 highestPoint = []
                 lowestPoint = []
@@ -385,23 +305,115 @@ def createKmlFile(notams, title1='', city1='') -> None:
                 center = getAreaCenter(coordsList)
                 if center not in centerCoords:
                     centerCoords.append(center)
-                drawStages(kml, coordsList, city, number, int(radius[1]))
-                lastCity, highestPoint, lowestPoint, seaCoord = getSatrtEndCoords(lowestPoint, highestPoint, coordsList, lastCity, city, loc, seaCoord)
+                if isFirst:
+                    launchCity, isFirst = getLaunchCity(city, coordsList, loc)
+                drawStages(kml, coordsList, launchCity, number, int(radius[1]))
+                lastCity, highestPoint, lowestPoint, seaCoord = getSatrtEndCoords(lowestPoint, highestPoint, coordsList, lastCity, launchCity, loc, seaCoord)
             lastStartDate = startDate
             lastEndDate = endDate
 
-    drawRoutePolyline(kml, lastCity, centerCoords, highestPoint, lowestPoint, seaCoord)
-    # drawRouteLine(kml, lastCity, highestPoint, lowestPoint, seaCoord)
-    title = myUtils.convertTitle(lastStartDate, lastEndDate, lastCity, city) if title1 == '' else title1
-    updateKmlFile(kml, title, KML_PATH, notams)
+    drawRoutePolyline(kml, lastCity, centerCoords, seaCoord)
+    title = myFile.convertTitle(lastStartDate, lastEndDate, lastCity, launchCity) if title1 == '' else title1
+    newKmlFile = updateKmlFile(kml, title, KML_PATH, notams)
+    if newKmlFile:
+        kmlFiles.append(newKmlFile)
+    return kmlFiles
+
+###############################################################################
+def convertKmlToGdf(kml):
+    kmlData = []
+    for feature in kml.features():
+        if isinstance(feature, Kml.Point):
+            geometry = Point(feature.coords[0])
+            kmlData.append({"Name" : feature.name, "Description": feature.description, "Geometry":geometry})
+        elif isinstance(feature, Kml.LineString):
+            geometry = LineString(feature.coords)
+            kmlData.append({"Name" : feature.name, "Description": feature.description, "Geometry":geometry})
+        elif isinstance(feature, Kml.Polygon):
+            geometry = LineString(feature.outerboundaryis)
+            kmlData.append({"Name" : feature.name, "Description": feature.description, "Geometry":geometry})
+    gdf = gpd.GeoDataFrame(kmlData)
+    return gdf
 
 ################################################################################################
+def compareKmls(newFile=None, newKml=None):
+    if newKml:
+        newGdf = convertKmlToGdf(newKml)
+    else:
+        location, locations = myFile.getLocation(newFile)
+        if location is None:
+            print(f'{newFile} not included {locations}')
+            return ''
+    
+    from myModules import myPlot
+    cn_font = myPlot.init()
+    newGdf = myKml.readKmlFile(newFile)
+    if newGdf.empty:
+        print(f"No Data in {newFile}!")
+        return 
+
+    folder = path.abspath(KML_FOLDERS[location])
+    filename = path.basename(newFile)
+
+    # delete files
+    myFile.removeFile(f'{TEMP_FILE_PATH}match/*.png')
+    myFile.removeFile(f'{TEMP_FILE_PATH}unmatch/*.png')
+
+    # List all kml files in specific foder except newFile
+    oldFiles = myFile.listFiles(folder, extension=".kml", excludeFile=filename)
+    savePath1 = f'{TEMP_FILE_PATH}match/{filename[:-4]}'
+    savePath2 = f'{TEMP_FILE_PATH}unmatch/{filename[:-4]}'
+    
+    for oldFile in oldFiles:
+        if '\\old\\' in oldFile:
+            continue
+
+        try:
+            if plt:
+                plt.close()
+
+            # Use geopandas to read old NOTAM kml file to shapely.geometry
+            try:
+                oldGdf = myKml.readKmlFile(oldFile)
+                if oldGdf.empty:
+                    continue
+                fig, ax = getFigure(setAspectEqual=True, plotGrid=True)
+            except Exception as e:
+                print(f"No Data in {oldFile}!")
+                print(f'Exception: {e}\n')
+
+            plotTwoNoatms(ax, newGdf, oldGdf)
+            newTitle = myFile.getTitle(newFile)
+            newTitle = newTitle if '时' in newTitle else newTitle.replace('日', '日??时??分')
+            oldTitle = myFile.getTitle(oldFile)
+            ious, title = plotPolygonsIntersection(fig, ax, cn_font, newGdf, newTitle, oldGdf, oldTitle)
+            plotTitleXYLabels(fig, ax, cn_font, title, 'Longitude（经度）', 'Latitude（纬度）')
+            # myPlot.showBackend()
+
+            # Save the plot to a file
+            basename = path.basename(oldFile)
+            filename = basename.replace(".kml", ".png")
+
+            if ious:
+                print(f'{newTitle} IoU {oldTitle}')
+                for iou in ious:
+                    print(f'    {iou}') 
+                myPlot.saveFig(fig, f'{savePath1}/{filename}', False, False)
+                print('')
+            else:
+                myPlot.saveFig(fig, f'{savePath2}/{filename}', False, False)
+        except Exception as e:
+            print(f'Exception: {e}\n')
+    print('\nFinished comparing!')
+
+#####################################################################################
 def drawStages(kml, coords, city, location, radius=10) -> None:
     if coords:
         cities = [city[i:i + 2] for i in range(0, len(city), 2)]
         count = len(coords)
         for c in cities:
-            color = myExcel.CITIES[c].split('|')[2]
+            color = myFile.readConfig(c)[1]
+            # color = myExcel.CITIES[c].split('|')[2]
             if count == 1:
                 drawCircle(kml, coords, location, color, radius)
             elif count == 2:
@@ -416,15 +428,15 @@ def drawStages(kml, coords, city, location, radius=10) -> None:
             break
     return coords
 
-################################################################################################
+#####################################################################################
 def drawPolygon(kml, coords, location, color=None) -> None:
     pol = kml.newpolygon(name=location)
     pol.outerboundaryis = coords
-    pol.style.polystyle.color = color if color is not None else myExcel.COLOR_SEA
+    pol.style.polystyle.color = color if color is not None else 'black'
     pol.style.polystyle.outline = 0
     pol.style.linestyle.width = 0
 
-################################################################################################
+#####################################################################################
 def drawDottedLine(kml, coords, location, color) -> None:
     for i in range(len(coords) - 1):
         for j in range(1, len(coords)):
@@ -435,39 +447,22 @@ def drawDottedLine(kml, coords, location, color) -> None:
                 dotted = ((lat1, lon1), (lat2, lon2))
                 drawLine(kml, dotted, location, color)
 
-################################################################################################
-def createShipTrackLinesKmlFile(newFile):
-    df = myUtils.readShipMoveData(newFile, '船舶轨迹', skipRows=1)
-    mmsiKey = str(df['mmsi'].iloc[0])
-    startDate = myUtils.removeChars(df['时间'].iloc[0])[:12]
-    endDate = myUtils.removeChars(df['时间'].iloc[-1])[:12]
-    mmsi = myUtils.readConfig(['LaunchShipMMSI'])
-    shipName = myUtils.readConfig(['LaunchShipName'])
-    shipNameDict = dict(zip(mmsi, shipName))
-    shipName = shipNameDict[mmsiKey] if mmsiKey in shipNameDict else f'MMSI{mmsiKey}'
-    # title = f'{startDate}-{endDate}-{shipName}-航迹'
-    title = f'{endDate[:4]}年{endDate[4:6]}月{endDate[6:8]}日{endDate[8:10]}时{endDate[10:12]}分{shipName}航迹'
-    coords = df[['经度', '纬度']].values.tolist()
-    kml = Kml()
-    drawLine(kml, coords, shipName)
-    updateKmlFile(kml, title, KML_PATH)
-
-################################################################################################
+#####################################################################################
 def drawLine(kml, coords, location=None, color=None) -> None:
     line = kml.newlinestring(name=location)
     line.coords = coords
-    line.style.linestyle.color = color if color is not None else myExcel.COLOR_SEA
+    line.style.linestyle.color = color if color is not None else 'black'
     line.style.linestyle.width = 1
 
-################################################################################################
-# distance in kilo metres
-def drawCircle(kml, coords, location, color=myExcel.COLOR_SEA, radius=3):
+#####################################################################################
+# distance in km
+def drawCircle(kml, coords, location, color, radius=3):
     circle = circleByPoint(coords[0][1], coords[0][0], radius)
     # circle = [(lon, lat) for lat, lon in buffer]
     drawLine(kml, circle, location, color)
     # drawPolygon(kml, circle, location, color)
 
-################################################################################################
+#####################################################################################
 def find_shapefiles(mapsPath=MAP_SHAPES_PATH, resolution='110m'):
     """Recursively find all .shp files in the given directory and subdirectories."""
     shapefiles = []
@@ -477,7 +472,7 @@ def find_shapefiles(mapsPath=MAP_SHAPES_PATH, resolution='110m'):
                 shapefiles.append(path.join(root, file))
     return shapefiles
 
-################################################################################################
+#####################################################################################
 def add_shapefile_to_cartopy(ax, shapefile_path, **kwargs):
     """Add a shapefile to the Cartopy plot."""
     shape_feature = cfeature.ShapelyFeature(
@@ -487,7 +482,7 @@ def add_shapefile_to_cartopy(ax, shapefile_path, **kwargs):
     )
     ax.add_feature(shape_feature)
 
-################################################################################################
+#####################################################################################
 # alculate Jaccard index of Two Geometries
 def getIntersectionOverUnion(newGdf, oldGdf):
     iouDict = {}
@@ -511,42 +506,22 @@ def getIntersectionOverUnion(newGdf, oldGdf):
                         iouDict[text] = gpd.GeoDataFrame(geometry=[intersection])
     return iouDict
 
-################################################################################################
+#####################################################################################
 def readFile(file):
     return gpd.read_file(path.abspath(file))
 
-################################################################################################
-# def format_X(value, tick_number):
-#     if value > 0:
-#         return f'{value:.0f}°E'
-#     elif value < 0:
-#         return f'{value:.0f}°W'
-#     else:
-#         return f'{value:.0f}°'
-    
-################################################################################################
-# def format_Y(value, tick_number):
-#     if value > 0:
-#         return f'{value:.0f}°N'
-#     elif value < 0:
-#         return f'{value:.0f}°S'
-#     else:
-#         return f'{value:.0f}°'
-
-################################################################################################
+#####################################################################################
 def getFigure(nrows=1, ncols=1, figsize=(18, 10.5), setAspectEqual=False, plotGrid=False):
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize)
     if setAspectEqual:
         ax.set_aspect('equal')
     if plotGrid:
-        # ax.xaxis.set_major_formatter(plt.FuncFormatter(format_X))
-        # ax.yaxis.set_major_formatter(plt.FuncFormatter(format_Y))
         ax.xaxis.set_major_formatter(LONGITUDE_FORMATTER)
         ax.yaxis.set_major_formatter(LATITUDE_FORMATTER)
         plt.grid(True, color='red', linestyle='-.', linewidth=0.5)
     return fig, ax
 
-################################################################################################
+#####################################################################################
 def plotTitleXYLabels(fig, ax, cn_font, title, xLabel, yLabel):
     ax.set_title(title, fontproperties=cn_font, fontsize=14, loc='center') # plot title
     # ax[0].axis('off') # Hide the border of the subplot
@@ -562,7 +537,7 @@ def plotTitleXYLabels(fig, ax, cn_font, title, xLabel, yLabel):
     # fig.legend(handles=handles, bbox_to_anchor=(0.1, 0), ncol=3) # add legend
     fig.legend(handles=handles, loc='lower center', ncol=3, fontsize=12)
 
-################################################################################################
+#####################################################################################
 def plotPolygonsIntersection(fig, ax, cn_font, newPolys, newTitle, oldPolys=None, oldTitle=''):
     # Calculate NOTAM drop zones Jaccard Similarity Index and plot intersection polygons
     ious = plotIntersection(ax, newPolys, oldPolys)
@@ -573,11 +548,11 @@ def plotPolygonsIntersection(fig, ax, cn_font, newPolys, newTitle, oldPolys=None
     # plotTitleXYLabels(fig, ax, cn_font, title, 'Longitude（经度）', 'Latitude（纬度）')
     return ious, title
 
-################################################################################################
+#####################################################################################
 def customRound(num):
     return num#ceil(num) if num >=0 else floor(num)
 
-################################################################################################
+#####################################################################################
 def getLimits(gdf, plotLines=False, plotPoints=False):
     if plotLines and plotPoints:
         gdf = gdf
@@ -605,7 +580,7 @@ def getLimits(gdf, plotLines=False, plotPoints=False):
     maxLongiitude = customRound(gdf.bounds.maxx.max()) + 1
     return minLongitude, minLatitude, maxLongiitude, maxLatitude
 
-################################################################################################
+#####################################################################################
 def getExtent(newGdf, oldGdf=None, plotLines=False, plotPoints=False):
     if oldGdf is None:
         return getLimits(newGdf, plotLines, plotPoints)
@@ -622,11 +597,11 @@ def getExtent(newGdf, oldGdf=None, plotLines=False, plotPoints=False):
     extent = [minLongitude, minLatitude, maxLongitude, maxLatitude]
     return extent
 
-################################################################################################
+#####################################################################################
 def adjustLimitsExtent(ax, extent):
     return adjustLimits(ax, extent[0], extent[1], extent[2], extent[3])
 
-################################################################################################
+#####################################################################################
 def adjustLimits(ax, minLon, minLat, maxLon, maxLat):
     lon21 = maxLon - minLon
     lat21 = maxLat - minLat
@@ -647,20 +622,20 @@ def adjustLimits(ax, minLon, minLat, maxLon, maxLat):
     # print(f'Ratio1: {ratio1:0.2f}, Ratio2: {ratio2:0.2f}')
     return minLon1, minLat1, maxLon1, maxLat1
 
-################################################################################################
+#####################################################################################
 def getGdfPolygons(gdf):
     # return gdf[gdf['geometry'].apply(lambda x: isinstance(x, Polygon))]
     return gdf[gdf.geometry.geom_type == 'Polygon']
 
-################################################################################################
+#####################################################################################
 def getGdfLines(gdf):
     return gdf[gdf.geometry.geom_type == 'LineString']
 
-################################################################################################
+#####################################################################################
 def getGdfPoints(gdf):
     return gdf[gdf.geometry.geom_type == 'Point']
 
-################################################################################################
+#####################################################################################
 def plotTwoNoatms(ax, newGdf, oldGdf=None, plotLines=False, plotPoints=False, plotNames=False, plotWorldMap=True, isAdjustLimit=True, font=None, newNames=None, oldNames=None):
     if isAdjustLimit:
         extent = getExtent(newGdf, oldGdf, plotLines, plotPoints)
@@ -688,11 +663,8 @@ def plotTwoNoatms(ax, newGdf, oldGdf=None, plotLines=False, plotPoints=False, pl
         # extent = adjustLimits(ax, extent[0], extent[1], extent[2], extent[3])
         adjustLimits(ax, minLon, minLat, maxLon, maxLat)
 
-################################################################################################
+#####################################################################################
 def plotCartopyTwoNoatms(ax, newGdf, oldGdf=None, plotLines=False, plotNames=False, plotWorldMap=True, isAdjustLimit=True, font=None):
-    # title = newFile.replace('\\', '/') if myUtils.isWindows() else newFile
-    # title = title.split('/')[-1].replace('日', '日??时??分')
-
     extent = getExtent(newGdf, oldGdf)
     extent = adjustLimitsExtent(ax, extent)
 
@@ -716,8 +688,8 @@ def plotCartopyTwoNoatms(ax, newGdf, oldGdf=None, plotLines=False, plotNames=Fal
             oldGdfLines = getGdfLines(oldGdf)
             plotCartopyLines(oldGdfLines, ax, extent=extent, color='green', ha='right', font=font, plotNames=plotNames)
 
-################################################################################################
-def plotCartopyMaps(cn_font, newFile, oldFile=None, projectionName='PlateCarree', plotLines=False, plotPoints=False, plotNames=False, resolution='110m'):
+#####################################################################################
+def plotCartopyMaps(cn_font, newFile, oldFile=None, projectionName='PlateCarree', plotLines=False, plotPoints=False, plotNames=False, resolution='110m', newNames=None, oldNames=None):
     # Create a plot with Cartopy
     if not hasattr(ccrs, projectionName):
         try:
@@ -726,16 +698,18 @@ def plotCartopyMaps(cn_font, newFile, oldFile=None, projectionName='PlateCarree'
             myExcept.printExceptionTrace(True)
 
     newGdf = myKml.readKmlFile(newFile)
+    # newNames = [name for name in newGdf.Name]
+    newNames = getGeometryNames(newGdf, plotLines, plotPoints) if not newNames else newNames
     oldGdf = myKml.readKmlFile(oldFile) if oldFile else None
-    newNames = [name for name in newGdf.Name]
-    oldNames = [name for name in oldGdf.Name] if oldFile else []
+    # oldNames = [name for name in oldGdf.Name] if oldFile else []
+    oldNames = getGeometryNames(oldGdf, plotLines, plotPoints) if not oldNames else oldNames
 
     fig = plt.figure(figsize=(16, 9))
     projectionClass = getattr(ccrs, projectionName)
     ax = plt.axes(projection=projectionClass())
     ax.set_aspect('equal')
 
-    title = newFile.replace('\\', '/') if myUtils.isWindows() else newFile
+    title = newFile.replace('\\', '/') if myFile.isWindows() else newFile
     title = title.split('/')[-1].replace('日', '日??时??分')
 
     extent = getExtent(newGdf, oldGdf)
@@ -752,7 +726,7 @@ def plotCartopyMaps(cn_font, newFile, oldFile=None, projectionName='PlateCarree'
         extent = getExtent(newGdf, oldGdf)
         extent = adjustLimitsExtent(ax, extent)
 
-        oldTitle = oldFile.replace('\\', '/') if myUtils.isWindows() else oldFile
+        oldTitle = oldFile.replace('\\', '/') if myFile.isWindows() else oldFile
         title += '\n' + oldTitle.split('/')[-1]
         oldGdfPolygons = getGdfPolygons(oldGdf)
         plotCartopyPolygons(oldGdfPolygons, ax, extent=extent, color='green', ha='right', font=cn_font, plotNames=plotNames)
@@ -788,7 +762,7 @@ def plotCartopyMaps(cn_font, newFile, oldFile=None, projectionName='PlateCarree'
     plotTitleXYLabels(fig, ax, cn_font, title, 'Longitude（经度）', 'Latitude（纬度）')
     return fig, newNames, oldNames
 
-################################################################################################
+#####################################################################################
 def getGeometryNames(gdf, plotLines, plotPoints):
     if gdf is not None:
         names = {}
@@ -802,7 +776,7 @@ def getGeometryNames(gdf, plotLines, plotPoints):
         names = None
     return names
 
-################################################################################################
+#####################################################################################
 def plotMaps(cn_font, newKmlFile, oldKmlFile=None, plotLines=False, plotPoints=False, plotNames=False, newNames=None, oldNames=None):
     newGdf = myKml.readKmlFile(path.abspath(newKmlFile), False)
     if newGdf is None:
@@ -815,16 +789,16 @@ def plotMaps(cn_font, newKmlFile, oldKmlFile=None, plotLines=False, plotPoints=F
     fig, ax = getFigure(setAspectEqual=True, plotGrid=True)
     plotTwoNoatms(ax, newGdf, oldGdf, plotLines=plotLines, plotPoints=plotPoints, plotNames=plotNames, font=cn_font, newNames=newNames, oldNames=oldNames)
 
-    newTitle = myUtils.getTitle(newKmlFile)
+    newTitle = myFile.getTitle(newKmlFile)
     if oldKmlFile:
         newTitle = newTitle if '时' in newTitle else newTitle.replace('日', '日??时??分')
-        oldTitle = myUtils.getTitle(oldKmlFile)
+        oldTitle = myFile.getTitle(oldKmlFile)
         _, newTitle = plotPolygonsIntersection(fig, ax, cn_font, newGdf, newTitle, oldGdf, oldTitle)
 
     plotTitleXYLabels(fig, ax, cn_font, newTitle, 'Longitude（经度）', 'Latitude（纬度）')
     return fig, newNames, oldNames
 
-################################################################################################
+#####################################################################################
 def getImageInMemoryFromFig(fig, dpi=96, resize=False, size=myExcel.IMAGE_SIZE):
     buf = io.BytesIO()
     fig.savefig(buf, bbox_inches='tight', dpi=dpi, format='png')
@@ -842,7 +816,7 @@ def getImageInMemoryFromFig(fig, dpi=96, resize=False, size=myExcel.IMAGE_SIZE):
     # graphic = graphic.decode('utf-8')
     return imagePng
 
-################################################################################################
+#####################################################################################
 def getImageFromKml(cn_font, newKmlFile, oldKmlFile=None, size=myExcel.IMAGE_SIZE, projection=False, plotLines=False, plotPoints=False, plotNames=False, newNames=None, oldNames=None):
     if plt:
         plt.close()
@@ -850,7 +824,7 @@ def getImageFromKml(cn_font, newKmlFile, oldKmlFile=None, size=myExcel.IMAGE_SIZ
     if projection:
         projectionName = 'Mercator'
         # projectionName = 'PlateCarree'
-        fig, newNames, oldNames = plotCartopyMaps(cn_font, newKmlFile, oldKmlFile, projectionName, plotLines=plotLines, plotPoints=plotPoints, plotNames=plotNames)
+        fig, newNames, oldNames = plotCartopyMaps(cn_font, newKmlFile, oldKmlFile, projectionName, plotLines=plotLines, plotPoints=plotPoints, plotNames=plotNames, newNames=newNames, oldNames=oldNames)
     else:
         fig, newNames, oldNames = plotMaps(cn_font, newKmlFile, oldKmlFile, plotLines=plotLines, plotPoints=plotPoints, plotNames=plotNames, newNames=newNames, oldNames=oldNames)
 
@@ -859,7 +833,7 @@ def getImageFromKml(cn_font, newKmlFile, oldKmlFile=None, size=myExcel.IMAGE_SIZ
     image = getImageInMemoryFromFig(fig, resize=True, size=size)
     return image, newNames, oldNames
 
-################################################################################################
+#####################################################################################
 def plotCartopyPolygons(gdf, ax, extent=None, color=None, ha=None, zorder=2, font=None, plotNames=None):
     try:
         geoplot.polyplot(gdf, ax=ax, extent=extent, facecolor=color, color=color, zorder=zorder)
@@ -870,21 +844,19 @@ def plotCartopyPolygons(gdf, ax, extent=None, color=None, ha=None, zorder=2, fon
     except:
         pass
 
-################################################################################################
+#####################################################################################
 def plotCartopyLines(gdf, ax, extent=None, color=None, ha=None, zorder=1, font=None, plotNames=None):
     # geoplot.polyplot(gdf, ax=ax, extent=extent, facecolor='none', color=color, linewidth=0.5, zorder=zorder)
-    # TODO: plot curve 
     lons, lats = gdf.geometry.iloc[0].xy
     ax.plot(lons, lats, transform=ccrs.Geodetic(), color=color, zorder=zorder+1)
     if plotNames:
         plotAnnotate(ax, gdf, color, ha, 10, font, ccrs.PlateCarree()._as_mpl_transform(ax))
 
-################################################################################################
+#####################################################################################
 def plotAnnotate(ax, gdf, color, ha, fontsize, font=None, transform=None):
     if hasattr(gdf, 'Name'):
         for label, bound, geometry in zip(gdf.Name, gdf.bounds.iloc, gdf.geometry.iloc):
             if 'MSA' not in label and ha:
-                # TODO: if angle < 30 plot name top and bittom else left or right
                 x, y = geometry.centroid.coords[0]
                 if geometry.geom_type == 'LineString':
                     x += 1 if ha == 'left' else -1
@@ -895,10 +867,11 @@ def plotAnnotate(ax, gdf, color, ha, fontsize, font=None, transform=None):
                 else:
                     ax.annotate(label, xy=(x, y), xytext=(x, y), ha=ha, va='center', color=color, fontsize=fontsize, font=font)
 
-################################################################################################
+#####################################################################################
 def plotGeometry(ax, gdf, extent=None, color=None, ha=None, legend=None, lables=None, plotLines=False, plotPoints=False, plotNames=False, zorder=2, font=None, names=None):
     if isinstance(gdf, gpd.GeoDataFrame):
         if names:
+            # names = dict(names) if isinstance(names, list) else names
             for name, isShow in names.items():
                 geomGdf = gdf[gdf.Name == name]
                 if not geomGdf.empty:
@@ -932,7 +905,7 @@ def plotGeometry(ax, gdf, extent=None, color=None, ha=None, legend=None, lables=
                 if plotNames:
                     plotAnnotate(ax, lineGdf, color, ha, 14, font)
 
-################################################################################################
+#####################################################################################
 def plotIntersection(ax, newGdf, oldGdf):
     newIndex = 0
     ious = []
@@ -963,7 +936,7 @@ def plotIntersection(ax, newGdf, oldGdf):
                         plotGeometry(ax, gpd.GeoDataFrame(geometry=[intersection]), color='orange', legend=text, zorder=4)
     return ious
 
-################################################################################################
+#####################################################################################
 def circleByPoint(lat, lon, km=5):
     proj_wgs84 = CRS('EPSG:4326')
     proj_aeqd = CRS(f'+proj=aeqd +lat_0={lat} +lon_0={lon} +x_0=0 +y_0=0')
@@ -971,7 +944,7 @@ def circleByPoint(lat, lon, km=5):
     buf = Point(0, 0).buffer(km * 1000)  # distance in metres
     return transform(transformer.transform, buf).exterior.coords[:]
 
-################################################################################################
+#####################################################################################
 # Function to convert LineString to Points
 def lineStringToPoints(gdf):
     points = []
@@ -982,13 +955,13 @@ def lineStringToPoints(gdf):
     pointsGdf = gpd.GeoDataFrame(geometry=points, crs=gdf.crs)
     return pointsGdf
 
-################################################################################################
+#####################################################################################
 def lineStringToPoint(line):
     coords = line.coords
     points = [Point(coord) for coord in coords]
     return points
 
-################################################################################################
+#####################################################################################
 def lineStringToPointGdf(lineGdf):
     pointGeometries = []
     names = []
@@ -1007,4 +980,74 @@ def lineStringToPointGdf(lineGdf):
         'geometry': pointGeometries
     }, crs=lineGdf.crs)
     return pointGdf
+
+###############################################################################
+def calculateAngle(point1, point2, point3):
+    # angle = angle between line from point1 to point2 then to point3
+    # a = length from point1 to point2
+    #   = sqrt((lon1 - lon2) * (lon1 - lon2) + (lat1 - lat2) * (lat1 - lat2))
+    # b = length from point3 to point2
+    #   = sqrt((lon3 - lon2) * (lon3 - lon2) + (lat3 - lat2) * (lat3 - lat2))
+    # c = length from point1 to point3
+    #   = sqrt((lon1 - lon3) * (lon1 - lon3) + (lat1 - lat3) * (lat1 - lat3))
+    # cos(θ) = (a * a + b * b - c * c) / (2 * a * b)
+    # θ = acos((a * a + b * b - c * c) / (2 * a * b))
+    lon1, lat1 = point1
+    lon2, lat2 = point2
+    lon3, lat3 = point3
+    # lon2 = (lon2 + lon3) / 2
+    # lat2 = (lat2 + lat3) / 2
+    a = sqrt((lon2 - lon1) * (lon2 - lon1) + (lat2 - lat1) * (lat2 - lat1))
+    b = sqrt((lon2 - lon3) * (lon2 - lon3) + (lat2 - lat3) * (lat2 - lat3))
+    if a == 0 or b == 0:
+        return 0
+    c = sqrt((lon1 - lon3) * (lon1 - lon3) + (lat1 - lat3) * (lat1 - lat3))
+    theta = acos((a * a + b * b - c * c) / (2 * a * b))
+    # angleInDegrees = degrees(theta)
+    return theta
+
+###############################################################################
+def sliceByLen(text, length):
+    return [text[i:i + 2] for i in range(0, len(text), length)]
+
+###############################################################################
+def getLaunchCity(cities, coordsList, loc):
+    if len(cities) > 2 and len(coordsList) > 3:
+        cityList = sliceByLen(cities, 2)
+        launchCity = ''
+        launchAngle = 0
+        for city in cityList:
+            cityPoint = [float(x) for x in myFile.readConfig(city)[2].split('+')]
+            top1, top2 = getTopCorners(coordsList)
+            angle = calculateAngle(cityPoint, top1, top2)
+            if not launchCity or abs(pi / 2 - angle) < abs(pi / 2 - launchAngle):
+                launchCity = city
+                launchAngle = angle
+            if degrees(abs(pi / 2 - angle)) < 5:
+                launchCity += city if city not in launchCity else ''
+            print(f'{city} to {loc}: {degrees(angle):.2f}°, {launchCity}')
+    else:
+        launchCity = cities
+    isFirst = False if len(coordsList) > 3 else True
+    return launchCity, isFirst
+
+###############################################################################
+def getTopCorners(coords):
+    """
+    Given a list of four coordinates (lon, lat) of a rectagle, return top corner:
+    - p1 as the top-left corner (highest latitude, samllest longitude)
+    - p2 as the top-right corner (hightest latitude, larest longitude)
+
+    Args:
+      coord (list of tuple): List of coordinates [(lon, lat), ...]
+    
+    Returns:
+      tuple: p1 (left-top), p2(right-top)
+    """
+    sortedBylat = sorted(coords, key=lambda x: x[1], reverse=True)
+    topPoints = sortedBylat[:2]
+    topPointsSortedByLon = sorted(topPoints, key=lambda x: x[0])
+    p1 = topPointsSortedByLon[0]
+    p2 = topPointsSortedByLon[1]
+    return p1, p2
 
