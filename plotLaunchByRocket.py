@@ -8,7 +8,9 @@ from matplotlib.lines import Line2D
 
 from myModules import myPlot
 from myModules import myShape
-from myModules import myUtils
+from myModules import myFile
+
+DATA_FILE_PATH = './data/'
 
 ################################################################################################
 def countDataFrameByRocket(df, retired_rockets):
@@ -105,9 +107,12 @@ def countDataFrameByRocket(df, retired_rockets):
     dfNczSortResult1 = dfNczSort.sort_values(by=['长征分组', '现役分组', '发射数', '成功率', '日期'], ascending=[True, True,  True, True, False])
 
     # Sort by successful rate
-    dfSortResult2 = dfSort.sort_values(by=['长征分组', '现役分组', '成功率', '发射数', '日期'], ascending=[True, True,  True, True, False])
-    dfCzSortResult2 = dfCzSort.sort_values(by=['长征分组', '现役分组', '成功率', '发射数', '日期'], ascending=[True, True,  True, True, False])
-    dfNczSortResult2 = dfNczSort.sort_values(by=['长征分组', '现役分组', '成功率', '发射数', '日期'], ascending=[True, True,  True, True, False])
+    # dfSortResult2 = dfSort.sort_values(by=['长征分组', '现役分组', '成功率', '发射数', '日期'], ascending=[True, True,  True, True, False])
+    # dfCzSortResult2 = dfCzSort.sort_values(by=['长征分组', '现役分组', '成功率', '发射数', '日期'], ascending=[True, True,  True, True, False])
+    # dfNczSortResult2 = dfNczSort.sort_values(by=['长征分组', '现役分组', '成功率', '发射数', '日期'], ascending=[True, True,  True, True, False])
+    dfSortResult2 = dfSort.sort_values(by=['成功率', '发射数', '长征分组', '现役分组', '日期'], ascending=[True, True,  True, True, False])
+    dfCzSortResult2 = dfCzSort.sort_values(by=['成功率', '发射数', '长征分组', '现役分组', '日期'], ascending=[True, True,  True, True, False])
+    dfNczSortResult2 = dfNczSort.sort_values(by=['成功率', '发射数', '长征分组', '现役分组', '日期'], ascending=[True, True,  True, True, False])
     noSum = ~dfSortResult2['火箭'].str.contains('合计') & ~dfSortResult2['火箭'].str.contains('总计')
     noCzSum = ~dfCzSortResult2['火箭'].str.contains('合计') & ~dfCzSortResult2['火箭'].str.contains('总计')
     noNczSum = ~dfNczSortResult2['火箭'].str.contains('合计') & ~dfNczSortResult2['火箭'].str.contains('总计')
@@ -175,7 +180,7 @@ def plotTitleLegendByRocket(cn_font, title, hasGreyLabel=False):
 def plotByRocket(cn_font, df, title, path, startYear):
     # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) 
     fig, axLeft =  myShape.getFigure()
-    retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
+    retiredRocketsDict = myFile.readConfigRetiredDict() #constants.RETIRED_ROCKETS
     hasGreyLabel = plotLineGraphByRocket(cn_font, axLeft, df, retiredRocketsDict, startYear=startYear)
     axRight = axLeft.twinx()
 
@@ -187,13 +192,13 @@ def plotByRocket(cn_font, df, title, path, startYear):
 
 ################################################################################################
 def plotGraphByRocket(cn_font, df, title, startYear=None, endYear=None, seriesList=None):
-    retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
+    retiredRocketsDict = myFile.readConfigRetiredDict() #constants.RETIRED_ROCKETS
     df = myPlot.parseToDataFrame(df, columnYear='日期', columnNotNull='结果', startYear=startYear, endYear=endYear)
     df1, df2, dfCz1, dfCz2, dfNcz1, dfNcz2 = countDataFrameByRocket(df, retiredRocketsDict)
     title1 = myPlot.getPlotTitle(title.replace('发射统计', '发射数统计'), startYear, endYear)
     title2 = myPlot.getPlotTitle(title.replace('发射统计', '发射率统计'), startYear, endYear)
-    path1 = '' if startYear == None else '火箭年发射数统计/'
-    path2 = '' if startYear == None else '火箭年发射率统计/'
+    path1 = '' if startYear == None else '年度别发射数统计/'
+    path2 = '' if startYear == None else '年度别发射率统计/'
 
     if path1 == '':
         for series in seriesList:
@@ -227,7 +232,7 @@ def plot1(cn_font, df, startYear=None, seriesList=None):
 ################################################################################################
 def main():
     cn_font = myPlot.init()
-    excelFile = "./data/ChinaRocketLaunch.xlsx"
+    excelFile = f"{DATA_FILE_PATH}ChinaRocketLaunch.xlsx"
     sheetName = "发射纪录"
     df = myPlot.readDataFromSheetNew(excelFile, sheetName)
     startYear = '2024'

@@ -7,7 +7,10 @@ from matplotlib.lines import Line2D
 
 from myModules import myPlot
 from myModules import myShape
-from myModules import myUtils
+from myModules import myList
+from myModules import myDate
+
+DATA_FILE_PATH = './data/'
 
 ################################################################################################
 def fillZero(dfListMerge, columns):
@@ -589,7 +592,7 @@ def plotBarGraphByYearMonth(cn_font, ax, dfList, startYear, rocketType='', byYea
             ax.bar_label(bar2, fontsize=12, label_type='edge') 
             myPlot.plotTextOnCenterOfBar(ax, bar1.patches[0], okList[1][i], ngList[1][i])
 
-        yTicks = myPlot.getLogList(myUtils.maxOfLists(totalList))
+        yTicks = myPlot.getLogList(myList.maxOfLists(totalList))
     else:
         for i, (xTick, ok, ng) in enumerate(zip(xTickList, okList[0], ngList[0])):
             bar1 = ax.bar(xTick, ok, color='green', label=ok, zorder=1)
@@ -838,7 +841,7 @@ def plotGraphByYearMonth(cn_font, df, title, startYear=None, endYear=None, byYea
 
     prefix = '中国'
     dfList = countDataFrameByYearMonth(dfList, byYear)
-    date = myUtils.getJapanDate()
+    date = myDate.getJapanDate()
     thisMonth = f'{date[:4]}-{date[4:6]}'
     if len(dfList) > 1 and dfList[1].日期.iloc[-2] < thisMonth:
         dfTemp = dfList[1]
@@ -857,7 +860,7 @@ def plotGraphByYearMonth(cn_font, df, title, startYear=None, endYear=None, byYea
     else:
         rocketListNew = rocketList
 
-    if ((mom and startYear[:4] == myUtils.getThisYear()) or startYear == None):
+    if ((mom and startYear[:4] == myDate.getThisYear()) or startYear == None):
         for rocket in rocketListNew:
             if rocket not in ',长征,其他':
                 continue
@@ -899,7 +902,7 @@ def plot1(cn_font, df, years=None, seriesList=None):
             plotGraphByMonth(cn_font, df, title2, year)
 
         # for year in years:
-            if year == myUtils.getThisYear() and seriesList:
+            if year == myDate.getThisYear() and seriesList:
                 today = datetime.today()
                 startYYMMMM = f'{year}01'
                 endYYMMMM = f'{year}12' if today.year < int(year) else f'{year}{today.strftime("%m")}'
@@ -913,7 +916,7 @@ def plot1(cn_font, df, years=None, seriesList=None):
 ################################################################################################
 def main():
     cn_font = myPlot.init()
-    excelFile = "./data/ChinaRocketLaunch.xlsx"
+    excelFile = f"{DATA_FILE_PATH}ChinaRocketLaunch.xlsx"
     sheetName = "发射纪录"
     df = myPlot.readDataFromSheetNew(excelFile, sheetName)
     years =  ['2024', '2023', '2022', '2021', '2020']

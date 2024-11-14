@@ -7,14 +7,16 @@ from timeit import timeit
 from time import sleep
 from sys import argv
 import warnings
+from selenium.webdriver.common.by import By
 
 # Suppress specific warning
 warnings.filterwarnings("ignore", message="invalid value encountered in exp2")
 
-from myModules import myUtils
+from myModules import m3u8_downloader
+from myModules import myFile
 from myModules import myNet
 from myModules import myExcept
-from myModules import m3u8_downloader
+from myModules import myDict
 
 CNYS = 'CNYS'
 WJYS = 'WJYS'
@@ -83,21 +85,19 @@ def parseVideoIdCNYS(driver, videoName: str) -> dict:
 
     while True:
         driver.get(videoUrl)
-        titles = myNet.findElementsByXPath(driver, '//div[@class="thumb-txt cor4 hide"]')
+        titles = driver.find_elements(By.XPATH, '//div[@class="thumb-txt cor4 hide"]')
         if not titles:
             break
 
-        descs =  myNet.findElementsByXPath(driver, '//span[@class="cor5 thumb-blurb hide2"]')
-        ids = myNet.findElementsByXPath(driver, '//a[@class="thumb-s collection fa ds-shoucang"]')
-        years = myNet.findElementsByXPath(driver, '//div[@class="thumb-else cor5 hide"]')
-        actors = myNet.findElementsByXPath(driver, '//div[@class="thumb-actor cor5 hide"]')
+        descs =  driver.find_elements(By.XPATH, '//span[@class="cor5 thumb-blurb hide2"]')
+        ids = driver.find_elements(By.XPATH, '//a[@class="thumb-s collection fa ds-shoucang"]')
+        years = driver.find_elements(By.XPATH, '//div[@class="thumb-else cor5 hide"]')
+        actors = driver.find_elements(By.XPATH, '//div[@class="thumb-actor cor5 hide"]')
 
         try:
             for title, id, year, actor, desc in zip(titles, ids, years, actors, descs):
-                # aTags = year.find_elements(By.TAG_NAME, 'a')
-                # bTags = actor.find_elements(By.TAG_NAME, 'a')
-                aTags = myNet.findElementsByTag(year, 'a')
-                bTags = myNet.findElementsByTag(actor, 'a')
+                aTags = year.find_elements(By.TAG_NAME, 'a')
+                bTags = actor.find_elements(By.TAG_NAME, 'a')
                 if len(aTags) > 2:
                     year, area, category = aTags[0].text, aTags[1].text, aTags[2].text
                 elif len(aTags) == 2:
@@ -142,30 +142,30 @@ def parseVideoIdWJYS(driver, videoName: str) -> dict:
                     myNet.elementInvisibleXPath(driver, 60, '//input[@class="verify_submit submit_btn"]')
                     break
                 except:
-                    verifyCode = myNet.findElementsByXPath(driver, '//input[@name="verify"]')
+                    verifyCode = driver.find_elements(By.XPATH, '//input[@name="verify"]')
                     if verifyCode:
                         verifyCode[0].clear()
                     sleep(1)
                     pass
 
             sleep(2)
-            items = myNet.findElementsByXPath(driver, '//div[@class="module-search-item"]')
+            items = driver.find_elements(By.XPATH, '//div[@class="module-search-item"]')
             if len(items) == 0 or not items or items[0].text == '':
                 break
 
             for item in items:
-                item1 = myNet.findElementsByXPath(item, './/a[@class="video-serial"]')
+                item1 = item.find_elements(By.XPATH, './/a[@class="video-serial"]')
                 title = item1[0].get_attribute('title')
                 videoId = item1[0].get_attribute('href').split('/')[4].replace('.html', '')
-                item2 = myNet.findElementsByXPath(item, './/a[@class="tag-link"]')
+                item2 = item.find_elements(By.XPATH, './/a[@class="tag-link"]')
                 category = item2[0].get_attribute('title')
-                item3 = myNet.findElementsByXPath(item, './/div[@class="tag-link"]')
+                item3 = item.find_elements(By.XPATH, './/div[@class="tag-link"]')
                 year = item3[0].text[:-1]
                 area =item3[1].text[:-1].replace(' ', '/')
-                item4 = myNet.findElementsByXPath(item, './/div[@class="video-info-item video-info-actor"]')
+                item4 = item.find_elements(By.XPATH, './/div[@class="video-info-item video-info-actor"]')
                 actors = item4[1].text.split('/')
                 actor = actors[0] if len(actors) == 1 else actors[0] + '/' + actors[1]
-                item5 = myNet.findElementsByXPath(item, './/div[@class="video-info-item"]')
+                item5 = item.find_elements(By.XPATH, './/div[@class="video-info-item"]')
                 desc = item5[0].text
                 videoDict[f'WJYS-{int(videoId):06}'] = f'{area}-{year}-{category}-{title}-{actor}-{desc}'
         except:
@@ -186,17 +186,17 @@ def parseVideoIdCTV(driver, videoName: str) -> dict:
         while True:
             myNet.setTimeout(driver, 30)
             driver.get(videoUrl)
-            details = myNet.findElementsByXPath(driver, '//div[@class="detail"]')
+            details = driver.find_elements(By.XPATH, '//div[@class="detail"]')
             if not details:
                 break
 
             for detail in details:
                 try:
-                    titles = myNet.findElementsByXPath(detail, './/h3[@class="title"]/a')[0]
+                    titles = detail.find_elements(By.XPATH, './/h3[@class="title"]/a')[0]
                     videoId = f'{int(titles.get_attribute("href").split("/")[4]):06}'
                     title = titles.text
-                    actor = myNet.findElementsByTag(detail, 'p')[1].text.split('：')[1].replace(',', '/')
-                    elements = myNet.findElementsByXPath(detail, './/p[@class="hidden-mi"]')[0].text.split('：')
+                    actor = detail.find_elements(By.XPATH, 'p')[1].text.split('：')[1].replace(',', '/')
+                    elements = detail.find_elements(By.XPATH, './/p[@class="hidden-mi"]')[0].text.split('：')
                     category = elements[1][:-2].replace(' ', '').replace(',', '/')
                     area = elements[2][:-2].replace(' ', '').replace(',', '/')
                     year = elements[3]
@@ -208,7 +208,7 @@ def parseVideoIdCTV(driver, videoName: str) -> dict:
             for videoId, value in videoDict.items():
                 descUrl = CTV_DETAIL_URL.format(videoId)
                 driver.get(descUrl)
-                descs = myNet.findElementsByXPath(driver, '//p[@class="desc hidden-xs"]')
+                descs = driver.find_elements(By.XPATH, '//p[@class="desc hidden-xs"]')
                 if descs:
                     desc = descs[0].text.replace('简介： ', '').replace(' 详情', '')
                     videoDict[videoId] = f'{value}-{desc}'
@@ -225,32 +225,30 @@ def parseVideoId(site:str, videoNames:str) -> dict:
     site = site.upper()
 
     if site == CNYS:
-        driver = myNet.getFirefoxDriver()
-        for videoName in videoNames.split(','):
-            videoDict.update(parseVideoIdCNYS(driver, videoName))
+        with myNet.getFirefoxDriver() as driver:
+            for videoName in videoNames.split(','):
+                videoDict.update(parseVideoIdCNYS(driver, videoName))
     elif site == CTV:
-        driver = myNet.getFirefoxDriver()
-        for videoName in videoNames.split(','):
-            videoDict.update(parseVideoIdCTV(driver, videoName))
+        with myNet.getFirefoxDriver() as driver:
+            for videoName in videoNames.split(','):
+                videoDict.update(parseVideoIdCTV(driver, videoName))
     elif site == WJYS:
-        driver = myNet.getFirefoxDriver(0)
-        for videoName in videoNames.split(','):
-            videoDict.update(parseVideoIdWJYS(driver, videoName))
+        with myNet.getFirefoxDriver(0) as driver:
+            for videoName in videoNames.split(','):
+                videoDict.update(parseVideoIdWJYS(driver, videoName))
     else:
-        driver = myNet.getFirefoxDriver()
-        for videoName in videoNames.split(','):
-            videoDict.update(parseVideoIdCNYS(driver, videoName))
-            sleep(0.5)
+        with myNet.getFirefoxDriver() as driver:
+            for videoName in videoNames.split(','):
+                videoDict.update(parseVideoIdCNYS(driver, videoName))
+                sleep(0.5)
 
-            videoDict.update(parseVideoIdCTV(driver, videoName))
-            sleep(0.5)
+                videoDict.update(parseVideoIdCTV(driver, videoName))
+                sleep(0.5)
 
-        driver.quit()
-        driver = myNet.getFirefoxDriver(0, False)
-        for videoName in videoNames.split(','):
-            videoDict.update(parseVideoIdWJYS(driver, videoName))
-            sleep(0.5)
-    driver.quit()
+        with myNet.getFirefoxDriver(0, False) as driver:
+            for videoName in videoNames.split(','):
+                videoDict.update(parseVideoIdWJYS(driver, videoName))
+                sleep(0.5)
     return videoDict
 
 ################################################################################################
@@ -267,11 +265,11 @@ def praseEpisodes(driver, videoDict):
         sleep(.5)
         xPath = '//i[@class="fa ds-dianying"]'
         count = '??'
-        myNet.elementXPath(driver, 60, xPath)
-        elements = myNet.findElementsByXPath(driver, xPath)
+        myNet.elementLocatedBy(driver, By.XPATH, xPath)
+        elements = driver.find_elements(By.XPATH, xPath)
         for element in elements:
             if '海外' in element.text:
-                count = myNet.findElementsByXPath(driver, '//span[@class="badge"]')
+                count = driver.find_elements(By.XPATH, '//span[@class="badge"]')
                 count = '01' if not count.isdigit() else count
                 break
 
@@ -300,55 +298,53 @@ def parseUrlListCNYS(base, videoId):
     sId = 1
     page = 1
     urls = {}
-    driver = myNet.getFirefoxDriver()
-    print(f'Parsing {videoId} url list on {CNYS_BASE_URL}...')
+    with myNet.getFirefoxDriver() as driver:
+        print(f'Parsing {videoId} url list on {CNYS_BASE_URL}...')
 
-    try:
-        while True:
-            link = base.format(videoId, sId, page)
-            driver.get(link)
+        try:
+            while True:
+                link = base.format(videoId, sId, page)
+                driver.get(link)
 
-            if not videoName:
-                element = myNet.findElementsByXPath(driver, '//a[@class="player-title-link"]')
-                videoName = element[0].text if element else ''
+                if not videoName:
+                    element = driver.find_elements(By.XPATH, '//a[@class="player-title-link"]')
+                    videoName = element[0].text if element else ''
 
-            if not year:
-                element1 = myNet.findElementsByXPath(driver, '//div[@class="player-details flex wrap"]')
-                if not element1:
+                if not year:
+                    element1 = driver.findElementsByXPath(By.XPATH, '//div[@class="player-details flex wrap"]')
+                    if not element1:
+                        break
+
+                    element2 = element1[0].findElements(By.TAG_NAME, 'a')
+                    year = element2[0].text if element2 else '????'
+
+                url, url_next = getUrlsFromJavaScript(driver)
+                if not url:
                     break
 
-                element2 = myNet.findElementsByTag(element1[0], 'a')
-                year = element2[0].text if element2 else '????'
+                if not url.startswith('https://m3u.haiwaikan.com/'):
+                    page = 1
+                    sId += 1
+                    if sId > 3:
+                        break
+                    else:
+                        continue
 
-            url, url_next = getUrlsFromJavaScript(driver)
-            if not url:
-                break
+                id = f'{page:02}'
+                urls[id] = url
+                print(f'{id}: {url}')
 
-            if not url.startswith('https://m3u.haiwaikan.com/'):
-                page = 1
-                sId += 1
-                if sId > 3:
+                if not url_next:
                     break
-                else:
-                    continue
 
-            id = f'{page:02}'
-            urls[id] = url
-            print(f'{id}: {url}')
+                id = f'{page+1:02}'
+                urls[id] = url_next
+                print(f'{id}: {url_next}')
 
-            if not url_next:
-                break
-
-            id = f'{page+1:02}'
-            urls[id] = url_next
-            print(f'{id}: {url_next}')
-
-            page += 2
-    except:
-        myExcept.printExceptionTrace()
-        pass
-
-    driver.quit()
+                page += 2
+        except:
+            myExcept.printExceptionTrace()
+            pass
     return videoName, year, urls, sId
 
 ################################################################################################
@@ -357,44 +353,42 @@ def parseUrlListCTV(base: str, videoId: int):
     sId = 1
     page = 1
     urls = {}
-    driver = myNet.getFirefoxDriver()
-    print(f'Parsing {videoId} url list on {CTV_BASE_URL}...')
+    with myNet.getFirefoxDriver() as driver:
+        print(f'Parsing {videoId} url list on {CTV_BASE_URL}...')
 
-    try:
-        while True:
-            link = base.format(videoId)
-            driver.get(link)
+        try:
+            while True:
+                link = base.format(videoId)
+                driver.get(link)
 
-            if not videoName:
-                element = myNet.findElementsByXPath(driver, '//h1[@class="title"]')
-                videoName = element[0].text if element else ''
-            
-            if not year:
-                element1 = myNet.findElementsByXPath(driver, '//p[@class="data margin-0"]')
-                element2 = myNet.findElementsByTag(element1[0], 'a')
-                year = element2[-1].text if element2 else '????'
-            
-            url, url_next = getUrlsFromJavaScript(driver)
-            if not url:
-                break
+                if not videoName:
+                    element = driver.find_elements(By.XPATH, '//h1[@class="title"]')
+                    videoName = element[0].text if element else ''
+                
+                if not year:
+                    element1 = driver.find_elements(By.XPATH, '//p[@class="data margin-0"]')
+                    element2 = element1[0].find_elements(By.TAG_NAME, 'a')
+                    year = element2[-1].text if element2 else '????'
+                
+                url, url_next = getUrlsFromJavaScript(driver)
+                if not url:
+                    break
 
-            id = f'{page:02}'
-            urls[id] = url
-            print(f'{id}: {url}')
+                id = f'{page:02}'
+                urls[id] = url
+                print(f'{id}: {url}')
 
-            if not url_next:
-                break
+                if not url_next:
+                    break
 
-            id = f'{page+1:02}'
-            urls[id] = url_next
-            print(f'{id}: {url_next}')
+                id = f'{page+1:02}'
+                urls[id] = url_next
+                print(f'{id}: {url_next}')
 
-            page += 2
-    except:
-        myExcept.printExceptionTrace()
-        pass
-
-    driver.quit()
+                page += 2
+        except:
+            myExcept.printExceptionTrace()
+            pass
     return videoName, year, urls, sId
 
 ################################################################################################
@@ -404,9 +398,9 @@ XPATH_TABS_REAL = '//div[@class="scroll-content"]'
 def parseTabList(driver, detailUrl, videoId):
     link = detailUrl.format(videoId) 
     driver.get(link)
-    module = myNet.findElementByXPath(driver, '//div[@class="module"]')
-    tab0 = myNet.findElementByXPath(module, XPATH_TAB0)
-    tabs = myNet.findElementsByXPath(module, XPATH_TABS)
+    module = driver.find_element(By.XPATH, '//div[@class="module"]')
+    tab0 = module.find_element(By.XPATH, XPATH_TAB0)
+    tabs = module.find_element(By.XPATH, XPATH_TABS)
     tabs.insert(0, tab0)
     sIds = ''
     sIdList = []
@@ -422,33 +416,33 @@ def parseUrlListWJYS(detailUrl: str, playUrl: str, videoId: int, sId: int) -> li
     videoName, year = '', ''
     page = 1
     urls = {}
-    driver = myNet.getFirefoxDriver(1)
-    print(f'Parsing {videoId} url list on {WJYS_BASE_URL}...')
+    with myNet.getFirefoxDriver(1) as driver:
+        print(f'Parsing {videoId} url list on {WJYS_BASE_URL}...')
 
-    try:
-        sIdList = parseTabList(driver, detailUrl, videoId)
-        sId = sId if sId else sIdList[0]
+        try:
+            sIdList = parseTabList(driver, detailUrl, videoId)
+            sId = sId if sId else sIdList[0]
 
-        tabIndex = 0
-        link = playUrl.format(videoId, sId, page) 
-        driver.get(link)
-        tabs = myNet.findElementsByXPath(driver, '//a[@class="module-tab-item tab-item"]')
+            tabIndex = 0
+            link = playUrl.format(videoId, sId, page) 
+            driver.get(link)
+            tabs = driver.find_elements(By.XPATH, '//a[@class="module-tab-item tab-item"]')
 
-        while True:
-            if not videoName:
-                element = myNet.findElementsByXPath(driver, '//h1[@class="page-title"]')
-                videoName = element[0].text if element else ''
+            while True:
+                if not videoName:
+                    element = driver.find_elements(By.XPATH, '//h1[@class="page-title"]')
+                    videoName = element[0].text if element else ''
 
-            if not year:
-                element1 = myNet.findElementsByXPath(driver, '//div[@class="video-info-aux"]')
-                element2 = myNet.findElementsByXPath(element1[0], './/a[@class="tag-link"]')
-                year = element2[1].text if element2 else '????'
+                if not year:
+                    element1 = driver.findElementsByXPath(By.XPATH, '//div[@class="video-info-aux"]')
+                    element2 = element1[0].findElementsByXPath(By.XPATH, './/a[@class="tag-link"]')
+                    year = element2[1].text if element2 else '????'
 
-            url, url_next = getUrlsFromJavaScript(driver)
-            if not url:
-                break
+                url, url_next = getUrlsFromJavaScript(driver)
+                if not url:
+                    break
 
-            if not 'vip' in url or True:
+                # if not 'vip' in url or True:
                 id = f'{page:02}'
                 urls[id] = url
                 print(f'{sId}-{id}: {url}')
@@ -463,19 +457,18 @@ def parseUrlListWJYS(detailUrl: str, playUrl: str, videoId: int, sId: int) -> li
                 page += 2
                 link = playUrl.format(videoId, sId, page)
                 driver.get(link)
-            else:
-                if len(tabs) > tabIndex:
-                    link = tabs[tabIndex].get_property('href')
-                    links = link.split('-')
-                    sId = links[1]
-                    driver.get(link)
-                    tabIndex += 1
-                else:
-                    break
-    except:
-        myExcept.printExceptionTrace()
-        pass
-    driver.quit()
+                # else:
+                #     if len(tabs) > tabIndex:
+                #         link = tabs[tabIndex].get_property('href')
+                #         links = link.split('-')
+                #         sId = links[1]
+                #         driver.get(link)
+                #         tabIndex += 1
+                #     else:
+                #         break
+        except:
+            myExcept.printExceptionTrace()
+            pass
     return videoName, year, urls, sId
 
 def downloadMP4(url: str, key: str, filename: str, count: int, existFiles: list, mergedFolder: str):
@@ -492,7 +485,7 @@ def downloadMP4(url: str, key: str, filename: str, count: int, existFiles: list,
 def downloadVideoFiles(urls: dict, mergedFolder:str, filename: str, reverse=False) -> None:
     try:
         count = len(urls)
-        existFiles = sorted(list(myUtils.listFiles(mergedFolder, '.mp4', onlyFilename=True, includeSubFolder=False)))
+        existFiles = sorted(list(myFile.listFiles(mergedFolder, '.mp4', onlyFilename=True, includeSubFolder=False)))
         if reverse:
             for key, url in reversed(urls.items()):
                 if 'vip.' in url and False:
@@ -583,8 +576,8 @@ def main() -> None:
 
         if videoDict:
             videoDict = sortDictValue(videoDict)
-            myUtils.printDict(videoDict)
-            myUtils.saveDictToTextFile(f'/tmp/{videoNames}.txt', videoDict)
+            myDict.printDict(videoDict)
+            myDict.saveDictToTextFile(f'/tmp/{videoNames}.txt', videoDict)
         else:
             print(f'No videoIds for {videoNames}!')
     elif videoIds:
@@ -594,17 +587,17 @@ def main() -> None:
         else:
             filePaths = ''
         if filePaths:
-            urls = myUtils.readDictFromFile(filePaths[0])
+            urls = myDict.readDictFromFile(filePaths[0])
         if not urls:
             videoName, year, urls, sId = parseUrlList(site, videoId, sId)
 
             if urls:
-                myUtils.saveDictToFile(f'/tmp/{site.upper()}-{year}-{videoName}-{videoId}-{sId}.txt', urls)
+                myDict.saveDictToFile(f'/tmp/{site.upper()}-{year}-{videoName}-{videoId}-{sId}.txt', urls)
             else:
                 print(f'No accessable url list for videoId {videoId}!')
     if urls and mergedFolder:
         downloadVideoFiles(urls, mergedFolder, filename, videoIds[0] == '-')
-        myUtils.playSound()
+        myFile.playSound()
 
 ################################################################################################
 def parseArguments():
