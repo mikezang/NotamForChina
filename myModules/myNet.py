@@ -1,3 +1,4 @@
+from time import time
 import os
 from time import sleep
 from selenium import webdriver
@@ -10,26 +11,26 @@ import inspect
 import socket
 import lxml.html
 
-from myModules import constants
+from myModules import myConst
 
 
 ################################################################################################
 def waitForPageLoaded(driver, timeout):
     WebDriverWait(driver, timeout).until(
-        lambda driver: driver.execute_script('return document.readyState') == 'complete'
+        lambda d: d.execute_script('return document.readyState') == 'complete'
     )
 
 ################################################################################################
 def scrollBottom(driver: webdriver.Firefox):
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+    return driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
 
 ################################################################################################
 def passProxy(driver) -> None:
     try:
-        elementInput(driver, 20, constants.XPATH_INPUT_USERNAME, constants.PROXY_ID)
-        elementClick(driver, 5, constants.XPATH_INPUT_SUBMIT)
-        elementInput(driver, 20, constants.XPATH_INPUT_PASSWORD, constants.PROXY_PW)
-        elementClick(driver, 5, constants.XPATH_INPUT_SUBMIT)
+        elementInput(driver, myConst.XPATH_INPUT_USERNAME, myConst.PROXY_ID)
+        elementClick(driver, myConst.XPATH_INPUT_SUBMIT)
+        elementInput(driver, myConst.XPATH_INPUT_PASSWORD, myConst.PROXY_PW)
+        elementClick(driver, myConst.XPATH_INPUT_SUBMIT)
         sleep(5)
     except Exception as e:
         print(f'{__file__}-{inspect.getframeinfo(inspect.currentframe()).lineno}: {e}')
@@ -46,16 +47,8 @@ def elementAttributes(driver: webdriver.Firefox, element):
     # driver.execute_script('var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;', element)
 
 ################################################################################################
-def elementId(driver: webdriver.Firefox, time: float, id: str):
-    return WebDriverWait(driver, time).until(EC.presence_of_element_located((By.ID, id)))
-
-################################################################################################
-def elementClass(driver: webdriver.Firefox, time: float, className: str):
-    return WebDriverWait(driver, time).until(EC.presence_of_element_located((By.CLASS_NAME, className)))
-
-################################################################################################
-def elementXPath(driver, time, xPath):
-    return WebDriverWait(driver, time).until(EC.presence_of_element_located((By.XPATH, xPath)))
+def elementLocatedBy(driver: webdriver.Firefox, by: By, value: str, timeout: float=120):
+    return WebDriverWait(driver, timeout).until(EC.presence_of_element_located((by, value)))
 
 ################################################################################################
 def elementInvisibleXPath(driver, time, xPath):
@@ -68,56 +61,20 @@ def elementXPathFocus(driver: webdriver.Firefox, xpath: str, preventScroll: bool
   driver.execute_script(JavaScriptFocusToElement, element, preventScroll)
 
 ################################################################################################
-def windowOpened(driver, time, windowHandles):
-    WebDriverWait(driver, time).until(EC.new_window_is_opened(windowHandles))
+def windowOpened(driver, windowHandles, timeout=60):
+    WebDriverWait(driver, timeout).until(EC.new_window_is_opened(windowHandles))
 
 ################################################################################################
-def elementClick(driver, time, xPath):
-    elementXPath(driver, time, xPath).click()
+def elementClick(driver, xPath, timeout=60):
+    elementLocatedBy(driver, By.XPATH, xPath, timeout).click()
 
 ################################################################################################
-def elementInput(driver, time, xPath, value):
-    elementXPath(driver, time, xPath).send_keys(value)
+def elementInput(driver, xPath, value, timeout=60):
+    elementLocatedBy(driver, By.XPATH, xPath, timeout).send_keys(value)
 
 ################################################################################################
 def getXmlTextContent(html):
     return lxml.html.document_fromstring(html).text_content()
-
-################################################################################################
-def findElementsByClass(driver: webdriver.Firefox, className: str):
-    return driver.find_elements(By.CLASS_NAME, className)
-
-################################################################################################
-def findElementByCssSelector(driver: webdriver.Firefox, cssSelector: str):
-    return driver.find_element(By.CSS_SELECTOR, cssSelector)
-
-################################################################################################
-def findElementByClass(driver: webdriver.Firefox, className: str):
-    return driver.find_element(By.CLASS_NAME, className)
-
-################################################################################################
-def findElementsByXPath(driver: webdriver.Firefox, xPath: str):
-    return driver.find_elements(By.XPATH, xPath)
-
-################################################################################################
-def findElementByXPath(driver: webdriver.Firefox, xPath: str):
-    return driver.find_element(By.XPATH, xPath)
-
-################################################################################################
-def findElementsByLinkText(driver: webdriver.Firefox, linkText: str):
-    return driver.find_elements(By.LINK_TEXT, linkText)
-
-################################################################################################
-def findElementsByTag(driver, tagName):
-    return driver.find_elements(By.TAG_NAME, tagName)
-
-################################################################################################
-def findElementByTag(driver, tagName):
-    return driver.find_element(By.TAG_NAME, tagName)
-
-################################################################################################
-def findElementByTag(driver, tagName):
-    return driver.find_element(By.TAG_NAME, tagName)
 
 ################################################################################################
 def getFirefoxDriver(headless=1, disableImage=True, log=False) -> webdriver:
@@ -126,7 +83,7 @@ def getFirefoxDriver(headless=1, disableImage=True, log=False) -> webdriver:
     # options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", 'false')
     options.set_preference("intl.accept_languages", "zh-CN,zh")
     options.set_preference("extensions.translations.disabled", True)
-    options.set_preference('general.useragent.override', constants.header['User-Agent'])
+    options.set_preference('general.useragent.override', myConst.header['User-Agent'])
     if headless == 1:
         options.headless = True
         options.add_argument('--headless')
@@ -174,4 +131,52 @@ def checkVPN(driver) -> None:
         if isVPN(False):
             passProxy(driver)
 
+################################################################################################
+def waitForVisible(driver, xPath, timeout=20):
+    start_time = time()
+    while True:
+        WebDriverWait(driver, timeout).until(lambda d: d.execute_script('return document.body != null'))        
+        scrollBottom(driver)
+        sleep(0.5)
+        noMore = elementLocatedBy(driver, By.XPATH, xPath)
+        if noMore.is_displayed():
+            break
+        if time() - start_time > timeout:
+            print("Timeout reached while waiting for the page to fully load.")
+            break
 
+################################################################################################
+def getScrollHeight(driver):
+    return driver.execute_script("return document.body.scrollHeight")
+
+################################################################################################
+def waitForFullPageLoad(driver: webdriver.Firefox, timeout=60):
+    """Scrolls until all dynamic content is loaded and the page is stable."""
+    WebDriverWait(driver, timeout).until(lambda d: d.execute_script('return document.body != null'))
+    # last_height = getScrollHeight(driver)
+    last_height = driver.execute_script("return document.body.scrollHeight")
+    # lastPageSource = driver.page_source
+    scroll_pause_time = 1.0
+    start_time = time()
+
+    while True:
+        scrollBottom(driver)
+        sleep(scroll_pause_time)
+        # pageSource = driver.page_source
+        new_height = getScrollHeight(driver)
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height != last_height:
+        # if pageSource != lastPageSource:
+            sleep(scroll_pause_time)
+            # new_height = getScrollHeight(driver)
+            new_height = driver.execute_script("return document.body.scrollHeight")
+            # pageSource = driver.page_source
+            # lastPageSource = pageSource
+            last_height = new_height
+        # if pageSource == lastPageSource:
+        # if new_height == last_height:
+        else:
+            break
+        if time() - start_time > timeout:
+            print("Timeout reached while waiting for the page to fully load.")
+            break

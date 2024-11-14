@@ -18,7 +18,7 @@ import ffmpeg
 
 path.append("")
 
-from myModules import constants
+from myModules import myConst
 
 MAX_POOLS = 10
 class Video_Decoder(object):
@@ -55,7 +55,7 @@ class Video_Decoder(object):
 
 def decode_key_uri(base:str, URI: str):
     uri = URI if URI.startswith('https://') else mergePath(base, URI)
-    uri_req = requests.get(uri, headers=constants.header)
+    uri_req = requests.get(uri, headers=myConst.header)
     uri_str = "".join(["{:02x}".format(c) for c in uri_req.content])
     return uri_str
 
@@ -76,7 +76,7 @@ def download_ts_file(seq_and_ts_url: tuple[int, str], store_dir: str, attempts: 
     
     for _ in range(attempts):
         try:
-            ts_res = requests.get(ts_url, headers=constants.header)
+            ts_res = requests.get(ts_url, headers=myConst.header)
             if ts_res.status_code in [200, 403]:
                 break
         except Exception:
@@ -97,7 +97,7 @@ def downloadM3u8File(m3u8_link):
     m3u8_content = ""
     if m3u8_link.startswith("http"):
         try:
-            m3u8_content = requests.get(m3u8_link, headers=constants.header).content.decode("utf-8")
+            m3u8_content = requests.get(m3u8_link, headers=myConst.header).content.decode("utf-8")
             m3u8_http_base = m3u8_link.rstrip(m3u8_link.split("/")[-1])
         except:
             print(f'Timeout for access {m3u8_link}')
