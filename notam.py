@@ -2,15 +2,21 @@
     Thie is NOTAM module to parse luanch data from NOTAM site
     https://notams.aim.faa.gov/notamSearch/
 """
-from time import sleep
 from datetime import datetime, timedelta
+from glob import glob
+import locale
+import sys
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 from timeit import timeit
 
-from myModules import myUtils
 from myModules import myExcept
 from myModules import myShape
 from myModules import myNet
+from myModules import myFile
+from myModules import myDate
+from myModules import myDict
+from myModules import myNOTAM
 
 NEW_NOTAM_URL = "https://www.notams.faa.gov/dinsQueryWeb/"
 XPATH_SPAN_DETAIL = "//span[@ng-bind-html='globalScope.selectedNOTAM.icaoMessage']"
@@ -23,7 +29,7 @@ SCROLL_WINDOW = "window.scrollTo(0, document.body.scrollHeight)"
 
 ################################################################################################
 def getNotamDetail(driver, searchLocaltions):
-    start = myUtils.getJapanTime()
+    start = myDate.getJapanTime()
     print(f"{start}")
     print(f"Searching Location: {searchLocaltions}")
     notam = {}
@@ -31,16 +37,21 @@ def getNotamDetail(driver, searchLocaltions):
     try:
         driver.get(NEW_NOTAM_URL)
         windowHandles = driver.window_handles
-        # myNet.checkVPN(driver)
+        button = driver.find_element(By.CSS_SELECTOR, NEW_CSS_SELECTOR_BUTTON_DISCLAIMER)
+    except NoSuchElementException:
+        print(f'{NEW_NOTAM_URL} is temporary down, try again later ...')
+        button = None
+        pass
 
-        if (button := myNet.findElementByCssSelector(driver, NEW_CSS_SELECTOR_BUTTON_DISCLAIMER)):
+    try:
+        if button:
             button.click()
 
-            if (radio := myNet.elementXPath(driver, 30, NEW_XPATH_RADIO_TYPE)):
+            if (radio := myNet.elementLocatedBy(driver, By.XPATH, NEW_XPATH_RADIO_TYPE)):
                 radio.click()
-                myNet.elementInput(driver, 30, NEW_XPATH_TEXTAREA, searchLocaltions)
-                myNet.elementClick(driver, 30, NEW_XPATH_SEARCH_BUTTON)
-                myNet.windowOpened(driver, 30, windowHandles)
+                myNet.elementInput(driver, NEW_XPATH_TEXTAREA, searchLocaltions)
+                myNet.elementClick(driver, NEW_XPATH_SEARCH_BUTTON)
+                myNet.windowOpened(driver, windowHandles)
                 driver.switch_to.window(driver.window_handles[-1])
 
                 try:
@@ -48,19 +59,18 @@ def getNotamDetail(driver, searchLocaltions):
                 except:
                     pass
 
-                myNet.elementXPath(driver, 30, NEW_FORM_XPATH)
+                myNet.elementLocatedBy(driver, By.XPATH, NEW_FORM_XPATH)
 
                 if (form := driver.find_element(By.XPATH, NEW_FORM_XPATH)):
-                    driver.execute_script(SCROLL_WINDOW)
-            
-                    if (table1 := myNet.findElementByTag(form, "table")):
-                        if (td1 := myNet.findElementByTag(table1, "td")):
-                            for table2 in myNet.findElementsByTag(td1, "table"):
-                                if myUtils.isChinaNotam(table2.text):
-                                    for td2 in myNet.findElementsByTag(table2, "td"):
-                                        if myUtils.isChinaNotam(td2.text):
-                                            notam = myUtils.parseNotamText(notam, td2.text)
-    except :
+                    myNet.scrollBottom(driver)
+                    if (table1 := form.find_element(By.TAG_NAME, "table")):
+                        if (td1 := table1.find_element(By.TAG_NAME, "td")):
+                            for table2 in td1.find_elements(By.TAG_NAME, "table"):
+                                if myNOTAM.isChinaNotam(table2.text):
+                                    for td2 in table2.find_elements(By.TAG_NAME, "td"):
+                                        if myNOTAM.isChinaNotam(td2.text):
+                                            notam = myNOTAM.parseNotamText(notam, td2.text)
+    except:
         myExcept.printExceptionTrace()
         pass
     return notam, start
@@ -85,26 +95,34 @@ def convertDate(oldDate):
         return datetime.strptime(oldDate, '%m/%d/%Y %H%M').strftime("%Y/%m/%d %H:%M")
     
 def main():
-    driver = myNet.getFirefoxDriver()
-    try:
-        firLocations = myUtils.readConfigFirNames()
-        notam_data, start = getNotamDetail(driver, firLocations)
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+    sys.stdout.reconfigure(encoding='UTF-8')
 
-        if notam_data:
-            notam_data =  myUtils.sortDictByValue(notam_data)
-            myUtils.printNotam(notam_data, start)
-            myShape.createKmlFile(notam_data)
-    except:
-        myExcept.printExceptionTrace()
+    with myNet.getFirefoxDriver() as driver:
+        try:
+            firLocations = myFile.readConfigFirNames()
+            notam_data, start = getNotamDetail(driver, firLocations)
 
-    if driver:
-        driver.quit()
+            if notam_data:
+                notam_data =  myDict.sortDictByValue(notam_data)
+                myDict.printNotam(notam_data, start)
+                kmlFiles = myShape.createKmlFile(notam_data)
+                # compareKmlList(kmlFiles)
+        except:
+            myExcept.printExceptionTrace()
+
+###############################################################################
+def compareKmlList(kmlFiles):
+    for kmlFile in kmlFiles:
+        print(f'\ncomparing {kmlFile} with past kml files...')
+        myShape.compareKmls(kmlFile)
 
 ################################################################################################
 def showRunTime(func):
     result = timeit(func, number=1, globals=globals())
-    print(f'Finished in {timedelta(seconds=result)}\n')
+    print(f'\nFinished in {timedelta(seconds=result)}')
 
 ################################################################################################
 if __name__ == "__main__":
     showRunTime("main()")
+    # myStats.showStats(main)

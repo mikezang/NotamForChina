@@ -3,10 +3,12 @@ from timeit import timeit
 from os import path
 import PySimpleGUI as sg
 
-from myModules import myUtils
 from myModules import myPlot
 from myModules import myShape
 from myModules import myExcel
+from myModules import myFile
+from myModules import myDate
+from myModules import myGUI
 
 BUTTON_SAVE = 'Save'
 BUTTON_SHOW_ROUTE_BEARING = 'Show Route Bearing'
@@ -24,8 +26,8 @@ GEOMTRIES_COUNT = 12
 
 ################################################################################################
 def main():
-    myUtils.setStartTime()
-    myPlot.setScreenDpiAware()    
+    myDate.setStartTime()
+    myGUI.setScreenDpiAware()    
     cn_font = myPlot.init()
 
     newNames = [[sg.Checkbox('', key=(0, i), visible=False, enable_events=True)] for i in range(GEOMTRIES_COUNT)]
@@ -36,7 +38,7 @@ def main():
         for j in range(GEOMTRIES_COUNT):
             window[(i, j)].widget.configure(indicatoron=False)
 
-    myPlot.moveWindow(window, y=0)
+    myGUI.moveWindow(window, y=0)
     window[NEW_FOLDER].bind("<Return>", "_Enter")
     window[OLD_FOLDER].bind("<Return>", "_Enter")
 
@@ -56,20 +58,20 @@ def main():
             break
         newSelectedFile, oldSelectedFile, projection, plotLines, plotPoints, plotNames, newNames, oldNames = \
             handleEvents(window, event, values, cn_font, newSelectedFile, oldSelectedFile, projection=projection, plotLines=plotLines, plotPoints=plotPoints, plotNames=plotNames, newNames=newNames, oldNames=oldNames)
-        myPlot.moveWindow(window)
+        myGUI.moveWindow(window)
         window.Normal()
     window.close()
 
 ################################################################################################
 def getWindow(newButtons, oldButtons):
-    myPlot.make_dpi_aware()
+    myGUI.setScreenDpiAware()
     sg.theme('Python')
     sg.set_options(text_justification='right')
-    newPath = 'c:/users/w802479/downloads' if myUtils.isWindows() else '/users/mikezang/downloads'
+    newPath = 'c:/users/w802479/downloads' if myFile.isWindows() else '/users/mikezang/downloads'
     oldPath = './notams/maps'
-    newSubfolders, _ = myUtils.listFoldersFiles(newPath)
-    oldSubfolders, _ = myUtils.listFoldersFiles(oldPath)
-    # subfolders, extList = myUtils.listFoldersFiles('notams/maps')
+    newSubfolders, _ = myFile.listFoldersFiles(newPath)
+    oldSubfolders, _ = myFile.listFoldersFiles(oldPath)
+    # subfolders, extList = myFile.listFoldersFiles('notams/maps')
     layout = getMiddleFrame(newSubfolders, newPath, oldSubfolders, oldPath, newButtons, oldButtons)
     window = sg.Window('Show KML/Image file and Compare KML files', layout, finalize=True, font=("Helvetica", 12))      
     return window
@@ -153,7 +155,7 @@ def saveElementAsFile(element, filename):
 def updateFolders(window, folderName, folderValue, subfolderName):
     window[folderName].update(select=False)
     window[folderName].update(value=folderValue)
-    newSubfolders, _ = myUtils.listFoldersFiles(folderValue)
+    newSubfolders, _ = myFile.listFoldersFiles(folderValue)
     window[subfolderName].update(values=newSubfolders)
 
 ################################################################################################
@@ -229,13 +231,13 @@ def handleEvents(window, event, values, cn_font, newSelectedFile, oldSelectedFil
                     oldSelectedFile = None
                     image, newNames, oldNames = myShape.getImageFromKml(cn_font, newSelectedFile, oldSelectedFile, projection=projection, plotLines=plotLines, plotPoints=plotPoints, plotNames=plotNames)
                     if not image:
-                        sg.popup_error(f'{newSelectedFile} open failed!')
+                        sg.popup_error(f'{newSelectedFile} open failed!', font=('Noto Serif CJK JP', 18))
                     else:
                         window["-IMAGE-"].update(data=image)
                         toogleGeometries(window, True, newNames, oldNames)
                         toogleButtons(window, False)
                         toogleOldFolders(window, False)
-                        location, _ = myUtils.getLocation(newSelectedFile)
+                        location, _ = myFile.getLocation(newSelectedFile)
                         if location:
                             oldFolder = path.abspath(myShape.KML_FOLDERS[location])
                             updateFolders(window, OLD_FOLDER, oldFolder, OLD_SUBFOLDERS)

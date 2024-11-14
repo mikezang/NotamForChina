@@ -4,15 +4,24 @@
 """
 # pylint: disable=W0105,W0511,W0703,C0103,C0116,C0301
 
+from json import dump, load
+import locale
 from re import findall, finditer, search, sub, IGNORECASE
 from datetime import date, datetime, timedelta
+import sys
 from timeit import timeit
 from pytz import UTC, timezone
+from selenium.webdriver.common.by import By
 
-from myModules import constants
-from myModules import myUtils
+from myModules import myConst
 from myModules import myExcept
+from myModules import myConst
 from myModules import myNet
+from myModules import myFile
+from myModules import myDate
+from myModules import myDict
+
+TEMP_FILE_PATH = './temp/'
 
 ################################################################################################
 def splitTitle(item: list) -> str:
@@ -20,8 +29,8 @@ def splitTitle(item: list) -> str:
     count = len(items)
     if count == 4:
         titleDate = getDateFromTitle(item[1])
-        localDate = convertNsfDate(titleDate, constants.TIMEZONE_SHANGHAI)
-        localDateStr = localDate.strftime("%Y年%m月%d日%H時%M分") if localDate else items[3]
+        localDate = convertNsfDate(titleDate, myConst.TIMEZONE_SHANGHAI)
+        localDateStr = localDate.strftime("%Y年%m月%d日%H时%M分") if localDate else items[3]
         key = items[1] + localDateStr + items[2] + items[0]
     elif count == 3:
         key = items[1] + items[2] + items[0]
@@ -37,13 +46,13 @@ def sortByTitle(d: dict) -> dict:
 
 ################################################################################################
 def writeNsfToFile(nsfDict):
-    filename = f'./data/nsfLinkList.html'
+    filename = f'{TEMP_FILE_PATH}nsfLinkList.html'
     newText = f"<H2>Chinese Launchers POST List</H2>"
     nsfDict = sortByTitle(nsfDict)
     for i, (key, value) in enumerate(nsfDict.items()):
         values = value.split(':')
         newText += f'{i + 1:03}-{values[0]}: <a target=_blank href={key}>{':'.join(values[1:])}</a><br>'
-    myUtils.saveTextFile(filename, newText)
+    myFile.saveTextFile(filename, newText)
 
 ################################################################################################
 def isPastDate(oldDate) -> bool:
@@ -62,19 +71,19 @@ def updateNotamDict(notamDict, notam) -> dict:
 
 ################################################################################################
 def printNsf(launch_date) -> None:
-    print(f"\nNSF发射数据{myUtils.getJapanTime()}")
+    print(f"\nNSF发射数据{myDate.getJapanTime()}")
     print("==============================")
     printNsfDict(launch_date)
 
 ################################################################################################
 def getNsfUrl(driver, page) -> dict:
     urls = {}
-    myNet.elementClass(driver, 30, "table_grid")
-    table = myNet.findElementByClass(driver, "table_grid")
-    rows = myNet.findElementsByTag(table, "tr")
+    myNet.elementLocatedBy(driver, By.CLASS_NAME, "table_grid")
+    table = driver.find_element(By.CLASS_NAME, "table_grid")
+    rows = table.find_elements(By.TAG_NAME, "tr")
 
     for row in rows:
-        cols = myNet.findElementsByTag(row, "td")
+        cols = row.find_elements(By.TAG_NAME, "td")
 
         for col in cols:
             className = col.get_attribute("class")
@@ -82,7 +91,7 @@ def getNsfUrl(driver, page) -> dict:
                 continue
 
             if "subject" in className:
-                ahref = myNet.findElementByTag(row, "a")
+                ahref = row.find_element(By.TAG_NAME, "a")
                 href = ahref.get_attribute("href") + ';all'
                 href = sub(r'PHPSESSID\=[a-z0-9]+\&', '', href)
                 title = ahref.text
@@ -91,7 +100,7 @@ def getNsfUrl(driver, page) -> dict:
 
 ################################################################################################
 def getDateFromTitle(title) -> str:
-    titleDate = myUtils.removeAllSpaces(title.split("-")[-1])
+    titleDate = myFile.removeAllSpaces(title.split("-")[-1])
     if title.lower() == 'Gaofen-4, long march-3B, XSLC, December 28, 2015 (16:04 UTC)'.lower():
         titleDate = titleDate.split('XSLC,')[1].replace(',', '')
     elif title.lower() == 'Chuang Xin 1-04 and Ling Qiao - cz-2D - JSLC, 00:15, September 4th, 2014'.lower():
@@ -102,7 +111,7 @@ def getDateFromTitle(title) -> str:
 def getNsfUrlList(driver, p='1') -> dict:
     urls = {}
     invalidUrls = {}
-    driver.get(constants.NSF_URL_CHINA)
+    driver.get(myConst.NSF_URL_CHINA)
     # myNet.checkVPN(driver)
 
     if p == 'all' or p == 'url':
@@ -113,7 +122,7 @@ def getNsfUrlList(driver, p='1') -> dict:
         startPage = lastPage
 
     for page in range(startPage, lastPage + 1):
-        href = constants.NSF_URL_CHINA + str(50 * (page - 1))
+        href = myConst.NSF_URL_CHINA + str(50 * (page - 1))
         print(f"Page{page:02}: {href}")
 
         if page > 1:
@@ -134,7 +143,6 @@ def parseNsfContents(driver, nsfUrls, titleForCheck):
 def parseNsfContent(driver, i, title, basePage, baseUrl) -> None:
     url = baseUrl + ';all'
     driver.get(url)
-    myUtils.checkVPN(driver)
 
     lastPage = getNsfPages(driver)
     printTitlePages(title, lastPage, i)
@@ -152,26 +160,26 @@ def parseNsfContent(driver, i, title, basePage, baseUrl) -> None:
             html += driver.page_source
 
     html = myNet.getXmlTextContent(html)
-    html = myUtils.removeAllSpaces(html)
+    html = myFile.removeAllSpaces(html)
     html = html.replace(r'\n', '').replace(r'\r', '').replace(r'\t', '')
     html = sub(r'sSessionId.+|Read\d{0,10}times', '', html)
-    header = findall(constants.NSF_PAGE_HEADER, html)
+    header = findall(myConst.NSF_PAGE_HEADER, html)
     if header and len(header) == 1:
-        html = sub(r'.+' + constants.NSF_PAGE_HEADER, '', html)
+        html = sub(r'.+' + myConst.NSF_PAGE_HEADER, '', html)
 
     notam = {}
     coords = [f'{basePage},{baseUrl}']
 
-    coodinatesNotam = findall(constants.PATTERN_LATITUDE_LONGITUDE, html)
+    coodinatesNotam = findall(myConst.PATTERN_LATITUDE_LONGITUDE, html)
     if coodinatesNotam:
-        coords.append(f'{[findConvertLatitudeLongitude(c) for c in coodinatesNotam]}')
+        coords.append(f'{[myFile.findConvertLatitudeLongitude(c) for c in coodinatesNotam]}')
         print(coodinatesNotam)
     else:
         coords.append([])
 
-    coodinatesMsa = findall(constants.MSA_PATTERN_LATITUDE_LONGITUDE1, html)
+    coodinatesMsa = findall(myConst.MSA_PATTERN_LATITUDE_LONGITUDE1, html)
     if coodinatesMsa:
-        coords.append(f'{[findConvertLatitudeLongitude(c) for c in coodinatesMsa]}')
+        coords.append(f'{[myFile.findConvertLatitudeLongitude(c) for c in coodinatesMsa]}')
         print(coodinatesMsa)
     else:
         coords.append([])
@@ -180,15 +188,76 @@ def parseNsfContent(driver, i, title, basePage, baseUrl) -> None:
         filename = f'c:/zang/rockets/pages/{title}'
         coords.append([f'{html}'])
         notam[title] = coords
-        myUtils.updateDictToJsonFile(notam, filename)
+        updateDictToJsonFile(notam, filename)
+
+################################################################################################
+def updateDictToJsonFile(nsf_data, filename, isBackup=False):
+    nsf_old = loadDictFromJsonFile(filename)
+
+    if nsf_old is not None:
+        nsf_new = nsf_old.copy()
+        nsf_new.update(nsf_data)
+        nsf_new = myDict.sortDictByKey(nsf_new)
+
+        if nsf_old != nsf_new:
+            saveDictToJsonFile(nsf_new, f"{filename}")
+            if isBackup:
+                saveDictToJsonFile(nsf_data, f'{filename}{myDate.getJapanTime("-%Y%m%d-%H%M%S")}')
+        # else:
+        #     print(f'Not update to file "{filename}.json"')
+    else:
+        saveDictToJsonFile(nsf_data, f"{filename}")
+        if isBackup:
+            saveDictToJsonFile(nsf_data, f'{filename}{myDate.getJapanTime("-%Y%m%d-%H%M%S")}')
+
+################################################################################################
+def saveDictToJsonFile(nsfDict, filename):
+    print(f'Save   to file "{filename}.json"')
+    with open(f'{filename}.json', "w", encoding="utf-8") as f:
+        dump(nsfDict, f, ensure_ascii=False, indent=2)
+
+################################################################################################
+def loadDictFromJsonFile(filename):
+    try:
+        with open(f'{filename}.json', encoding="utf-8") as f:
+            print(f'Load from file "{filename}.json".')
+            return load(f)
+    except FileNotFoundError:
+        return None
+
+################################################################################################
+def updateNsfNotamJsonFile(nsf_new, filename):
+    nsf_old = loadDictFromJsonFile(filename)
+
+    if nsf_old is not None:
+        for k, vNew in nsf_new.items():
+            if k not in nsf_old:
+                nsf_old[k] = vNew
+            elif vNew is str:
+                continue
+            elif nsf_old[k] is str:
+                nsf_old[k] = vNew
+            elif nsf_old[k] != nsf_new[k]:
+                nsf_old[k] = nsf_new[k]
+
+        nsf_old = myDict.sortDictByKey(nsf_old)
+
+        if nsf_old != nsf_new:
+            saveDictToJsonFile(nsf_old, f"{filename}")
+            saveDictToJsonFile(nsf_old, f'{filename}{myDate.getJapanTime("-%Y%m%d-%H%M%S")}')
+        else:
+            print(f'Not update to file "{filename}.json"')
+    else:
+        saveDictToJsonFile(nsf_new, f"{filename}")
+        saveDictToJsonFile(nsf_new, f'{filename}{myDate.getJapanTime("-%Y%m%d-%H%M%S")}')
 
 ################################################################################################
 def getNsfList(driver, nsfUrls, titleForCheck):
     for i, (title, url) in enumerate(nsfUrls.items()):
-        if titleForCheck == '' or title == titleForCheck: #'2022年06月05日10時44分酒泉長征二号己':
+        if titleForCheck == '' or title == titleForCheck:
             notam = getNsfDetail(driver, i, title, url.split(",")[1])
             if notam and '?' not in title:
-                nsfUrls[title] = [url, myUtils.sortDictByValue(notam)]
+                nsfUrls[title] = [url, myDict.sortDictByValue(notam)]
             else:
                 nsfUrls[title] = url
     return nsfUrls
@@ -217,8 +286,8 @@ def getNsfDetail(driver, i, title, baseUrl) -> dict:
             html += driver.page_source
 
     html = myNet.getXmlTextContent(html)
-    html = html.replace('MEPEP', constants.MEPEP).replace('MUMAN', constants.MUMAN).replace('LUVAR', constants.LUVAR)
-    html = myUtils.removeAllSpaces(html)
+    html = html.replace('MEPEP', myConst.MEPEP).replace('MUMAN', myConst.MUMAN).replace('LUVAR', myConst.LUVAR)
+    html = myFile.removeAllSpaces(html)
     # html = html.replace('\n', '').replace("\r", "")
     notamDict.update(getNsfNotam(html, year, i))
     notamDict = removeDuplicateNotams(notamDict)
@@ -250,10 +319,9 @@ def getNsfDetail(driver, i, title, baseUrl) -> dict:
 ################################################################################################
 def getNsfNotamsFromFile(nsf_list, titleForCheck) -> dict:
     notam = {}
-    # pageFiles = myUtils.getConetntsJsonFileFolder('C:/zang/rockets/pages')
     for j, (title, _) in enumerate(nsf_list.items()):
         if titleForCheck == '' or title == titleForCheck: #'2022年06月05日10時44分酒泉長征二号己':
-            conetnts = myUtils.loadDictFromJsonFile(f'C:/zang/rockets/pages/{title}')
+            conetnts = loadDictFromJsonFile(f'C:/zang/rockets/pages/{title}')
             pageUrl, _, _, content = conetnts[title]
             year = title[2:4]
             notam[title] = [f'{pageUrl}, {getNsfNotam(content[0], year, j)}']
@@ -263,9 +331,9 @@ def getNsfNotamsFromFile(nsf_list, titleForCheck) -> dict:
 def getNsfNotam(content, year, j) -> dict:
     notam = {}
 
-    latlons = search(constants.PATTERN_LATITUDE_LONGITUDE, content)
+    latlons = search(myConst.PATTERN_LATITUDE_LONGITUDE, content)
     if not latlons:
-        latlons = search(constants.MSA_PATTERN_LATITUDE_LONGITUDE, content)
+        latlons = search(myConst.MSA_PATTERN_LATITUDE_LONGITUDE, content)
         if not latlons:
             return notam
 
@@ -292,8 +360,8 @@ def getNsfNotam(content, year, j) -> dict:
             startDatesList = [m.group(1) for m in startDates]
             dateSet = set()
             for i, (endDate, _, endIndex) in enumerate(endDatesList):
-                startDate = convertDate(startDatesList[i])
-                endDate = convertDate(endDate)
+                startDate = myDate.convertDate(startDatesList[i])
+                endDate = myDate.convertDate(endDate)
                 number = f'?{1000 + i + 1:04}/{year}'
                 startIndex = 0 if i == 0 else endDatesList[i - 1][2]
                 contentSection = content[startIndex:endIndex]
@@ -385,7 +453,7 @@ def convertMsaDate1(d) -> str:
 
 ################################################################################################
 def getNsfMsaDates(content, year) -> list:
-    seaDates = finditer(constants.MSA_PATTERN_DATE, content)
+    seaDates = finditer(myConst.MSA_PATTERN_DATE, content)
     seaDatesList = [(m.groups(), m.start(), m.end()) for m in seaDates]
     startDates, endDates, starts, ends = [], [], [], []
     for i, d in enumerate(seaDatesList):
@@ -400,13 +468,13 @@ def getNsfMsaDates(content, year) -> list:
 ################################################################################################
 def getNsfNotamDataMsa(content, year) -> list:
     startDates, endDates, starts, ends = getNsfMsaDates(content, year)
-    areas = [convertMsaCoordinates(findall(constants.MSA_PATTERN_LATITUDE_LONGITUDE, content[start:end])) for start, end in zip(starts, ends)]
+    areas = [convertMsaCoordinates(findall(myConst.MSA_PATTERN_LATITUDE_LONGITUDE, content[start:end])) for start, end in zip(starts, ends)]
     return startDates, endDates, areas
 
 ################################################################################################
 def getNsfMsaDates1(content, year) -> list:
-    seaDates = finditer(constants.MSA_PATTERN_DATE2_START, content)
-    seaEnds = finditer(constants.MSA_PATTERN_DATE2_END, content)
+    seaDates = finditer(myConst.MSA_PATTERN_DATE2_START, content)
+    seaEnds = finditer(myConst.MSA_PATTERN_DATE2_END, content)
     seaDatesList = [(m.groups(), m.start(), m.end()) for m in seaDates]
     seaEndsList = [(m.groups(), m.start(), m.end()) for m in seaEnds]
     startDates, endDates, starts, ends = [], [], [], []
@@ -423,16 +491,16 @@ def getNsfMsaDates1(content, year) -> list:
 ################################################################################################
 def getNsfNotamDataMsa1(content, year) -> list:
     startDates, endDates, starts, ends = getNsfMsaDates1(content, year)
-    areas = [formatLatitudeLongitude(getNsfAreaGroup(content[start:end])) for start, end in zip(starts, ends)]
+    areas = [myFile.formatLatitudeLongitude(getNsfAreaGroup(content[start:end])) for start, end in zip(starts, ends)]
     return startDates, endDates, areas
 
 ################################################################################################
 def getNsfHydropacDates(content, year) -> list:
-    hydropac = search(constants.HYDROPAC_PATTERN, content)
+    hydropac = search(myConst.HYDROPAC_PATTERN, content)
     number, startDates, endDates, starts, ends = '', '', '', '', '',
     if hydropac:
         number = hydropac.group()
-        seaDates = finditer(constants.HYDROPAC_PATTERN_DATES, content)
+        seaDates = finditer(myConst.HYDROPAC_PATTERN_DATES, content)
         seaDatesList = [(m.groups(), m.start(), m.end()) for m in seaDates]
         startDates, endDates, starts, ends = [], [], [], []
         if seaDatesList:
@@ -447,7 +515,7 @@ def getNsfHydropacDates(content, year) -> list:
                 starts.append(d[1])
                 ends.append(seaDatesList[i + 1][1] if i + 1 < len(seaDatesList) else len(content))
         else:
-            seaDates = finditer(constants.HYDROPAC_PATTERN_DATES1, content)
+            seaDates = finditer(myConst.HYDROPAC_PATTERN_DATES1, content)
             seaDatesList = [(m.groups(), m.start(), m.end()) for m in seaDates]
             for i, d in enumerate(seaDatesList):
                 # d = (('01', 'FEB', '21', '0800', '0930'), 5696, 5723)
@@ -463,37 +531,72 @@ def getNsfNotamDataHydropac(content, year) -> list:
     areas = []
     if number:
         for start, end in zip(starts, ends):
-            areasMatch = findall(constants.MSA_PATTERN_LATITUDE_LONGITUDE, content[start:end])
+            areasMatch = findall(myConst.MSA_PATTERN_LATITUDE_LONGITUDE, content[start:end])
             areas.append(convertMsaCoordinates(areasMatch))
     return number, startDates, endDates, areas
 
 ################################################################################################
 def getNsfNumbers(content) -> list:
-    numbers = finditer(constants.PATTERN_NOTAM_NUMBER, content)
-    return [(m.group(1).replace(constants.NOTAM_NUMBER_ERROR, f'A{constants.NOTAM_NUMBER_ERROR}'), m.start(), m.end()) for m in numbers if m.group(1) != constants.NOTAM_NUMBER_INVALID]
+    numbers = finditer(myConst.PATTERN_NOTAM_NUMBER, content)
+    return [(m.group(1).replace(myConst.NOTAM_NUMBER_ERROR, f'A{myConst.NOTAM_NUMBER_ERROR}'), m.start(), m.end()) for m in numbers if m.group(1) != myConst.NOTAM_NUMBER_INVALID]
 
 ################################################################################################
 def getNsfNotamData1(content) -> tuple:
     # startDate, endDate = getNsfDate(content)
     startDate, endDate, endIndex = getNsfDateIndex(content)
-    area = formatLatitudeLongitude(getNsfAreaGroup(content[:endIndex]))
-    location = myUtils.getNsfLocation(content[:endIndex])
+    area = myFile.formatLatitudeLongitude(getNsfAreaGroup(content[:endIndex]))
+    location = getNsfLocation(content[:endIndex])
     if not location and area:
         location = getLocationIfInsideBoundary(area)
-    return convertDate(startDate), convertDate(endDate), location, area
+    return myDate.convertDate(startDate), myDate.convertDate(endDate), location, area
+
+def getFirRegExPattern(fir:str):
+    pattern = '(' + fir.replace(' ', '|') + ')'
+    return pattern
+
+################################################################################################
+def getNsfLocation(content) -> str:
+    firNames = myFile.readConfigFirNames()
+    pattern = getFirRegExPattern(firNames)
+    locations = finditer(pattern, content)
+    if locations:
+        loc = ''
+        lastEnd = 0
+        for m in locations:
+            if lastEnd == 0 or m.start() - lastEnd < 10:
+                if loc != '':
+                    loc += '/'
+                loc += m.group()
+            lastEnd = m.end()
+        return loc
+    else:
+        return ''
 
 ################################################################################################
 def getNsfNotamData2(content) -> tuple:
-    area = formatLatitudeLongitude(getNsfAreaGroup(content))
-    location = myUtils.getNsfLocation(content)
+    area = myFile.formatLatitudeLongitude(getNsfAreaGroup(content))
+    location = getNsfLocation(content)
     if not location and area:
         location = getLocationIfInsideBoundary(area)
     return location, area
 
 ################################################################################################
+def getNsfArea(contentSection) -> str:
+    area = ''
+    questionLatLons = findall(myConst.PATTERM_QUESTION, contentSection)
+    latlons = findall(myConst.PATTERN_LATITUDE_LONGITUDE, contentSection)
+    for latlon in latlons:
+        if latlon in questionLatLons or latlon in area:
+            continue
+        if area != '':
+            area += '|'
+        area += latlon
+    return area
+
+################################################################################################
 def getNsfNotamData3(content) -> tuple:
-    area = formatLatitudeLongitude(myUtils.getNsfArea(content))
-    location = myUtils.getNsfLocation(content)
+    area = myFile.formatLatitudeLongitude(getNsfArea(content))
+    location = getNsfLocation(content)
     if not location and area:
         location = getLocationIfInsideBoundary(area)
     return location, area
@@ -502,41 +605,129 @@ def getNsfNotamData3(content) -> tuple:
 def getLocationIfInsideBoundary(areas) -> str:
     for area1 in areas.split('-'):
         for area in area1.split('|'):
-            p = myUtils.convertDMS2DD(area)
-            for loc, boundary in constants.FIR_BOUNDARY.items():
+            p = myFile.convertDMS2DD(area)
+            for loc, boundary in myConst.FIR_BOUNDARY.items():
                 boundary1 = [(lon, lat) for lat, lon in boundary]#swap longitute(y) and latitute(x)
-                if myUtils.pointIsInsidePolygon(p, boundary1):
+                if pointIsInsidePolygon(p, boundary1):
                     return loc
     return ''
 
+# Given three collinear points p, q, r,
+# the function checks if point q lies on line segment 'pr'
+################################################################################################
+def pointOnSegment(p:tuple, q:tuple, r:tuple):
+    if ((q[0] <= max(p[0], r[0])) & (q[0] >= min(p[0], r[0])) &
+        (q[1] <= max(p[1], r[1])) & (q[1] >= min(p[1], r[1]))):
+        return True
+    return False
+
+# A Python3 program to check if a given point lies inside a given polygon
+# Refer
+# https://www.geeksforgeeks.org/how-to-check-if-a-given-point-lies-inside-a-polygon/
+# https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+# https://www.geeksforgeeks.org/orientation-3-ordered-points/amp/%C2%A0/
+# for explanation of functions onSegment(), orientation() and doIntersect()
+# Define Infinite (Using INT_MAX caused overflow problems)
+# This code is contributed by Vikas Chitturi
+INT_MAX = 10000
+
+################################################################################################
+# Returns true if the point p lies inside the polygon[] with n vertices
+def pointIsInsidePolygon(p: tuple, points: list) -> bool:
+    n = len(points)
+    if n < 3:
+        return False# There must be at least 3 vertices in polygon
+    extreme = (INT_MAX, p[1])# Create a point for line segment from p to infinite
+    decrease = 0# To count number of points in polygon whose y-coordinate is equal to y-coordinate of the point
+    count = i = 0
+
+    while True:
+        nextPoint = (i + 1) % n
+        if points[i][1] == p[1]:
+            decrease += 1
+
+        # Check if the line segment from 'p' to 'extreme' intersects with the line
+        # segment from 'polygon[i]' to 'polygon[next]'
+        if pointDoIntersect(points[i], points[nextPoint], p, extreme):
+            # If the point 'p' is collinear with line segment 'i-next', then check if it lies
+            # on segment. If it lies, return true, otherwise false
+            if pointOrientation(points[i], p, points[nextPoint]) == 0:
+                return pointOnSegment(points[i], p, points[nextPoint])
+            count += 1
+        i = nextPoint
+        if i == 0:
+            break
+
+	# Reduce the count by decrease amount as these points would have been added twice
+    count -= decrease
+    return count % 2 == 1# Return true if count is odd, false otherwise
+
+################################################################################################
+# To find orientation of ordered triplet (p, q, r).
+# The function returns following values
+# 0 --> p, q and r are collinear
+# 1 --> Clockwise
+# 2 --> Counterclockwise
+def pointOrientation(p:tuple, q:tuple, r:tuple):
+    val = (((q[1] - p[1]) * (r[0] - q[0])) - ((q[0] - p[0]) * (r[1] - q[1])))
+    if val == 0:
+        return 0
+    if val > 0:
+        return 1 # Collinear
+    else:
+        return 2 # Clock or counterclock
+
+################################################################################################
+def pointDoIntersect(p1, q1, p2, q2):
+    # Find the four orientations needed for general and special cases
+    o1 = pointOrientation(p1, q1, p2)
+    o2 = pointOrientation(p1, q1, q2)
+    o3 = pointOrientation(p2, q2, p1)
+    o4 = pointOrientation(p2, q2, q1)
+
+    # General case
+    if (o1 != o2) and (o3 != o4):
+        return True
+
+    # Special Cases
+    if (o1 == 0) and (pointOnSegment(p1, p2, q1)):
+        return True# p1, q1 and p2 are collinear and p2 lies on segment p1q1
+    if (o2 == 0) and (pointOnSegment(p1, q2, q1)):
+        return True# p1, q1 and p2 are collinear and q2 lies on segment p1q1
+    if (o3 == 0) and (pointOnSegment(p2, p1, q2)):
+        return True# p2, q2 and p1 are collinear and p1 lies on segment p2q2
+    if (o4 == 0) and (pointOnSegment(p2, q1, q2)):
+        return True# p2, q2 and q1 are collinear and q1 lies on segment p2q2
+    return False
+
 ################################################################################################
 def getNsfDate(content) -> tuple:
-    startDate = search(constants.PATTERN_START_DATE, content)
+    startDate = search(myConst.PATTERN_START_DATE, content)
 
     if not startDate:
-        startEndDate = search(constants.PATTERN_START_END_DATE1, content)
+        startEndDate = search(myConst.PATTERN_START_END_DATE1, content)
         if not startEndDate:
-            startEndDate = search(constants.PATTERN_START_END_DATE2, content)
+            startEndDate = search(myConst.PATTERN_START_END_DATE2, content)
         startDate = startEndDate[1] if startEndDate else ''
         endDate = startEndDate[2] if startEndDate else ''
     else:
-        endDate = search(constants.PATTERN_END_DATE, content)
+        endDate = search(myConst.PATTERN_END_DATE, content)
         startDate = startDate[1] if startDate else ''
         endDate = endDate[1] if endDate else ''
     return startDate, endDate
 
 ################################################################################################
 def getNsfDateIndex(content) -> tuple:
-    startDate1 = search(constants.PATTERN_START_DATE, content)
+    startDate1 = search(myConst.PATTERN_START_DATE, content)
     if not startDate1:
-        startEndDate = search(constants.PATTERN_START_END_DATE1, content)
+        startEndDate = search(myConst.PATTERN_START_END_DATE1, content)
         if not startEndDate:
-            startEndDate = search(constants.PATTERN_START_END_DATE2, content)
+            startEndDate = search(myConst.PATTERN_START_END_DATE2, content)
         startDate = startEndDate[1] if startEndDate else ''
         endDate = startEndDate[2] if startEndDate else ''
         endIndex = startEndDate.end() if startEndDate else len(content)
     else:
-        endDate = search(constants.PATTERN_END_DATE, content)
+        endDate = search(myConst.PATTERN_END_DATE, content)
         startDate = startDate1[1] if startDate1 else ''
         endDate = endDate[1] if endDate else ''
         endIndex = len(content)
@@ -546,8 +737,8 @@ def getNsfDateIndex(content) -> tuple:
 def getNsfAreaGroup(contentSection) -> str:
     area = ''
     lastEnd = 0
-    questionLatLons = findall(constants.PATTERM_QUESTION, contentSection)
-    latlons = finditer(constants.PATTERN_LATITUDE_LONGITUDE, contentSection)
+    questionLatLons = findall(myConst.PATTERM_QUESTION, contentSection)
+    latlons = finditer(myConst.PATTERN_LATITUDE_LONGITUDE, contentSection)
     for m in latlons:
         latlon = m.group(1)
         if latlon in questionLatLons:
@@ -564,46 +755,46 @@ def getNsfAreaGroup(contentSection) -> str:
 
 ################################################################################################
 def getNsfLocations(content) -> list:
-    return findall(constants.PATTERN_LOCATION_ONLY, content)
+    return findall(myConst.PATTERN_LOCATION_ONLY, content)
 
 ################################################################################################
 def getNsfDatesGroup(content) -> tuple:
-    startDates = search(constants.PATTERN_START_DATE, content)
+    startDates = search(myConst.PATTERN_START_DATE, content)
     if not startDates:
-        startDates = search(constants.PATTERN_START_DATE1, content)
+        startDates = search(myConst.PATTERN_START_DATE1, content)
         if not startDates:
-            startDates = search(constants.PATTERN_START_DATE2, content)
+            startDates = search(myConst.PATTERN_START_DATE2, content)
             if not startDates:
                 startDates = []
                 endDates = []
             else:
-                startDates = finditer(constants.PATTERN_START_DATE2, content)
-                endDates = finditer(constants.PATTERN_END_DATE2, content)
+                startDates = finditer(myConst.PATTERN_START_DATE2, content)
+                endDates = finditer(myConst.PATTERN_END_DATE2, content)
         else:
-            startDates = finditer(constants.PATTERN_START_DATE1, content)
-            endDates = finditer(constants.PATTERN_END_DATE1, content)
+            startDates = finditer(myConst.PATTERN_START_DATE1, content)
+            endDates = finditer(myConst.PATTERN_END_DATE1, content)
     else:
-        startDates = finditer(constants.PATTERN_START_DATE, content)
-        endDates = finditer(constants.PATTERN_END_DATE, content)
+        startDates = finditer(myConst.PATTERN_START_DATE, content)
+        endDates = finditer(myConst.PATTERN_END_DATE, content)
 
     return startDates, endDates
 
 ################################################################################################
 def getNsfDates(content) -> tuple:
-    startDates = findall(constants.PATTERN_START_DATE, content)
+    startDates = findall(myConst.PATTERN_START_DATE, content)
     if not startDates:
-        startDates = findall(constants.PATTERN_START_DATE1, content)
+        startDates = findall(myConst.PATTERN_START_DATE1, content)
         if not startDates:
-            startDates = findall(constants.PATTERN_START_DATE2, content)
+            startDates = findall(myConst.PATTERN_START_DATE2, content)
             if not startDates:
                 startDates = []
                 endDates = []
             else:
-                endDates = findall(constants.PATTERN_END_DATE2, content)
+                endDates = findall(myConst.PATTERN_END_DATE2, content)
         else:
-            endDates = findall(constants.PATTERN_END_DATE1, content)
+            endDates = findall(myConst.PATTERN_END_DATE1, content)
     else:
-        endDates = findall(constants.PATTERN_END_DATE, content)
+        endDates = findall(myConst.PATTERN_END_DATE, content)
 
     return startDates, endDates
 
@@ -624,7 +815,7 @@ def printNsfDict(d) -> None:
 ################################################################################################
 def convertNsfDate(utcDateStr, tz) -> datetime:
     utcDateStr = utcDateStr.replace('Sept.', 'Sep')
-    for fmt in constants.NSF_DATE_FORMATS:
+    for fmt in myConst.NSF_DATE_FORMATS:
         try:
             utcDate = datetime.strptime(utcDateStr, fmt).replace(tzinfo=UTC)
             return utcDate.astimezone(timezone(tz))
@@ -633,18 +824,11 @@ def convertNsfDate(utcDateStr, tz) -> datetime:
     return None
 
 ################################################################################################
-def convertDate(oldDate) -> str:
-    for pattern, fmt in constants.FORMAT_DATE.items():
-        if search(pattern, oldDate):
-            return datetime.strptime(oldDate, fmt).strftime("%Y/%m/%d %H:%M")
-    return oldDate
-
-################################################################################################
 def showNsfNotam(content) -> None:
-    numbers = findall(constants.PATTERN_NOTAM_NUMBER, content)
+    numbers = findall(myConst.PATTERN_NOTAM_NUMBER, content)
     locs = getNsfLocations(content)
     startDates, endDates = getNsfDates(content)
-    latlons = finditer(constants.PATTERN_LATITUDE_LONGITUDE, content)
+    latlons = finditer(myConst.PATTERN_LATITUDE_LONGITUDE, content)
     out = f'{numbers}, {locs}, {startDates}, {endDates}, \n　'
     for m in latlons:
         out += f'{m.group()}({m.start()},{m.end()}), '
@@ -667,67 +851,27 @@ def removeDuplicateNotams(notamDict) -> dict:
     return res
 
 ################################################################################################
-def formatLatitudeLongitude(oldData) -> str:
-    newData = ''
-    llListGroup = oldData.split('-')
-    for ll in llListGroup:
-        if newData != '':
-            newData = newData[:-1] + '-'
-        llList = ll.split('|')
-
-        for oldll in llList:
-            radius = oldll.split('+')
-            newll = findConvertLatitudeLongitude(radius[0])
-            if len(radius) == 2:
-                newll += f'+{radius[1]}'
-            newData += newll + '|'
-    return newData[:-1]
-
-################################################################################################
-def formatMSALatitudeLongitude(oldData) -> str:
-    newData = []
-    # llListGroup = oldData.split('-')
-    for data in oldData:
-        oldllList = data.split('|')
-
-        newllList = ''
-        for oldll in oldllList:
-            newll = findConvertLatitudeLongitude(oldll)
-            newllList += newll + '|'
-        newData.append(newllList[:-1])
-    return newData
-
-################################################################################################
-def findConvertLatitudeLongitude(latlon):
-    for p in constants.PATTERNS:
-        if search(p, latlon):
-            return myUtils.convertPatterns(latlon, p)
-    return latlon
-
-################################################################################################
 def getNsfPages(driver) -> int:
-    myNet.elementClass(driver, 30, "pagesection")
-    # pagesection = driver.find_element(By.CLASS_NAME, "pagesection")
-    # pages = pagesection.find_elements(By.CLASS_NAME, "navPages")
-    pagesection = myNet.findElementByClass(driver, "pagesection")
-    pages = myNet.findElementsByClass(pagesection, "navPages")
+    myNet.elementLocatedBy(driver, By.CLASS_NAME, "pagesection")
+    pagesection = driver.find_element(By.CLASS_NAME, "pagesection")
+    pages = pagesection.find_elements(By.CLASS_NAME, "navPages")
     return int(pages[-2].text) if len(pages) > 0 and 'Next' == pages[-1].text else 1
 
 ################################################################################################
 def getRocketName(title) -> str:
-    m = search(constants.NSF_ROCKET_PATTERN, title, IGNORECASE)
-    return constants.NSF_ROCKETS[m.group().lower()] if m else ''
+    m = search(myConst.NSF_ROCKET_PATTERN, title, IGNORECASE)
+    return myConst.NSF_ROCKETS[m.group().lower()] if m else ''
 
 ################################################################################################
 def getNsfCity(title) -> str:
-    m = search(constants.NSF_CITY_PATTERN, title, IGNORECASE)
-    return constants.NSF_CITIES[m.group().upper()] if m else '未知'
+    m = search(myConst.NSF_CITY_PATTERN, title, IGNORECASE)
+    return myConst.NSF_CITIES[m.group().upper()] if m else '未知'
 
-################################################################################################
-def drawNsfNotam(nsf_luanchList, titleForCheck) -> None:
-    for title, notams in nsf_luanchList.items():
-        if isinstance(notams, list) and (titleForCheck == '' or title == titleForCheck):
-            myUtils.createNsfKmlFile(title, notams)
+# ################################################################################################
+# def drawNsfNotam(nsf_luanchList, titleForCheck) -> None:
+#     for title, notams in nsf_luanchList.items():
+#         if isinstance(notams, list) and (titleForCheck == '' or title == titleForCheck):
+#             myFile.createNsfKmlFile(title, notams)
 
 ################################################################################################
 def printTitlePages(title, lastPage, i) -> None:
@@ -751,16 +895,17 @@ def printTitlePages(title, lastPage, i) -> None:
 
 ################################################################################################
 def main():
-    try:
-        driver = myNet.getFirefoxDriver()
-        print('Create all NSF launched urls from Chinese Launchers')
-        print('https://forum.nasaspaceflight.com/index.php?board=40.0')
-        page = 'url'
-        nsfDict = getNsfUrlList(driver, page)
-        writeNsfToFile(nsfDict)
-    except:
-        myExcept.printExceptionTrace()
-        # print(f'{__file__}: {os.linesep} + {traceback.format_exc()}')
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+    sys.stdout.reconfigure(encoding='UTF-8')
+    with myNet.getFirefoxDriver() as driver:
+        try:
+            print('Create all NSF launched urls from Chinese Launchers')
+            print('https://forum.nasaspaceflight.com/index.php?board=40.0')
+            page = 'url'
+            nsfDict = getNsfUrlList(driver, page)
+            writeNsfToFile(nsfDict)
+        except:
+            myExcept.printExceptionTrace()
 
 ################################################################################################
 def showRunTime(func):

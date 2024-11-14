@@ -3,16 +3,17 @@ from sys import argv
 from timeit import timeit
 from PIL import Image, ImageDraw, ImageFont
 
-from myModules import myUtils
+from myModules import myFile
+from myModules import myDate
 
 ################################################################################################
 def getFontPath():
     # Set the Chinese font
-    if myUtils.isWindows():
+    if myFile.isWindows():
         font_path = 'C:/Windows/Fonts/simhei.ttf'
-    elif myUtils.isLinux():
+    elif myFile.isLinux():
         font_path = '//usr//share//fonts//truetype//wqy//wqy-microhei.ttc'
-    elif myUtils.isMacOS():
+    elif myFile.isMacOS():
         font_path = '//usr//local//share//fonts//truetype//SimHei.ttf'
     return font_path
 
@@ -28,11 +29,11 @@ def create_cover_image(text, fontPath='', fontSize=48, width=864, height=504, ba
         print("Font not found, using default font!")
         font = ImageFont.load_default()
 
-    lines = text.split('|')
+    lines = text.split('\n')
     lines.append('　')
     # lines.append('　')
     lines.append('制作者：峥嵘不藏　')
-    lines.append('制作日：2024-10-31')
+    lines.append(f'制作日：{myDate.getJapanDate('%Y/%m/%d')}')
     line_height = draw.textbbox((0, 0), lines[0], font=font)[3]
     total_text_height = len(lines) * line_height
     text_y = (height - total_text_height) // 4
@@ -49,10 +50,16 @@ def create_cover_image(text, fontPath='', fontSize=48, width=864, height=504, ba
 ################################################################################################
 def main():
     if len(argv) > 1:
-        create_cover_image(argv[1], background_color="orange")
+        date = argv[1]
     else:
-        print("Usage:")
-        print(f"\tpython {argv[0]} Text")
+        date = myDate.getJapanDate('%Y年%m月%d日')
+
+    text = f"截止{date}\n中国运载火箭发射统计"
+    print(f'Create Cover as below:\n{text}')
+    create_cover_image(text, background_color="orange")
+    # else:
+    #     print("Usage:")
+    #     print(f"\tpython {argv[0]} Text")
 
 ################################################################################################
 def showRunTime(func):

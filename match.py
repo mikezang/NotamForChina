@@ -3,7 +3,8 @@ from os import path
 from sys import argv
 from timeit import timeit
 
-from myModules import myUtils
+from myModules import myFile
+from myModules import myDate
 
 MUSIC_NAME_DICT = {
     'music/歌唱祖国音乐.mp3': 181.76,
@@ -368,7 +369,6 @@ MUSIC_TIME_LIST = [
 ]
 
 ################################################################################################
-# TODO: how to use dict for music name and duration
 def findCombinationsNew(musicList, musicDict, index, current_tracks, current_duration, video_duration, results, count, threshold):
     if len(results) == count:
         return
@@ -404,7 +404,7 @@ def makeMusicItem(duration, tracks):
 
 ################################################################################################
 def matchMusics2Video(videoName, musicList=MUSIC_NAME_LIST, favorites=[], threshold=1, index=0, count=100):
-    videoTime = myUtils.getFileDuration(videoName)
+    videoTime = myFile.getFileDuration(videoName)
 
     if len(musicList) == 1:
         n = int(videoTime) // int(MUSIC_NAME_DICT[musicList[0]])
@@ -418,7 +418,7 @@ def matchMusics2Video(videoName, musicList=MUSIC_NAME_LIST, favorites=[], thresh
         results = []
 
         if favorites:
-            musicList, timeList, favoritesTime = myUtils.removeItemsFromTwoLists(musicList, timeList, favorites)
+            musicList, timeList, favoritesTime = myFile.removeItemsFromTwoLists(musicList, timeList, favorites)
         else:
             favorites = []
 
@@ -434,7 +434,7 @@ def matchMusics2Video(videoName, musicList=MUSIC_NAME_LIST, favorites=[], thresh
 
         print(f'\n{videoName=}, {videoTime=}, {index=}, {count=}, {threshold=}\n')
         listFilename = f'mergelist/{path.basename(videoName).replace(".mp4", ".txt")}'
-        myUtils.saveTextFile(listFilename, lines, openFile=False)
+        myFile.saveTextFile(listFilename, lines, openFile=False)
  
         for i, favorite in enumerate(favorites, 1):
             print(f'favorite{i:02}: {favorite.split('\\')[-1]}')
@@ -499,14 +499,14 @@ def parseArgv():
         index = 0
         count = 100
 
-    if musicList and myUtils.isTextFile(musicList):
-        musicList = myUtils.readTextFile(musicList, True)
+    if musicList and myFile.isTextFile(musicList):
+        musicList = myFile.readTextFile(musicList, True)
     else:
         musicList = MUSIC_NAME_LIST if not musicList else musicList.split(',')
 
     if favorites:
-        if myUtils.isTextFile(favorites):
-            favorites = myUtils.readTextFile(favorites, True)
+        if myFile.isTextFile(favorites):
+            favorites = myFile.readTextFile(favorites, True)
             favorites = [path.abspath(item) for item in favorites]
         else:
             favorites = [path.abspath(item) for item in favorites.split(',')]
@@ -515,38 +515,25 @@ def parseArgv():
 
 ################################################################################################
 def main():
-    myUtils.setStartTime()
+    myDate.setStartTime()
     if len(argv) == 1:
         showUsage()
         return
     
     videoName, musicList, favorites, threshold, index, count = parseArgv()
-    if not myUtils.isVideoFile(videoName):
+    if not myFile.isVideoFile(videoName):
         showUsage()
         return
 
     matchMusics2Video(videoName, musicList, favorites, threshold, index, count)
-    myUtils.showRunTime()
+    myDate.showRunTime()
 
 ################################################################################################
 def findMomoeSongs():
-    momoeAllList = [m.split(':')[-1] for m in myUtils.readTextFile('music/momoe/momoeAll.txt', True)]
+    momoeAllList = [m.split(':')[-1] for m in myFile.readTextFile('music/momoe/momoeAll.txt', True)]
     resultList = sorted(momoeAllList)
-    myUtils.saveListToTextFile('music/momoe/momoeLast.txt', resultList)
+    myFile.saveListToTextFile('music/momoe/momoeLast.txt', resultList)
     return
-
-    momoe100List = myUtils.readTextFile('music/momoe/momoe100.txt', True)
-    momoeList = myUtils.readTextFile('music/momoe/momoe.txt', True)
-    momoe100Dict = {m.split('-')[-1]: m for m in momoe100List}
-    momoeDict = {m.split('-')[-1]: m for m in momoeList}
-
-    for k, v in momoeDict.items():
-        if k not in momoe100Dict:
-            momoe100Dict[k] = v
-
-    resultDict = myUtils.sortDictByKey(momoe100Dict)
-    myUtils.saveDictToTextFile('music/momoe/momoeAll.txt', resultDict)
-
 
 ################################################################################################
 def showRunTime(func):

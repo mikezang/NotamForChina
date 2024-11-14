@@ -1,0 +1,226 @@
+
+C:\zang\python\RocketLaunch>python findFunctions.py 
+
+in myModules\m3u8_downloader.py:
+
+  Only Used in C:\zang\python\RocketLaunch\dlvideos.py
+    download
+
+in myModules\myConst.py:
+
+  Only Used in C:\zang\python\RocketLaunch\nsf.py
+    NSF_DATE_FORMATS
+    NSF_URL_CHINA
+    NSF_PAGE_HEADER
+    MSA_PATTERN_LATITUDE_LONGITUDE1
+    MSA_PATTERN_DATE
+    MSA_PATTERN_DATE2_START
+    MSA_PATTERN_DATE2_END
+    HYDROPAC_PATTERN
+    PATTERN_NOTAM_NUMBER
+    PATTERM_QUESTION
+    NSF_ROCKET_PATTERN
+    NSF_CITY_PATTERN
+    MSA_PATTERN_LATITUDE_LONGITUDE
+    HYDROPAC_PATTERN_DATES
+    PATTERN_START_END_DATE1
+    PATTERN_START_DATE1
+    NSF_ROCKETS
+    NSF_CITIES
+    HYDROPAC_PATTERN_DATES1
+    NOTAM_NUMBER_ERROR
+    NOTAM_NUMBER_INVALID
+    PATTERN_START_END_DATE2
+    PATTERN_START_DATE2
+    PATTERN_END_DATE1
+    FIR_BOUNDARY
+    PATTERN_END_DATE2
+
+  Only Used in myModules\myDate.py
+    FORMAT_DATE
+    TIMEZONE_TOKYO
+
+  Only Used in myModules\myFile.py
+    PATTERN_NOTAM_NUMBER_NEW
+    NEW_PATTERN1
+    PATTERN1
+    NEW_PATTERN2
+    PATTERN3
+    PATTERN_RADIUS
+    PATTERN5
+    PATTERN6
+    PATTERN7
+
+  Only Used in myModules\myNet.py
+    XPATH_INPUT_USERNAME
+    PROXY_ID
+    XPATH_INPUT_SUBMIT
+    XPATH_INPUT_PASSWORD
+    PROXY_PW
+
+  Only Used in myModules\myUtils.py
+    COMMANDS
+
+in myModules\myDate.py:
+
+  Only Used in C:\zang\python\RocketLaunch\compare.py
+    getUTCTime
+
+  Only Used in C:\zang\python\RocketLaunch\css.py
+    getUTCFromLocal
+    getChinaTime
+
+  Only Used in C:\zang\python\RocketLaunch\plotLaunchBarChartRace.py
+    setLogging
+    convertToDate
+
+  Only Used in myModules\myDict.py
+    getDDMM
+
+  Only Used in myModules\myPlot.py
+    getLastdayOfMonth
+
+in myModules\myDict.py:
+
+  Only Used in C:\zang\python\RocketLaunch\dlvideos.py
+    readDictFromFile
+    saveDictToFile
+
+  Only Used in myModules\myFile.py
+    getNotamDictString
+
+in myModules\myExcel.py:
+
+  Only Used in myModules\myShape.py
+    COLOR_SEA
+
+in myModules\myFile.py:
+
+  Only Used in C:\zang\python\RocketLaunch\compare.py
+    removeFile
+    getNoatmDict
+
+  Only Used in C:\zang\python\RocketLaunch\css.py
+    getLastModifiedDate
+
+  Only Used in C:\zang\python\RocketLaunch\match.py
+    saveListToTextFile
+    removeItemsFromTwoLists
+
+  Only Used in C:\zang\python\RocketLaunch\merge.py
+    isImageFile
+    parseFileInfo
+    keepOneLineChar
+
+  Only Used in C:\zang\python\RocketLaunch\nsf.py
+    removeAllSpaces
+    formatLatitudeLongitude
+
+  Only Used in C:\zang\python\RocketLaunch\plotLaunchByLocation.py
+    getColorFromKml
+
+  Only Used in C:\zang\python\RocketLaunch\showKml.py
+    listFoldersFiles
+
+  Only Used in myModules\myPlot.py
+    readConfigSeriesDictList
+
+  Only Used in myModules\myShape.py
+    updateTempFile
+
+  Only Used in myModules\myUtils.py
+    readConfigLaunchCenters
+    convertPatterns
+
+in myModules\myHtml.py:
+
+  Only Used in C:\zang\python\RocketLaunch\plotLaunchByDate.py
+    buildTableBegin
+    buildTableEnd
+    buildTableCell
+
+in myModules\myList.py:
+
+  Only Used in C:\zang\python\RocketLaunch\plotLaunchByYearMonth.py
+    maxOfLists
+
+in myModules\myMath.py:
+
+  Only Used in myModules\myShape.py
+    great_circle_angle
+    great_circle_point
+    getBearing
+    haversine
+
+in myModules\myNet.py:
+
+  Only Used in C:\zang\python\RocketLaunch\dlvideos.py
+    elementXPathFocus
+    elementInvisibleXPath
+
+  Only Used in C:\zang\python\RocketLaunch\notam.py
+    windowOpened
+    waitForPageLoaded
+    scrollBottom
+
+  Only Used in C:\zang\python\RocketLaunch\nsf.py
+    getXmlTextContent
+
+  Only Used in C:\zang\python\RocketLaunch\trip.py
+    waitForVisible
+
+in myModules\myPlot.py:
+
+  Only Used in C:\zang\python\RocketLaunch\plotLaunchBarChartRace.py
+    get_nearest_row
+    get_nearest_taikonaut
+
+  Only Used in C:\zang\python\RocketLaunch\plotLaunchByDate.py
+    plotYearOnTopOfBar
+    plotYAxis
+    isSingleRocket
+    calcColsPerLine
+    countDataFrameByDate
+    split50perPage
+    plotPayloadInsideBar
+    plotRocketNumberInsideBar
+    getUniqueColorList
+    getUnique20Colors
+
+  Only Used in C:\zang\python\RocketLaunch\plotLaunchByLocation.py
+    plotTextOnTopOfBars
+
+  Only Used in C:\zang\python\RocketLaunch\plotLaunchByYearMonth.py
+    plotTextOnCenterOfBar
+
+  Only Used in C:\zang\python\RocketLaunch\showKml.py
+    getImage
+
+in myModules\myShape.py:
+
+  Only Used in C:\zang\python\RocketLaunch\compare.py
+    drawLine
+    updateKmlFile
+    KML_PATH
+    plotTwoNoatms
+    plotPolygonsIntersection
+    plotTitleXYLabels
+    drawCircle
+    drawPolygon
+
+  Only Used in C:\zang\python\RocketLaunch\plotGoogleMap.py
+    getExtent
+    adjustLimitsExtent
+
+  Only Used in C:\zang\python\RocketLaunch\showKml.py
+    getImageFromKml
+    showRouteAngle
+
+in myModules\myUtils.py:
+
+  Only Used in myModules\myShape.py
+    getCityCoordinate
+    convertLocation
+    isNearTime
+
+Finished in 0:00:00.307715

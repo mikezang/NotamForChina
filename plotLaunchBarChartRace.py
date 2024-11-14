@@ -3,11 +3,15 @@ import time
 import numpy as np
 import bar_chart_race as bcr
 import pandas as pd
-from datetime import timedelta
+from datetime import date, timedelta
 from timeit import timeit
 
-from myModules import myUtils
+from myModules import myFile
 from myModules import myPlot
+from myModules import myDate
+
+DATA_FILE_PATH = './data/'
+TEMP_FILE_PATH = './temp/'
 
 ################################################################################################
 def sumLabel(rocket, All, Ok, startYear=''):
@@ -53,7 +57,7 @@ def plotRocketChartRaceAnimation(df, rocket, startYear=None, endYear=None, no=''
             percent = 0 if valOk == 0 or valAll == 0 else valOk / valAll * 100
             ret = f'{int(valOk)}/{int(valAll):.0f}＝成功率'
             ret += f'{percent:.0f}%' if int(percent) == percent else f'{percent:.2f}%'
-            retiredRocketsDict = myUtils.readConfigRetiredDict() #constants.RETIRED_ROCKETS
+            retiredRocketsDict = myFile.readConfigRetiredDict() #constants.RETIRED_ROCKETS
 
             if label in retiredRocketsDict:
                 retiredDate = retiredRocketsDict[label]
@@ -102,7 +106,7 @@ def plotRocketChartRaceAnimation(df, rocket, startYear=None, endYear=None, no=''
     dfOk = dfList[1] # ok values
     dfAll = dfList[2] # all values
     if plotStartYear:
-        plotYear = myUtils.convertToDate('2024')
+        plotYear = myDate.convertToDate('2024')
         dfFormat = dfFormat[dfFormat.index>=plotYear]
         dfOk = dfOk[dfOk.index>=plotYear] # ok values
         dfAll = dfAll[dfAll.index>=plotYear] # all values
@@ -110,7 +114,7 @@ def plotRocketChartRaceAnimation(df, rocket, startYear=None, endYear=None, no=''
 
     filename, title = getFilenameAndTitle(isAfterRetired, rocket, no, startYear, endYear, plotStartYear)
     myLogger.info(f'Start ploting bar char race: {filename}')
-    myUtils.createFolder(filename)
+    myFile.createFolder(filename)
     periodTemplate = '%Y年%m月%d日'
     rocketsCount = min(30, len(dfFormat.columns))
     labelFontSize = 5 if rocketsCount >= 30 else 7
@@ -123,8 +127,6 @@ def plotRocketChartRaceAnimation(df, rocket, startYear=None, endYear=None, no=''
         tick_template=tickFunc, period_summary_func=sumFunc, bar_texttemplate=barFunc, 
         period_template=periodTemplate, filter_column_colors=True, 
         tick_label_font=labelFontSize, bar_label_font=labelFontSize, n_bars=rocketsCount)
-
-    # myUtils.playSound()
     myLogger.info(f'End ploting bar char race: ---------------------------')
 
 ################################################################################################
@@ -141,11 +143,17 @@ def plot2(df, rocket, plotStartYear=None):
 
 ################################################################################################
 def plot3(excelFile, sheetName, plotStartYear=None, use_pinyin=False):
-    df = pd.read_excel(excelFile, sheetName, usecols='A:N', ).query('在轨日数 > 0')
+    condition = '在轨 >= -1 and 航天员 not in ["-","无人"]'
+    df = pd.read_excel(excelFile, sheetName, usecols='A:N', ).query(condition)
     # df = pd.read_excel(excelFile, sheetName)
     # df['发射日期'] = df['发射日期'].apply(lambda d: d.replace(hour=0, minute=0, second=0))
     # df['着陆日期'] = df['着陆日期'].apply(lambda d: d.replace(hour=23, minute=23, second=59))
     plotShenzhouChartRaceAnimation(df, plotStartYear, use_pinyin)
+
+################################################################################################
+def getAge(born, ageYear=None):
+    today = date.today() if ageYear == None else ageYear
+    return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
 
 ################################################################################################
 def getBarLabel(taikonaut, iDate, use_pinyin=False):
@@ -155,9 +163,9 @@ def getBarLabel(taikonaut, iDate, use_pinyin=False):
     noList = [no for no in taikonaut['批次']]
 
     if use_pinyin:
-        shipList = [ship for ship in taikonaut['Ship']]
+        shipList = [ship for ship in taikonaut['缩写']]
     else:
-        shipList = [ship[:-1].replace('舟', '') for ship in taikonaut['载人飞船']]
+        shipList = [ship[:-1].replace('舟', '') for ship in taikonaut['飞船']]
 
     daysList = []
     shipDaysList = []
@@ -174,12 +182,12 @@ def getBarLabel(taikonaut, iDate, use_pinyin=False):
             shipDaysList.append(f'{ship}({realDays})')
 
     no = int(noList[0])
-    age = myUtils.getAge(bornList[0], iDate)
+    age = getAge(bornList[0], iDate)
     realDays = int(sum(daysList))
     ships = '+'.join(reversed(shipDaysList))
     batchAge = f'B{no}-A{age}:' if use_pinyin else f'第{no}批{age}岁:'
     dyas = f'D{realDays}' if use_pinyin else f'{realDays}日'
-    barLabel = f'{batchAge}{dyas}={ships}'
+    barLabel = f'{batchAge}{dyas}={ships}' if ships else f'{batchAge}{dyas}'
     return barLabel
 
 ################################################################################################
@@ -193,7 +201,7 @@ def getSumLabel(df, iDate, cond, use_pinyin=False):
     if cond2.any():
         dfNew.loc[cond2, 'days'] = (dfNew.loc[cond2, '着陆日期'] - dfNew.loc[cond2, '发射日期']).dt.days
 
-    taikoColumn = 'Pinyin' if use_pinyin else '航天员'
+    taikoColumn = '拼音' if use_pinyin else '航天员'
     dfSumCount = dfNew[cond].groupby(taikoColumn)['days'].agg(['sum', 'count']).reset_index()
     countMax = dfSumCount['count'].max()
     daysMax = int(dfSumCount['sum'].max())
@@ -225,10 +233,11 @@ def getSumLabel(df, iDate, cond, use_pinyin=False):
 ################################################################################################
 def plotShenzhouChartRaceAnimation(df, plotStartYear='', use_pinyin=False):
     def barFunc(days, taiko, iDate):
+        taikonaut = myPlot.get_nearest_taikonaut(df, iDate, taiko, use_pinyin)
         if int(days) == 0:
-            barLabel = ''
+            barLabel =  getBarLabel(taikonaut, iDate, use_pinyin)
         else:
-            taikonaut = myPlot.get_nearest_taikonaut(df, iDate, taiko, use_pinyin)
+            # taikonaut = myPlot.get_nearest_taikonaut(df, iDate, taiko, use_pinyin)
             if len(taikonaut) == 0:
                 barLabel = ''
             else:
@@ -255,7 +264,7 @@ def plotShenzhouChartRaceAnimation(df, plotStartYear='', use_pinyin=False):
     dfWide = dfList[0]
     dfRank = dfList[1]
     if plotStartYear:
-        plotYear = myUtils.convertToDate('2024')
+        plotYear = myDate.convertToDate('2024')
         dfWide = dfWide[dfWide.index>=plotYear]
         dfRank = dfRank[dfRank.index>=plotYear]
     myLogger.info(f'End parsing data to DataFrame')
@@ -266,30 +275,29 @@ def plotShenzhouChartRaceAnimation(df, plotStartYear='', use_pinyin=False):
         plotYear = '至' + plotStartYear if plotStartYear else ''
         filename, title = f'videos\\{plotYear}中国航天员在轨动态条形图.mp4', f'{plotYear}中国航天员在轨动态条形图(在轨优先)'
     myLogger.info(f'Start ploting bar char race: {filename}')
-    myUtils.createFolder(filename)
+    myFile.createFolder(filename)
     periodTemplate = '%B %d, %Y' if use_pinyin else '%Y年%m月%d日'
 
     bcr.bar_chart_race(dfWide, dfRank, 
-                       save_last_frame_image=True, plot_last_frames=False, last_frames_count=100,
-                       save_frames_csv=False, incremental_plot=False,
-                       title=title, filename=filename,interpolate_period=True, steps_per_period=10,  
-                       tick_template=tickFunc, period_summary_func=sumFunc, bar_texttemplate=barFunc, 
-                       period_template=periodTemplate, filter_column_colors=True)
+        save_last_frame_image=True, plot_last_frames=True, last_frames_count=1000,
+        save_frames_csv=False, incremental_plot=False,
+        title=title, filename=filename,interpolate_period=True, steps_per_period=10,  
+        tick_template=tickFunc, period_summary_func=sumFunc, bar_texttemplate=barFunc, 
+        period_template=periodTemplate, filter_column_colors=True)
 
-    # myUtils.playSound()
     myLogger.info(f'End ploting bar char race: ---------------------------')
 
 ################################################################################################
 def main():
-    logFilename = f"temp/{time.strftime('%Y%m%d-%H%M%S')}.log"
-    myUtils.setLogging(logFilename)
+    logFilename = f"{TEMP_FILE_PATH}{time.strftime('%Y%m%d-%H%M%S')}.log"
+    myDate.setLogging(logFilename)
     myLogger = logging.getLogger('main')
 
     myLogger.info(f'Start: *****************************')
     myPlot.init(True)
 
     myLogger.info(f'Start reading data:')
-    excelFile = "data/ChinaRocketLaunch.xlsx"
+    excelFile = f"{DATA_FILE_PATH}ChinaRocketLaunch.xlsx"
     sheetName = "中国航天员"
     plot3(excelFile, sheetName, '2024')
 

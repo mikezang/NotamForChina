@@ -7,8 +7,11 @@ import PySimpleGUI as sg
 from re import findall 
 
 from myModules import myExcel
-from myModules import myUtils
 from myModules import myPlot
+from myModules import myFile
+from myModules import myDate
+from myModules import myGUI
+
 import plotLaunchByDate
 import plotLaunchByRocket
 import plotLaunchByLocation
@@ -18,6 +21,10 @@ import plotLaunchBarChartRace
 CHROME = r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
 BUTTON1_LABEL = '统计条形图作成'
 BUTTON2_LABEL = '动态条形图作成'
+DATA_FILE_PATH = './data/'
+EXCEL_FILE = myFile.readConfig('ExcelFile', False)
+SHEET_LAUNCH = myFile.readConfig('SheetLuanch', False)
+SHEET_TAIKO = myFile.readConfig('SheetTaiko', False)
 
 ################################################################################################
 def splitStringToList(text, n=10):
@@ -148,15 +155,22 @@ def getCategoriesFrame(categories, lastCategory):
         layout2.append(checkbox)      
     return sg.Frame('运载火箭分类（动态条形图）', layout2)
 
-def getPayloadsFrame(payloads, lastPayload):
+def getPayloadsFrame(payloads, lastPayload:tuple):
     subPayloads = splitStringToList(payloads, 11)
     payloadsTitle = [sg.Checkbox('选择全载荷系列', key='payload01', enable_events=True),
                      sg.Checkbox('仅生成最后图表', key='payload02', default=True)]
     layout = [payloadsTitle]
+
+    css = ''
+    for payload in lastPayload:
+        if payload in myFile.readConfig(['空间站']):
+            css = '空间站' 
+            break
+            
     for i, subPayload in enumerate(subPayloads):
         checkbox = [sg.Checkbox(item if item[0] != '^' else item[1:], 
                     text_color=sg.theme_element_text_color() if item[0] != '^' else 'orange', 
-                    default=True if item == lastPayload or item[1:] == lastPayload else False,
+                    default=True if item == css or item in lastPayload or item[1:] in lastPayload else False,
                     key=f'payload-{i * 11 + j + 1}', size=(10, 1)) for j, item in enumerate(subPayload)]
         layout.append(checkbox)
     return [sg.Frame('载荷系列（统计条形图，无色=载荷名含有文字，桔色=载荷名开头文字）', layout)]
@@ -252,7 +266,7 @@ def getSelectedItems(values, items, prefix) -> list:
 
 ################################################################################################
 def getLastLaunch(dfLastLaunch, series, privates, dictUpperStages, payloads):
-    lastYear = myUtils.getJapanDate()[:4]
+    lastYear = myDate.getJapanDate()[:4]
     lastRocket = dfLastLaunch[myExcel.EXCEL_COLUMN_ROCKET]
     lastNumber = dfLastLaunch[myExcel.EXCEL_COLUMN_NUMBER]
     lastResult = True if dfLastLaunch[myExcel.EXCEL_COLUMN_RESULT] == '成功' else False
@@ -267,8 +281,8 @@ def getLastLaunch(dfLastLaunch, series, privates, dictUpperStages, payloads):
 def getLastPayload(payloads, lastPayloads):
     payloadsPattern = payloads.replace(',', '|')
     matched = findall(payloadsPattern, lastPayloads)
-    lastPayload = matched[0] if len(matched) > 0 else ''
-    return lastPayload
+    lastPayload = matched if len(matched) > 0 else ''
+    return tuple(set(lastPayload))
 
 ################################################################################################
 def removeSeriesText(rocketsChecked):
@@ -376,15 +390,23 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
         toogleAllCheckbox(window, values, 'payload-')
     elif event == BUTTON1_LABEL:
         window.minimize()
-        rocketList = values['rocket04']
+        df = myPlot.readDataFromSheetNew(EXCEL_FILE, SHEET_LAUNCH)
+        rocketList = values['rocket04'] # print list
         if rocketList:
             rocketRetired = values['rocket03']
             if rocketRetired:
                 rocketsChecked = getSelectedItems(values, retired, 'retired')
             else:
                 rocketsChecked = getSelectedItems(values, rockets, 'rocket')
-            plotLaunchByDate.printRocketsList(df, rocketsChecked)
-            myUtils.playSound()
+            plotLaunchByDate.printRocketsPayloadsList(df, rocketsChecked)
+
+            yearsChecked = getSelectedItems(values, years, 'year')
+            if yearsChecked:
+                years = splitYearsChecked(yearsChecked)
+                for year in years:
+                    plotLaunchByDate.printRocketsPayloadsList(df, year)
+
+            myFile.playSound()
             return
         
         yearsChecked = getSelectedItems(values, years, 'year')
@@ -406,12 +428,13 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
         cn_font = myPlot.init()
 
         if yearsChecked:
-            print(f'\nYear Checked: {yearsChecked}')
+            print(f'\nYear Checked: {yearsChecked}', end='', flush=True)
             yearsChecked = splitYearsChecked(yearsChecked)
 
             if seriesChecked:
-                print(f'\nSeries Checked: {seriesChecked}')
-
+                print(f' and Series Checked: {seriesChecked}')
+            else:
+                print()
             for years in yearsChecked:
                 for year in years:
                     plotLaunchByRocket.plot1(cn_font, df, year, seriesChecked)
@@ -461,7 +484,7 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
             print(f'\nPayload Checked: {payloadsChecked}')
             plotLaunchByDate.plot5(cn_font, df, payloadsChecked, dictUpperStages, payloadPrintLast)
         print('Plot finished!')
-        myUtils.playSound()
+        myFile.playSound()
         window.Normal()
 
     elif event == BUTTON2_LABEL:
@@ -477,55 +500,54 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
         categoriesChecked = getSelectedItems(values, categories, 'category')
         if categoriesChecked:
             print(f'\nCategory Checked: {categoriesChecked}')
-            excelFile = 'data/ChinaRocketLaunch.xlsx'
-            sheetName = '中国航天员'
 
             for category in categoriesChecked:
                 if category == '在轨航天员':
                     for year in yearsChecked:
-                        plotLaunchBarChartRace.plot3(excelFile, sheetName, year)
+                        plotLaunchBarChartRace.plot3(EXCEL_FILE, SHEET_TAIKO, year)
                     else:
                         if not yearsChecked:
-                            plotLaunchBarChartRace.plot3(excelFile, sheetName)
-                # elif category in '民营,其他':
-                #     plotLaunchBarChartRace.plot2(df, category)
+                            plotLaunchBarChartRace.plot3(EXCEL_FILE, SHEET_TAIKO)
                 else:
+                    df = myPlot.readDataFromSheetNew(EXCEL_FILE, SHEET_LAUNCH)
                     for year in yearsChecked:
                         plotLaunchBarChartRace.plot2(df, category, year)
                     else:
                         if not yearsChecked:
                             plotLaunchBarChartRace.plot2(df, category)
         print('Plot finished!')
-        myUtils.playSound()
+        myFile.playSound()
         window.Normal()
 
 ################################################################################################
 def main():
-    excelFile, sheetNames, years, rockets, retired, series, privates, locations, categories, payloads = myUtils.readConfig()
-    df = myPlot.readDataFromSheetNew(excelFile, sheetNames[0])
+    import locale
+    import sys
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+    sys.stdout.reconfigure(encoding='UTF-8')
+
+    EXCEL_FILE, years, rockets, retired, series, privates, locations, categories, payloads = myFile.readConfig()
+    df = myPlot.readDataFromSheetNew(EXCEL_FILE, SHEET_LAUNCH)
 
     if len(argv) > 1:
-        rockets = argv[1].split('/')
-        plotLaunchByDate.printRocketsList(df, rockets)
-        myUtils.playSound()
+        rocketsPayloads = argv[1].split('/')
+        plotLaunchByDate.printRocketsPayloadsList(df, rocketsPayloads)
+        myFile.playSound()
         return
     
-    myPlot.setScreenDpiAware()
+    myGUI.setScreenDpiAware()
 
-    # TODO read 退役，民营数据 from excel file not from config.ini
     dictUpperStages, dfLastLaunch = myPlot.readUpperStageDict(df)
     lastLaunch = getLastLaunch(dfLastLaunch, series, privates, dictUpperStages, payloads)
 
     window = getWindow(years, rockets, series, retired, privates, locations, categories, payloads, lastLaunch)
-    myPlot.moveWindow(window, y=0)
+    myGUI.moveWindow(window, y=0)
 
     while True:
         event, values = window.read(timeout=0)
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
-
         handleEvents(window, event, values, df, years, rockets, retired, series, locations, categories, payloads, dictUpperStages, dfLastLaunch)
-    
     window.close()
 
 ################################################################################################
