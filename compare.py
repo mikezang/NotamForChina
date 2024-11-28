@@ -172,14 +172,15 @@ def createMsaDropZonesKmlFile(oldFile):
                 area = formatMSALatitudeLongitude([area])[0]
                 coords = area.split('|')
                 coordsList = [myFile.convertDMS2DD(c) for c in coords]
+                color = myFile.readConfig('海上')[1]
                 if len(coordsList) == 1:
                     radius = parseRadius(content)
                     if radius > 0:
                         # coordsList[0] += f'+{radius:.0f}' 
-                        color = myFile.readConfig('海上')[1]
+                        # color = myFile.readConfig('海上')[1]
                         myShape.drawCircle(kml, coordsList, f'{location}/{number}', color=color, radius=radius)
                 else:
-                    myShape.drawPolygon(kml, coordsList, f'{location}/{number}')
+                    myShape.drawPolygon(kml, coordsList, f'{location}/{number}', )
                 notams = myNOTAM.getNoatmDict(notams, number, startDate, endDate, location, area)
                 lastStart = startDate
                 lastEnd = endDate

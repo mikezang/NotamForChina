@@ -27,10 +27,7 @@ SPAN_XPATH = "//span[@class='js_article_create_time album__item-info-item']"
 TEMP_FILE_PATH = './temp/'
 
 DAYS_DIFF = {
-    '余11席 预约倒计时 | 2天1晚': 0,
-    '房车·中国海南文昌3日2晚跟团游' : 2,
-    '酒泉4天3晚' : 2,
-    "酒泉2日" : 1,
+    "深度航天科普研学2天": 0,
     "2天" : 1,
     "3天" : 1,
     "3日" : 1,
@@ -273,8 +270,8 @@ def parseHuahuoDateOld(driver, thisCity, day_diff):
 def parseHuahuoDate(driver, thisCity, day_diff):
     launchData = {}
     pattern = r'\b(?:(?P<year1>\d{4})年)?(?P<month1>\d{1,2})月(?P<day1>\d{1,2})日'
-    pattern += r'(?:-|--|,|—)'
-    pattern += r'(?:(?P<year2>\d{4})年)?(?P<month2>\d{1,2})月(?P<day2>\d{1,2})日\b'
+    pattern += r'(?:-|--|,|—|、)'
+    pattern += r'(?:(?P<year2>\d{4})年)?(?:(?P<month2>\d{1,2})月)?(?:(?P<day2>\d{1,2})日)?\b'
     pattern += r'(?!\s*\d{1,2}:\d{2})'
     pageSource = driver.page_source
     matches = finditer(pattern, pageSource)

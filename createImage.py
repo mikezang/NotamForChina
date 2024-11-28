@@ -11,10 +11,12 @@ def getFontPath():
     # Set the Chinese font
     if myFile.isWindows():
         font_path = 'C:/Windows/Fonts/simhei.ttf'
+        font_path = 'C:/Windows/Fonts/simkai.ttf'
     elif myFile.isLinux():
         font_path = '//usr//share//fonts//truetype//wqy//wqy-microhei.ttc'
     elif myFile.isMacOS():
         font_path = '//usr//local//share//fonts//truetype//SimHei.ttf'
+        font_path = '//usr//local//share//fonts//truetype//SimKai.ttf'
     return font_path
 
 ################################################################################################

@@ -311,11 +311,11 @@ def parseUrlListCNYS(base, videoId):
                     videoName = element[0].text if element else ''
 
                 if not year:
-                    element1 = driver.findElementsByXPath(By.XPATH, '//div[@class="player-details flex wrap"]')
+                    element1 = driver.find_elements(By.XPATH, '//div[@class="player-details flex wrap"]')
                     if not element1:
                         break
 
-                    element2 = element1[0].findElements(By.TAG_NAME, 'a')
+                    element2 = element1[0].find_elements(By.TAG_NAME, 'a')
                     year = element2[0].text if element2 else '????'
 
                 url, url_next = getUrlsFromJavaScript(driver)
@@ -400,7 +400,7 @@ def parseTabList(driver, detailUrl, videoId):
     driver.get(link)
     module = driver.find_element(By.XPATH, '//div[@class="module"]')
     tab0 = module.find_element(By.XPATH, XPATH_TAB0)
-    tabs = module.find_element(By.XPATH, XPATH_TABS)
+    tabs = module.find_elements(By.XPATH, XPATH_TABS)
     tabs.insert(0, tab0)
     sIds = ''
     sIdList = []
@@ -434,8 +434,8 @@ def parseUrlListWJYS(detailUrl: str, playUrl: str, videoId: int, sId: int) -> li
                     videoName = element[0].text if element else ''
 
                 if not year:
-                    element1 = driver.findElementsByXPath(By.XPATH, '//div[@class="video-info-aux"]')
-                    element2 = element1[0].findElementsByXPath(By.XPATH, './/a[@class="tag-link"]')
+                    element1 = driver.find_elements(By.XPATH, '//div[@class="video-info-aux"]')
+                    element2 = element1[0].find_elements(By.XPATH, './/a[@class="tag-link"]')
                     year = element2[1].text if element2 else '????'
 
                 url, url_next = getUrlsFromJavaScript(driver)

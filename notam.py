@@ -3,7 +3,6 @@
     https://notams.aim.faa.gov/notamSearch/
 """
 from datetime import datetime, timedelta
-from glob import glob
 import locale
 import sys
 from selenium.webdriver.common.by import By
@@ -105,8 +104,9 @@ def main():
 
             if notam_data:
                 notam_data =  myDict.sortDictByValue(notam_data)
-                myDict.printNotam(notam_data, start)
                 kmlFiles = myShape.createKmlFile(notam_data)
+                myFile.updateTempFile(notam_data)
+                myDict.printNotam(notam_data, start)
                 # compareKmlList(kmlFiles)
         except:
             myExcept.printExceptionTrace()
