@@ -84,7 +84,7 @@ def saveTextFile(filename: str, newText: str, openFile=True, noSound=False, show
 
     # Opening the text file in its default editor
     if isWindows() and openFile:
-            system(f'start {filename}')
+        system(f'start {filename}')
     if not noSound:
         if isWindows():
             playSound('Alarm03.wav')
@@ -491,6 +491,8 @@ def removeAllSpaces(s):
 ################################################################################################
 # TODO: remove selected files when re-enter this folder
 def listFoldersFiles(curPath: str='.', extension: str='*.*'):
+    if not path.isdir(curPath):
+        makedirs(curPath)
     oldPath = path.abspath(curdir)
     folders = listdir(curPath[:-1] if curPath.endswith('/') else curPath)
     chdir(curPath)
@@ -537,13 +539,13 @@ def readConfigSeriesDictList():
     nczRocketList = readConfig('SeriesNCZRockets')
     seriesList = []
     for cz, czRocket in zip(czList, czRocketList):
-        czRockets = czRocket.split('|')
+        czRockets = czRocket.split('+')
         seriesDict = {}
         for rocket in czRockets:
             seriesDict[rocket] = f'{cz}系列'
         seriesList.append(seriesDict)
     for ncz, nczRocket in zip(nczList, nczRocketList):
-        nczRockets = nczRocket.split('|')
+        nczRockets = nczRocket.split('+')
         seriesDict = {}
         for rocket in nczRockets:
             seriesDict[rocket] = f'{ncz}系列'

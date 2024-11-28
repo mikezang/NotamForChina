@@ -10,7 +10,7 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import geoplot
-from os import environ, walk, path
+from os import environ, makedirs, walk, path
 from PIL import Image
 from math import acos, sqrt, degrees, pi, ceil, floor
 from simplekml import Kml
@@ -216,7 +216,7 @@ def createFirBoundaryKmlFile(title, boundary):
 
 #####################################################################################
 def saveKmlFile(kml: Kml, title: str, filePath=''):
-    print(f'Save to file "{filePath}{title}.kml"')
+    print(f'Save to file "{filePath}{title}.kml"\n')
     kml.document.name = title
     kml.save(f'{filePath}{title}.kml') # this is for check content
 
@@ -231,15 +231,15 @@ def updateKmlFile(kml: Kml, title: str, filePath='', notams=None):
             kmlNew = kml.kml()
             if kmlOld != kmlNew:
                 saveKmlFile(kml, title, filePath)
-                if notams:
-                    myFile.updateTempFile(notams)
+                # if notams:
+                #     myFile.updateTempFile(notams)
             else:
                 filename = ''
-                print(f'Not update to file "{filePath}{title}.kml"')
+                print(f'Not update to file "{filePath}{title}.kml"\n')
     except FileNotFoundError:
         saveKmlFile(kml, title, filePath)
-        if notams:
-            myFile.updateTempFile(notams)
+        # if notams:
+        #     myFile.updateTempFile(notams)
     return filename
 
 #####################################################################################
@@ -289,9 +289,9 @@ def createKmlFile(notams, title1='', city1='') -> None:
                 lastCity, highestPoint, lowestPoint, seaCoord = getSatrtEndCoords(lowestPoint, highestPoint, coordsList, lastCity, launchCity, loc, seaCoord)
             else:
                 # newCity = compareKmls(newKml=kml)
-                drawRoutePolyline(kml, lastCity, centerCoords, seaCoord)
+                drawRoutePolyline(kml, launchCity, centerCoords, seaCoord)
                 isFirst = True
-                title = myFile.convertTitle(lastStartDate, lastEndDate, lastCity, launchCity) if title1 == '' else title1
+                title = myFile.convertTitle(lastStartDate, lastEndDate, launchCity, launchCity) if title1 == '' else title1
                 newKmlFile = updateKmlFile(kml, title, KML_PATH, notams)
                 if newKmlFile:
                     kmlFiles.append(newKmlFile)
@@ -312,8 +312,8 @@ def createKmlFile(notams, title1='', city1='') -> None:
             lastStartDate = startDate
             lastEndDate = endDate
 
-    drawRoutePolyline(kml, lastCity, centerCoords, seaCoord)
-    title = myFile.convertTitle(lastStartDate, lastEndDate, lastCity, launchCity) if title1 == '' else title1
+    drawRoutePolyline(kml, launchCity, centerCoords, seaCoord)
+    title = myFile.convertTitle(lastStartDate, lastEndDate, launchCity, launchCity) if title1 == '' else title1
     newKmlFile = updateKmlFile(kml, title, KML_PATH, notams)
     if newKmlFile:
         kmlFiles.append(newKmlFile)
@@ -353,6 +353,8 @@ def compareKmls(newFile=None, newKml=None):
         return 
 
     folder = path.abspath(KML_FOLDERS[location])
+    if not path.isdir(folder):
+        makedirs(folder, True)
     filename = path.basename(newFile)
 
     # delete files
@@ -529,9 +531,9 @@ def plotTitleXYLabels(fig, ax, cn_font, title, xLabel, yLabel):
     ax.set_ylabel(yLabel, fontproperties=cn_font)  # Add a y-label to the axes.
 
     handles = [
-        Line2D([0], [0], linestyle='none', mfc='blue', mec='blue', marker='s', label='New Drop Zone'),
-        Line2D([0], [0], linestyle='none', mfc='green', mec='green', marker='s', label='Old Drop Zone'),
-        Line2D([0], [0], linestyle='none', mfc='orange', mec='orange', marker='s', label='Intersection Drop Zone')
+        Line2D([0], [0], linestyle='none', mfc='blue', mec='blue', marker='s', label='新落区'),
+        Line2D([0], [0], linestyle='none', mfc='green', mec='green', marker='s', label='旧落区'),
+        Line2D([0], [0], linestyle='none', mfc='orange', mec='orange', marker='s', label='重叠落区')
     ]
     
     # fig.legend(handles=handles, bbox_to_anchor=(0.1, 0), ncol=3) # add legend
@@ -545,7 +547,6 @@ def plotPolygonsIntersection(fig, ax, cn_font, newPolys, newTitle, oldPolys=None
     title = f'{newTitle}\n{oldTitle}'
     for ios in ious:
         title += f'\n{ios}'
-    # plotTitleXYLabels(fig, ax, cn_font, title, 'Longitude（经度）', 'Latitude（纬度）')
     return ious, title
 
 #####################################################################################
@@ -1011,28 +1012,61 @@ def sliceByLen(text, length):
     return [text[i:i + 2] for i in range(0, len(text), length)]
 
 ###############################################################################
+def _getLaunchCity(launchCity, launchAngle, loc, city, cityPoint, top1, top2):
+    angle = calculateAngle(cityPoint, top1, top2)
+    if not launchCity or abs(pi / 2 - angle) < abs(pi / 2 - launchAngle):
+        launchCity = city
+        launchAngle = angle
+    # if degrees(abs(pi / 2 - angle)) < 5:
+    #     launchCity += city if city not in launchCity else ''
+    print(f'{city} to {loc}: {degrees(angle):6.2f}° = {launchCity}')
+    return launchCity, angle
+
+def _getLaunchCities(loc, cities, coordsList):
+    launchCity = ''
+    launchAngle = 0
+    cityList = sliceByLen(cities, 2)
+    for city in cityList:
+        cityPoint = [float(x) for x in myFile.readConfig(city)[2].split('+')]
+        top1, top2 = getTopCorners(coordsList)
+        launchCity, launchAngle = _getLaunchCity(launchCity, launchAngle, loc, city, cityPoint, top1, top2)
+
+        if len(coordsList) > 4:
+            top1, top2 = getTopCorners(coordsList, 2)
+            launchCity, launchAngle = _getLaunchCity(launchCity, launchAngle, loc, city, cityPoint, top1, top2)
+    return launchCity, launchAngle
+
+def _getCity(cities, coordsList):
+    cityList = sliceByLen(cities, 2)
+    launchCity = ''
+    launchDistance = 0
+    for city in cityList:
+        cityPoint = [float(x) for x in myFile.readConfig(city)[2].split('+')]
+        y = abs(cityPoint[0] - coordsList[0][0])
+        x = abs(cityPoint[1] - coordsList[0][1])
+        d = x * x + y * y
+        if launchCity == '':
+            launchCity = city
+            launchDistance = d
+        elif d < launchDistance:
+            launchDistance = d
+            launchCity = city
+    return launchCity
+
+###############################################################################
 def getLaunchCity(cities, coordsList, loc):
-    if len(cities) > 2 and len(coordsList) > 3:
-        cityList = sliceByLen(cities, 2)
-        launchCity = ''
-        launchAngle = 0
-        for city in cityList:
-            cityPoint = [float(x) for x in myFile.readConfig(city)[2].split('+')]
-            top1, top2 = getTopCorners(coordsList)
-            angle = calculateAngle(cityPoint, top1, top2)
-            if not launchCity or abs(pi / 2 - angle) < abs(pi / 2 - launchAngle):
-                launchCity = city
-                launchAngle = angle
-            if degrees(abs(pi / 2 - angle)) < 5:
-                launchCity += city if city not in launchCity else ''
-            print(f'{city} to {loc}: {degrees(angle):.2f}°, {launchCity}')
+    if len(cities) > 2:
+        if len(coordsList) == 1: # launch spot
+            launchCity = _getCity(cities, coordsList)
+        elif len(coordsList) > 3: # drop zone
+            launchCity, launchAngle = _getLaunchCities(loc, cities, coordsList)
     else:
         launchCity = cities
     isFirst = False if len(coordsList) > 3 else True
     return launchCity, isFirst
 
 ###############################################################################
-def getTopCorners(coords):
+def getTopCorners(coords, top=1):
     """
     Given a list of four coordinates (lon, lat) of a rectagle, return top corner:
     - p1 as the top-left corner (highest latitude, samllest longitude)
@@ -1045,7 +1079,10 @@ def getTopCorners(coords):
       tuple: p1 (left-top), p2(right-top)
     """
     sortedBylat = sorted(coords, key=lambda x: x[1], reverse=True)
-    topPoints = sortedBylat[:2]
+    if top == 1:
+        topPoints = sortedBylat[:2]
+    else:
+        topPoints = [sortedBylat[0], sortedBylat[2]]
     topPointsSortedByLon = sorted(topPoints, key=lambda x: x[0])
     p1 = topPointsSortedByLon[0]
     p2 = topPointsSortedByLon[1]

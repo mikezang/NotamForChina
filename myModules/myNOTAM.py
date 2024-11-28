@@ -31,7 +31,7 @@ def isChinaNotam(condition):
 ################################################################################################
 def getNotamLocation(content) -> str:
     locStr = myFile.readConfigFirNames().replace(' ', '|')
-    pattern = rf'A\) ((?:{locStr} ?){{0,4}})'
+    pattern = rf'A\) ((?:(?:{locStr}) ?){{0,4}})'
     locations = findall(pattern, content)
     loc = ''
     if len(locations) > 0:

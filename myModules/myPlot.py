@@ -173,6 +173,8 @@ def getImage(filename, resize=True, size=myExcel.IMAGE_SIZE):
 
 ################################################################################################
 def saveFig(fig, filename, isPrint=True, resize=True, dpi=300):
+    import warnings
+    warnings.filterwarnings("ignore", category=UserWarning)
     myFile.createFolder(filename)
     if resize:
         buf = io.BytesIO()
