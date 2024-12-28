@@ -411,17 +411,20 @@ def plotRocketNumberInsideBar(cn_font, ax, yDataList, xuhaoList, rocketList, upp
                     withUpperStage = xuhao + '/' + upperStage[0]
                 else:
                     withUpperStage = rocket + xuhao + '/' + upperStage[0]
-                withUpperStage += f'/{spot[2:].split("（")[0]}' if len(spot) > 1 and spot[1] == '海' else ''
+                withUpperStage += f'/{spot[2:].split("(")[0]}' if len(spot) > 1 and spot[1] == '海' else ''
+                # withUpperStage += f'/{spot[2:].split("（")[0]}' if len(spot) > 1 and spot[1] == '海' else ''
                 label = convertStringToArray(withUpperStage)
             else:
                 if xuhao.startswith('遥') or xuhao.startswith('天'):
                     if not isSingleRocket(ax) or '(火箭)' in title:
                         xuhao = rocket + xuhao
-                    xuhao += f'/{spot[2:].split("（")[0]}' if len(spot) > 1 and spot[1] == '海' else ''
+                    # xuhao += f'/{spot[2:].split("（")[0]}' if len(spot) > 1 and spot[1] == '海' else ''
+                    xuhao += f'/{spot[2:].split("(")[0]}' if len(spot) > 1 and spot[1] == '海' else ''
                     label = convertStringToArray(xuhao)
                 else:
                     if not isSingleRocket(ax) or '(火箭)' in title:
-                        rocket += f'/{spot[2:].split("（")[0]}' if len(spot) > 1 and spot[1] == '海' else ''
+                        # rocket += f'/{spot[2:].split("（")[0]}' if len(spot) > 1 and spot[1] == '海' else ''
+                        rocket += f'/{spot[2:].split("(")[0]}' if len(spot) > 1 and spot[1] == '海' else ''
                         label = convertStringToArray(rocket)
                         label.append(xuhao)
                     else:
@@ -1121,11 +1124,11 @@ def parseToDataFrame(dfOld, rocket:str=None, location=None, payload=None, startY
                 mmdd = endYMD[4:] if endYMD[4:] != '0229' else '0228'
                 lastEndYMD = f'{lastYear}{mmdd}'
                 d1 = df[columnYear] >= pd.to_datetime(f'{lastStartYMD}')
-                d2 = df[columnYear] < pd.to_datetime(f'{lastEndYMD}')
+                d2 = df[columnYear] <= pd.to_datetime(f'{lastEndYMD}')
                 dfList.append(df[d1 & d2])
                 
             cond1 = df[columnYear] >= pd.to_datetime(f'{startYMD}')
-            cond2 = df[columnYear] < pd.to_datetime(f'{endYMD}')
+            cond2 = df[columnYear] <= pd.to_datetime(f'{endYMD}')
             dfList.append(df[cond1 & cond2])
 
     elif rocket is not None:

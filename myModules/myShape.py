@@ -537,7 +537,7 @@ def plotTitleXYLabels(fig, ax, cn_font, title, xLabel, yLabel):
     ]
     
     # fig.legend(handles=handles, bbox_to_anchor=(0.1, 0), ncol=3) # add legend
-    fig.legend(handles=handles, loc='lower center', ncol=3, fontsize=12)
+    fig.legend(handles=handles, loc='lower center', ncol=3, fontsize=12, prop=cn_font)
 
 #####################################################################################
 def plotPolygonsIntersection(fig, ax, cn_font, newPolys, newTitle, oldPolys=None, oldTitle=''):
@@ -1017,23 +1017,25 @@ def _getLaunchCity(launchCity, launchAngle, loc, city, cityPoint, top1, top2):
     if not launchCity or abs(pi / 2 - angle) < abs(pi / 2 - launchAngle):
         launchCity = city
         launchAngle = angle
-    # if degrees(abs(pi / 2 - angle)) < 5:
-    #     launchCity += city if city not in launchCity else ''
+    if degrees(abs(pi / 2 - angle)) < 5:
+        launchCity += city if city not in launchCity else ''
     print(f'{city} to {loc}: {degrees(angle):6.2f}° = {launchCity}')
-    return launchCity, angle
+    return launchCity, launchAngle, angle
 
 def _getLaunchCities(loc, cities, coordsList):
     launchCity = ''
     launchAngle = 0
+    needAgain = False
     cityList = sliceByLen(cities, 2)
     for city in cityList:
         cityPoint = [float(x) for x in myFile.readConfig(city)[2].split('+')]
         top1, top2 = getTopCorners(coordsList)
-        launchCity, launchAngle = _getLaunchCity(launchCity, launchAngle, loc, city, cityPoint, top1, top2)
+        launchCity, launchAngle, angle = _getLaunchCity(launchCity, launchAngle, loc, city, cityPoint, top1, top2)
+        needAgain = angle > pi / 2
 
-        if len(coordsList) > 4:
+        if needAgain or len(coordsList) > 4:
             top1, top2 = getTopCorners(coordsList, 2)
-            launchCity, launchAngle = _getLaunchCity(launchCity, launchAngle, loc, city, cityPoint, top1, top2)
+            launchCity, launchAngle, angle = _getLaunchCity(launchCity, launchAngle, loc, city, cityPoint, top1, top2)
     return launchCity, launchAngle
 
 def _getCity(cities, coordsList):

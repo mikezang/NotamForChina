@@ -6,10 +6,15 @@ from myModules import myDate
 def sortDictByValue(d: dict) -> dict:
     return {k : v for k, v in sorted(d.items(), key=lambda x: splitNotam(x))}
 
-################################################################################################
 def splitNotam(item):
     items = item[1].split(';')
-    return (items[0], items[1], -float(items[3].split('°')[0][1:]), items[2], item[0])
+    # items[0]=Start Datetime
+    # items[1]=End Datetime
+    # items[2]=Location
+    # items[3]=Coordinates
+    # item[0]=Location/Number
+    return (items[0], -float(items[3].split('°')[0][1:]), items[2], item[0])
+    # return (items[0], items[1], -float(items[3].split('°')[0][1:]), items[2], item[0])
 
 ################################################################################################
 def sortDictByEndDate(d: dict):

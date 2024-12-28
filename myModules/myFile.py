@@ -100,13 +100,10 @@ def updateTempFile(notams: dict):
     newText = f"NOTAM发射预测\n"
     newText += "================================\n"
     newText += myDict.getNotamDictString(notams)
-    # for i, (key, value) in enumerate(notams.items()):
-    #     items = value.split(';')
-    #     newText += f'{i + 1:02}: {items[2]}/{key},{items[0]},{items[1]};{items[3]}\n'
 
     try:
         isNew = True
-        oldFiles = listFiles(TEMP_FILE_PATH, '.txt')
+        oldFiles = glob(f'{TEMP_FILE_PATH}notam*.txt')
         for oldFile in oldFiles:
             with open(oldFile, encoding='utf-8') as f:
                 oldText = f.read()
