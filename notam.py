@@ -27,10 +27,11 @@ NEW_FORM_XPATH = "//form[@name='NotamRetrievalForm']"
 SCROLL_WINDOW = "window.scrollTo(0, document.body.scrollHeight)"
 
 ################################################################################################
-def getNotamDetail(driver, searchLocaltions):
+def getNotamDetail(driver):
+    firLocations = myFile.readConfigFirNames()
     start = myDate.getJapanTime()
     print(f"{start}")
-    print(f"Searching Location: {searchLocaltions}")
+    print(f"Searching Location: {firLocations}\n")
     notam = {}
     
     try:
@@ -48,7 +49,7 @@ def getNotamDetail(driver, searchLocaltions):
 
             if (radio := myNet.elementLocatedBy(driver, By.XPATH, NEW_XPATH_RADIO_TYPE)):
                 radio.click()
-                myNet.elementInput(driver, NEW_XPATH_TEXTAREA, searchLocaltions)
+                myNet.elementInput(driver, NEW_XPATH_TEXTAREA, firLocations)
                 myNet.elementClick(driver, NEW_XPATH_SEARCH_BUTTON)
                 myNet.windowOpened(driver, windowHandles)
                 driver.switch_to.window(driver.window_handles[-1])
@@ -99,8 +100,7 @@ def main():
 
     with myNet.getFirefoxDriver() as driver:
         try:
-            firLocations = myFile.readConfigFirNames()
-            notam_data, start = getNotamDetail(driver, firLocations)
+            notam_data, start = getNotamDetail(driver)
 
             if notam_data:
                 notam_data =  myDict.sortDictByValue(notam_data)

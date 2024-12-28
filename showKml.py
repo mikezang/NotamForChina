@@ -26,6 +26,11 @@ GEOMTRIES_COUNT = 12
 
 ################################################################################################
 def main():
+    import locale
+    import sys
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+    sys.stdout.reconfigure(encoding='UTF-8')
+
     myDate.setStartTime()
     myGUI.setScreenDpiAware()    
     cn_font = myPlot.init()

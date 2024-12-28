@@ -87,7 +87,7 @@ def getRocketsFrame(rockets, retired, lastRocket):
     rockets.append([sg.Column(row1, key='rockets'), sg.Column(row2, key='retired', visible=False)])
     return [sg.Frame('运载火箭（统计条形图）', rockets)]  
 
-def getSeriesFrame(series, lastSeries, lastResult):
+def getSeriesFrame(series, lastSeries, lastResult, lastNumber=None):
     seriesCZ = splitStringToList(series[0])
     seriesNCZ = splitStringToList(series[1])
     seriesCZRockets = splitStringToList(series[2])
@@ -98,7 +98,7 @@ def getSeriesFrame(series, lastSeries, lastResult):
         sg.Checkbox('仅生成最后图表', key='series02', default=True),
         sg.Checkbox('退役火箭系列', key='series03', enable_events=True),
         sg.Checkbox('发射失败系列', key='series04', default=not lastResult, enable_events=True),
-        sg.Checkbox('首飞发射', key='series05', enable_events=False),
+        sg.Checkbox('首飞发射', key='series05', default=lastNumber == '遥1', enable_events=False),
         sg.Checkbox('春节前后发射', key='series06', enable_events=False),
         sg.Checkbox('年初年末发射', key='series07', enable_events=False),
     ]
@@ -201,7 +201,7 @@ def getWindow(years, rockets, series, retired, privates, locations, categories, 
     layout = []
     layout.append(getYearsFrame(years, lastYear))  
     layout.append(getRocketsFrame(rockets, retired, lastRocket))  
-    layout.append(getSeriesFrame(series, lastSeries, lastResult))  
+    layout.append(getSeriesFrame(series, lastSeries, lastResult, lastNumber))  
     layout.append([getLocationsFrame(locations, lastLocation), getCategoriesFrame(categories, lastCategory)])  
     layout.append(getPayloadsFrame(payloads, lastPayload))
     layout.append(getButton())  
@@ -269,8 +269,9 @@ def getLastLaunch(dfLastLaunch, series, privates, dictUpperStages, payloads):
     lastYear = myDate.getJapanDate()[:4]
     lastRocket = dfLastLaunch[myExcel.EXCEL_COLUMN_ROCKET]
     lastNumber = dfLastLaunch[myExcel.EXCEL_COLUMN_NUMBER]
+    lastRemarks = dfLastLaunch[myExcel.EXCEL_COLUMN_REMARKS]
     lastResult = True if dfLastLaunch[myExcel.EXCEL_COLUMN_RESULT] == '成功' else False
-    lastUpperStage = (lastRocket+lastNumber) in dictUpperStages
+    lastUpperStage = f'{lastRocket}{lastNumber}/{lastRemarks}' in dictUpperStages
     lastSeries = getLastSeries(lastRocket, series, privates, lastUpperStage)
     lastLocation = dfLastLaunch[myExcel.EXCEL_COLUMN_LOCATION]
     lastPayload = getLastPayload(payloads, dfLastLaunch[myExcel.EXCEL_COLUMN_PAYLOAD])
@@ -393,6 +394,12 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
         df = myPlot.readDataFromSheetNew(EXCEL_FILE, SHEET_LAUNCH)
         rocketList = values['rocket04'] # print list
         if rocketList:
+            yearsChecked = getSelectedItems(values, years, 'year')
+            if yearsChecked:
+                years = splitYearsChecked(yearsChecked)
+                for year in years:
+                    plotLaunchByDate.printRocketsPayloadsList(df, year)
+
             rocketRetired = values['rocket03']
             if rocketRetired:
                 rocketsChecked = getSelectedItems(values, retired, 'retired')
@@ -400,12 +407,10 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
                 rocketsChecked = getSelectedItems(values, rockets, 'rocket')
             plotLaunchByDate.printRocketsPayloadsList(df, rocketsChecked)
 
-            yearsChecked = getSelectedItems(values, years, 'year')
-            if yearsChecked:
-                years = splitYearsChecked(yearsChecked)
-                for year in years:
-                    plotLaunchByDate.printRocketsPayloadsList(df, year)
-
+            payloadsChecked = getSelectedItems(values, payloads, 'payload')
+            if payloadsChecked:
+                plotLaunchByDate.printRocketsPayloadsList(df, payloadsChecked)
+                                                          
             myFile.playSound()
             return
         

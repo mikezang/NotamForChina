@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 from timeit import timeit
 from selenium.webdriver.common.by import By
 
-from myModules import myExcel
 from myModules import myExcept
 from myModules import myNet
 from myModules import myDate
@@ -27,7 +26,7 @@ SPAN_XPATH = "//span[@class='js_article_create_time album__item-info-item']"
 TEMP_FILE_PATH = './temp/'
 
 DAYS_DIFF = {
-    "深度航天科普研学2天": 0,
+    "早鸟优惠仅3天": 0,
     "2天" : 1,
     "3天" : 1,
     "3日" : 1,
@@ -206,7 +205,7 @@ def parseHuahuoUrls(li, span):
     for li, span in zip(li, span):
         title = li.get_attribute('data-title')
 
-        if '观礼' in title:
+        if '观礼' in title or '发射' in title:
             url = li.get_attribute('data-link')
             dateStr = convertToDate(span.text)
             city = getLaunchCity(title)
@@ -233,9 +232,11 @@ def parseCTripDate(driver, thisCity, day_diff):
     nextYear = int(thisYear) + 1
     pattern = rf'(?<!=)(({thisYear}|{nextYear})\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01]))'
     matches = findall(pattern, html)
+    today = myDate.getJapanDate("%Y-%m-%d")
     for m in matches:
-        launchDay = getDateAfterDays(m[0].replace('-', '/'), day_diff)
-        launchData[launchDay] = thisCity
+        if m[0] > today:
+            launchDay = getDateAfterDays(m[0].replace('-', '/'), day_diff)
+            launchData[launchDay] = thisCity
     return launchData
 
 ################################################################################################
@@ -270,9 +271,9 @@ def parseHuahuoDateOld(driver, thisCity, day_diff):
 def parseHuahuoDate(driver, thisCity, day_diff):
     launchData = {}
     pattern = r'\b(?:(?P<year1>\d{4})年)?(?P<month1>\d{1,2})月(?P<day1>\d{1,2})日'
-    pattern += r'(?:-|--|,|—|、)'
+    pattern += r'(?:(?:-|--|,|—|、)'
     pattern += r'(?:(?P<year2>\d{4})年)?(?:(?P<month2>\d{1,2})月)?(?:(?P<day2>\d{1,2})日)?\b'
-    pattern += r'(?!\s*\d{1,2}:\d{2})'
+    pattern += r'(?!\s*\d{1,2}:\d{2}))?'
     pageSource = driver.page_source
     matches = finditer(pattern, pageSource)
     today = myDate.getJapanDate("%Y/%m/%d")
@@ -282,18 +283,19 @@ def parseHuahuoDate(driver, thisCity, day_diff):
         year1 = groupDict.get('year1')
         year1 = int(year1) if year1 else 2024
         month1, day1 = groupDict.get('month1'), groupDict.get('day1')
-        mDate = f'{year1}/{month1}/{day1}'
+        mDate = f'{year1}/{int(month1):02}/{int(day1):02}'
         if mDate > today:
             if day_diff > 0:
                 launchDay = getDateAfterDays(mDate, day_diff)
                 launchData[launchDay] = thisCity
             else:
                 date1 = datetime(year1, int(month1), int(day1))
-                year2 = groupDict.get('year2')
-                year2 = int(year2) if year2 else 2024
                 month2 = groupDict.get('month2')
                 day2 = groupDict.get('day2')
                 if month2 and day2:
+                    year2 = groupDict.get('year2')
+                    year2 = 2025 if month2 < today[5:7] else year2
+                    year2 = int(year2) if year2 else 2024
                     date2 = datetime(year2, int(month2), int(day2))
                     day_diff = (date2 - date1).days // 2
                     launchDay = getDateAfterDays(mDate, day_diff)

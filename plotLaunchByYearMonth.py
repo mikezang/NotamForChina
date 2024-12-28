@@ -638,9 +638,9 @@ def plotTitleLegendByTime(cn_font, title):
 def plotTitleLegendByYearMonth(cn_font, title, hasGreyLabel=False, rocketType='', mom=False):
     if mom:
         handles = [
-            Line2D([0], [0], linestyle='solid', color='green', marker='o', label=f'{rocketType}成功率(今年)'),
+            # Line2D([0], [0], linestyle='solid', color='green', marker='o', label=f'{rocketType}成功率(今年)'),
             # Line2D([0], [0], linestyle='solid', color='red', marker='x', label=f'{rocketType}累计成功率(今年)'),
-            Line2D([0], [0], linestyle='solid', color='blue', marker='o', label=f'{rocketType}成功率(去年)'),
+            # Line2D([0], [0], linestyle='solid', color='blue', marker='o', label=f'{rocketType}成功率(去年)'),
             # Line2D([0], [0], linestyle='solid', color='magenta', marker='x', label=f'{rocketType}累计成功率(去年)'),
             Line2D([0], [0], linestyle='none', mfc='green', mec='green', marker='s', label=f'{rocketType}成功数(今年)'),
             Line2D([0], [0], linestyle='none', mfc='blue', mec='blue', color='blue', marker='s', label=f'{rocketType}成功数(去年)'),

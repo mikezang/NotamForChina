@@ -35,6 +35,7 @@ PLATFORMS = {
     'CSS': "CSS (TIANHE)", 
     'SZ-19': "SHENZHOU-19 (SZ-19)",
     'SZ-17': "SZ-17 MODULE",
+    'TZ-7': "TIANZHOU-7"
 }
 
 ################################################################################################
@@ -201,6 +202,7 @@ def buildTableBegin(tableId, loc, text):
     elif tableId in [2, 3]:
         html += '<TR><TD>'
     html += f'<button onclick=saveTableAsImage("{loc}")>Save Table as {loc}.png</button><BR>\n'
+    html += f'<TABLE class=borderOnly><TR><TD>\n'
     html += f'<TABLE class=border id={loc}>\n'
     html += f'<TR><TH colspan=3>{text.replace('\n', '<BR>\n')}</TH></TR>\n'
     html += '<TR><TH>北京时间</TH><TH>仰角</TH><TH>方位</TH></TR>\n'
@@ -214,7 +216,7 @@ def buildTableEnd(tableId):
     elif tableId in [1, 2]:
         html += '</TD></TR>\n'
     else:
-        html += '</TD></TR></TABLE>\n'
+        html += '</TD></TR></TABLE></TD></TR></TABLE>\n'
     return html
 
 ################################################################################################
@@ -451,7 +453,8 @@ def createHtmlForElevation(cities):
     platform, bgColor = checkArgv(cities)#'酒泉': ['2024年10月30日'], '文昌': ['2024年11月11日', '2024年11月15日']}
     passTime, tle = calculatePasses(cities, startDate, hours, platform)
     html = showTime(platform, passTime, tle, bgColor)
-    filename = f'{TEMP_FILE_PATH}中国空间站轨道预测{myDate.getJapanTimeFilename()}.html'
+    filename = f'{TEMP_FILE_PATH}中国空间站轨道预测.html'
+    # filename = f'{TEMP_FILE_PATH}中国空间站轨道预测{myDate.getJapanTimeFilename()}.html'
     myFile.saveTextFile(filename, html)
 
 ################################################################################################
