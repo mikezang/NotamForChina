@@ -35,7 +35,7 @@ def getNotamDetail(browser, searchLocaltions):
     try:
         context = browser.new_context()
         page = context.new_page()
-        page.goto(NEW_NOTAM_URL)
+        page.goto(NEW_NOTAM_URL, wait_until="domcontentloaded")
         button = page.locator(NEW_CSS_SELECTOR_BUTTON_DISCLAIMER)
     except NoSuchElementException:
         print(f'{NEW_NOTAM_URL} is temporary down, try again later ...')
@@ -101,7 +101,7 @@ def main():
     with sync_playwright() as p:
         try:
             firLocations = myFile.readConfigFirNames()
-            browser = p.firefox.launch(headless=True)
+            browser = p.firefox.launch(headless=True, slow_mo=0)
             notam_data, start = getNotamDetail(browser, firLocations)
             browser.close()
 
