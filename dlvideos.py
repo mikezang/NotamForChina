@@ -37,6 +37,7 @@ WJYS_SEARCH_PAGE_URL = WJYS_BASE_URL + 'vodsearch/page/{}/wd/{}.html'
 CNYS_ACTOR_URL = CNYS_BASE_URL + 'vodsearch-actor-{}.html'
 
 CNYS_VIDEO_URL = CNYS_BASE_URL + 'vodplay-{}-sid-{}-nid-{}.html'
+CNYS_VIDEO_URL = CNYS_BASE_URL + 'vodplay-{}-{}-{}.html'
 CTV_VIDEO_URL = CTV_BASE_URL + 'dyplay/{}-1-1/'
 WJYS_PLAY_URL = WJYS_BASE_URL + 'vodplay/{}-{}-{}.html'
 

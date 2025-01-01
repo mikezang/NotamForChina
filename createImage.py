@@ -34,8 +34,8 @@ def create_cover_image(text, fontPath='', fontSize=48, width=864, height=504, ba
     lines = text.split('\n')
     lines.append('　')
     # lines.append('　')
-    lines.append('制作者：峥嵘不藏　')
-    lines.append(f'制作日：{myDate.getJapanDate('%Y/%m/%d')}')
+    lines.append('创作者：峥嵘不藏　')
+    lines.append(f'创作日：{myDate.getJapanDate('%Y/%m/%d')}')
     line_height = draw.textbbox((0, 0), lines[0], font=font)[3]
     total_text_height = len(lines) * line_height
     text_y = (height - total_text_height) // 4

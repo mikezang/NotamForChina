@@ -281,7 +281,7 @@ def parseHuahuoDate(driver, thisCity, day_diff):
     for m in matches:
         groupDict = m.groupdict()
         year1 = groupDict.get('year1')
-        year1 = int(year1) if year1 else 2024
+        year1 = int(year1) if year1 else 2025
         month1, day1 = groupDict.get('month1'), groupDict.get('day1')
         mDate = f'{year1}/{int(month1):02}/{int(day1):02}'
         if mDate > today:
@@ -295,7 +295,7 @@ def parseHuahuoDate(driver, thisCity, day_diff):
                 if month2 and day2:
                     year2 = groupDict.get('year2')
                     year2 = 2025 if month2 < today[5:7] else year2
-                    year2 = int(year2) if year2 else 2024
+                    year2 = int(year2) if year2 else 2025
                     date2 = datetime(year2, int(month2), int(day2))
                     day_diff = (date2 - date1).days // 2
                     launchDay = getDateAfterDays(mDate, day_diff)
