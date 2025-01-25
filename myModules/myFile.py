@@ -285,13 +285,13 @@ def openConfig(section=None) -> tuple:
 
 ################################################################################################
 def readConfigLaunchCenters() -> dict:
+    firNames = readConfigFirNames().split()
+    firLaunchCenters = ''
     section = openConfig()
     count = int(section.get('FirCount'))
-    launchCenters = {}
     for i in range(count):
-        firNames = section.get(f'FirName{i + 1}').replace('~KOREA', '').split(',')
-        firLaunchCenters = section.get(f'FirLaunchCenter{i + 1}').split(',')
-        launchCenters.update(dict(zip(firNames, firLaunchCenters)))
+        firLaunchCenters += section.get(f'FirLaunchCenter{i + 1}')
+    launchCenters = (dict(zip(firNames, firLaunchCenters.split(','))))
     return launchCenters
 
 ################################################################################################
@@ -300,10 +300,11 @@ def readConfigFirNames() -> str:
     count = int(section.get('FirCount'))
     firNames = ''
     for i in range(count):
+        firName = section.get(f'FirName{i + 1}')
+        firName = ' '.join([x.split('~')[0] for x in firName.split(',')])
         if firNames:
             firNames += ' '
-        firNames += section.get(f'FirName{i + 1}')
-    firNames = firNames.replace(',', ' ').replace('~KOREA', '')
+        firNames += firName
     return firNames
 
 ################################################################################################
