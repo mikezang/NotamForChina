@@ -31,17 +31,32 @@ def getNotamDetail(driver):
     firLocations = myFile.readConfigFirNames()
     start = myDate.getJapanTime()
     print(f"{start}")
-    print(f"Searching Location: {firLocations}\n")
+    print(f"Searching Location: {firLocations}")
+    print('Searching...', end='')
     notam = {}
-    
-    try:
-        driver.get(NEW_NOTAM_URL)
-        windowHandles = driver.window_handles
-        button = driver.find_element(By.CSS_SELECTOR, NEW_CSS_SELECTOR_BUTTON_DISCLAIMER)
-    except NoSuchElementException:
-        print(f'{NEW_NOTAM_URL} is temporary down, try again later ...')
-        button = None
-        pass
+    i = 0
+    button = None
+    while True:
+        try:
+            driver.get(NEW_NOTAM_URL)
+            windowHandles = driver.window_handles
+            button = driver.find_element(By.CSS_SELECTOR, NEW_CSS_SELECTOR_BUTTON_DISCLAIMER)
+            print()
+            break
+        except NoSuchElementException:
+            i += 1
+            print('...', end='')
+            if i > 3:
+                print(f'{NEW_NOTAM_URL} is temporary down, try again later ...')
+                button = None
+                break
+            pass
+        except:
+            i += 1
+            print('...', end='')
+            if i > 3:
+                break
+            pass
 
     try:
         if button:
