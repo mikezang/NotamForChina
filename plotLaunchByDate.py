@@ -106,7 +106,8 @@ def plotTitleLegendByDate(cn_font, ax, title, df, okRate=None, page=0, isSeries=
     newHandles = list(uniqueLabels.values())
     newLabels = list(uniqueLabels.keys())
     newCounts = list(labelCounts.values())
-    newLabels = [f'发射成功 x {c - sumNg}' if singleRocket and not plotPayload and not isSeries else f'{l} x {c}' for l, c in zip(newLabels, newCounts)]
+    if '首飞日' not in title:
+        newLabels = [f'发射成功 x {c - sumNg}' if singleRocket and not plotPayload and not isSeries else f'{l} x {c}' for l, c in zip(newLabels, newCounts)]
 
     for i, handle in enumerate(newHandles):
         color = handle.patches[0].get_facecolor()
@@ -179,14 +180,16 @@ def plotGraphForLunarNewYear(cn_font, df, upperStages):
     # dfList = myPlot.parseExcelSheetToDataFrame(excelSheet, columnYear='日期', columnNotNull='结果', isLunarNewYear=True)
     dfList = myPlot.parseToDataFrame(df, columnYear='日期', columnNotNull='结果', isLunarNewYear=True)
     dfList = myPlot.countDataFrameByDate(dfList)
+    count = len(dfList)
     # series = ['全部', '长征', '其他']
-    series = ['全部']
+    # series = ['全部']
 
-    for df, s in zip(dfList, series):
+    for no, df in enumerate(dfList, 1):
         if not df.iloc[0:, :].empty:
             colorDict = getColorDict(df, False)
             okRate = getOkRate([df])
-            title = f'中国{s}运载火箭春节前后发射日统计'
+            title = f'中国全部运载火箭春节前后发射日统计'
+            title += str(no) if count > 1 else ''
             # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) 
             fig, axLeft =  myShape.getFigure()
             plotBarGraphByDate(cn_font, axLeft, df, upperStages=upperStages, colorDict=colorDict)

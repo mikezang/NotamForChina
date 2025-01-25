@@ -155,9 +155,9 @@ def getHuahuoList(driver):
 
 ################################################################################################
 def getLaunchCity(title):
-    if '文昌' in title:
+    if '文昌' in title or '海南' in title:
         return '文昌'
-    elif '西昌' in title:
+    elif '西昌' in title or '四川' in title:
         return '西昌'
     elif '酒泉' in title or '东方航天城' in title:
         return '酒泉'
@@ -194,9 +194,9 @@ def convertToDate(dateStr):
         if m:
             today -= timedelta(days=int(m.group(1))+1)
         else:
-            m = match(r'(\d{2})/(\d{2})', dateStr)
+            m = match(r'(\d{4})/(\d{2})/(\d{2})', dateStr)
             if m:
-                today = datetime(2024, int(m.group(1)), int(m.group(2)))
+                today = datetime(int(m.group(1)), int(m.group(2)), int(m.group(2)))
     return today.strftime('%Y-%m-%d')
 
 ################################################################################################
@@ -205,7 +205,7 @@ def parseHuahuoUrls(li, span):
     for li, span in zip(li, span):
         title = li.get_attribute('data-title')
 
-        if '观礼' in title or '发射' in title:
+        if '观礼' in title or '发射' in title or '航天' in title:
             url = li.get_attribute('data-link')
             dateStr = convertToDate(span.text)
             city = getLaunchCity(title)
@@ -248,7 +248,7 @@ def parseHuahuoDateOld(driver, thisCity, day_diff):
     today = myDate.getJapanDate("%Y/%m/%d")
 
     for i, m1 in enumerate(matches):
-        year1 = int(m1[1]) if m1[1] != '' else 2024
+        year1 = int(m1[1]) if m1[1] != '' else 2025
         month1, day1 = m1[2], m1[3]
         mDate = f'{year1}/{month1}/{day1}'
         date1 = datetime(year1, int(month1), int(day1)) + timedelta(days=1)
