@@ -31,7 +31,6 @@ def main():
     import sys
     locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
     sys.stdout.reconfigure(encoding='UTF-8')
-    
     myGUI.setScreenDpiAware()
 
     if len(argv) == 1:
@@ -51,11 +50,13 @@ def main():
                 proceeFile(newFile)
                 window.Normal()
                 newFile = ''
+        window.close()
     else:
         newFile = argv[1]
-        proceeFile(newFile)
-
-    window.close()
+        if path.isfile(newFile):
+            proceeFile(newFile)
+        else:
+            print(f'Not found file: {newFile}')
 
 ################################################################################################
 # headersRow starts from 0
@@ -172,7 +173,10 @@ def createMsaDropZonesKmlFile(oldFile):
                 area = formatMSALatitudeLongitude([area])[0]
                 coords = area.split('|')
                 coordsList = [myFile.convertDMS2DD(c) for c in coords]
-                color = myFile.readConfig('海上')[1]
+                if 'SD' in number:
+                    color = myFile.readConfig('海上')[1]
+                elif 'HN'in number or 'GD' in number:
+                    color = myFile.readConfig('文昌')[1]
                 if len(coordsList) == 1:
                     radius = parseRadius(content)
                     if radius > 0:
@@ -185,6 +189,7 @@ def createMsaDropZonesKmlFile(oldFile):
                 lastStart = startDate
                 lastEnd = endDate
         myShape.updateKmlFile(kml, title, myShape.KML_PATH, notams)
+        myFile.updateTempFile(notams)
 
 ################################################################################################
 MSA_RADIUS_PATTERN = r'为中心[、，](?:(\d{1,4})(海里|公里|米)为半径|半径(\d{1,4})(海里|公里|米))'
@@ -280,7 +285,7 @@ def getMsaDates(content: str) -> tuple:
     return startDates, endDates
 
 ################################################################################################
-MSA_LOCATIONS = {'鲁航警': 'SD', '粤航警': 'GD', '琼航警': 'HN'}
+MSA_LOCATIONS = {'鲁航警': 'SD', '粤航警': 'GD', '琼航警': 'HN', '沪航警': 'SH'}
 MSA_PATTERN_NUMBER = r'([A-Z][A-Z]|鲁航警|粤航警|琼航警)(\d{1,3}\/\d{2})'
 def getMsaLocation(content) -> str:
     locations = finditer(MSA_PATTERN_NUMBER, content)

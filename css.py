@@ -265,7 +265,7 @@ def showTime(platform, passTime, tle, bgColor=None):
                     degree, minute, second = convertDMS(elevation)
                     max_date = max_elevation_time.date()
                     max_time = max_elevation_time.time()
-                    date = f'{max_date.year}年{max_date.month:02}月{max_date.day:02}日'
+                    date = f'{max_date.year}{max_date.month:02}{max_date.day:02}'
                     time = f'{max_time.hour:02}时{max_time.minute:02}分'
                     text = f"\t{date}{time}，仰角：{degree:02.0f}°{minute:02.0f}'{second:02.0f}\"，"
                     text += f"方位角：{convertAzimuth(azimuth)}"
@@ -449,7 +449,7 @@ def checkArgv(cities):
 ################################################################################################
 def createHtmlForElevation(cities):
     startDate = datetime.now(timezone.utc)
-    hours = 480
+    hours = 2100
     platform, bgColor = checkArgv(cities)#'酒泉': ['2024年10月30日'], '文昌': ['2024年11月11日', '2024年11月15日']}
     passTime, tle = calculatePasses(cities, startDate, hours, platform)
     html = showTime(platform, passTime, tle, bgColor)
