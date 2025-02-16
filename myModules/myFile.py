@@ -285,13 +285,14 @@ def openConfig(section=None) -> tuple:
 
 ################################################################################################
 def readConfigLaunchCenters() -> dict:
-    firNames = readConfigFirNames().split()
+    firNames = '' #readConfigFirNames().split()
     firLaunchCenters = ''
     section = openConfig()
     count = int(section.get('FirCount'))
     for i in range(count):
+        firNames += section.get(f'FirName{i + 1}')
         firLaunchCenters += section.get(f'FirLaunchCenter{i + 1}')
-    launchCenters = (dict(zip(firNames, firLaunchCenters.split(','))))
+    launchCenters = (dict(zip(firNames.split(','), firLaunchCenters.split(','))))
     return launchCenters
 
 ################################################################################################
@@ -363,7 +364,11 @@ def getLocation(newFile):
     except:
         pass
     if locs:
-        return locs[0], locations
+        if locs[0] == '文昌':
+            locs.append('海南') 
+        if locs[0] == '海南':
+            locs.append('文昌') 
+        return locs, locations
     return None, locations
 
 ################################################################################################

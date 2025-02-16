@@ -1169,7 +1169,7 @@ def parseToDataFrame(dfOld, rocket:str=None, location=None, payload=None, startY
                         cond1 = d1 if cond1 is None else cond1 | d1
                 else:
                     # #TODO: use Regexp to match
-                    pattern = rf'{payload}' if payload in ['千帆'] else rf'{payload}.{{1,3}}号'
+                    pattern = rf'{payload}' if payload in ['千帆', '星网'] else rf'{payload}.{{1,3}}号'
                     cond1 = df[columnPayload].apply(lambda text: bool(search(pattern, text)))
                     # startswith = True
                     # if payload[:1] == '^':

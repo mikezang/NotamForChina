@@ -340,8 +340,8 @@ def compareKmls(newFile=None, newKml=None):
     if newKml:
         newGdf = convertKmlToGdf(newKml)
     else:
-        location, locations = myFile.getLocation(newFile)
-        if location is None:
+        locationList, locations = myFile.getLocation(newFile)
+        if locationList is None:
             print(f'{newFile} not included {locations}')
             return ''
     
@@ -352,60 +352,61 @@ def compareKmls(newFile=None, newKml=None):
         print(f"No Data in {newFile}!")
         return 
 
-    folder = path.abspath(KML_FOLDERS[location])
-    if not path.isdir(folder):
-        makedirs(folder, True)
-    filename = path.basename(newFile)
+    for location in locationList:
+        folder = path.abspath(KML_FOLDERS[location])
+        if not path.isdir(folder):
+            makedirs(folder, True)
+        filename = path.basename(newFile)
 
-    # delete files
-    myFile.removeFile(f'{TEMP_FILE_PATH}match/*.png')
-    myFile.removeFile(f'{TEMP_FILE_PATH}unmatch/*.png')
+        # delete files
+        myFile.removeFile(f'{TEMP_FILE_PATH}match/*.png')
+        myFile.removeFile(f'{TEMP_FILE_PATH}unmatch/*.png')
 
-    # List all kml files in specific foder except newFile
-    oldFiles = myFile.listFiles(folder, extension=".kml", excludeFile=filename)
-    savePath1 = f'{TEMP_FILE_PATH}match/{filename[:-4]}'
-    savePath2 = f'{TEMP_FILE_PATH}unmatch/{filename[:-4]}'
-    
-    for oldFile in oldFiles:
-        if '\\old\\' in oldFile:
-            continue
+        # List all kml files in specific foder except newFile
+        oldFiles = myFile.listFiles(folder, extension=".kml", excludeFile=filename)
+        savePath1 = f'{TEMP_FILE_PATH}match/{filename[:-4]}'
+        savePath2 = f'{TEMP_FILE_PATH}unmatch/{filename[:-4]}'
+        
+        for oldFile in oldFiles:
+            if '\\old\\' in oldFile:
+                continue
 
-        try:
-            if plt:
-                plt.close()
-
-            # Use geopandas to read old NOTAM kml file to shapely.geometry
             try:
-                oldGdf = myKml.readKmlFile(oldFile)
-                if oldGdf.empty:
-                    continue
-                fig, ax = getFigure(setAspectEqual=True, plotGrid=True)
+                if plt:
+                    plt.close()
+
+                # Use geopandas to read old NOTAM kml file to shapely.geometry
+                try:
+                    oldGdf = myKml.readKmlFile(oldFile)
+                    if oldGdf.empty:
+                        continue
+                    fig, ax = getFigure(setAspectEqual=True, plotGrid=True)
+                except Exception as e:
+                    print(f"No Data in {oldFile}!")
+                    print(f'Exception: {e}\n')
+
+                plotTwoNoatms(ax, newGdf, oldGdf)
+                newTitle = myFile.getTitle(newFile)
+                newTitle = newTitle if '时' in newTitle else newTitle.replace('日', '日??时??分')
+                oldTitle = myFile.getTitle(oldFile)
+                ious, title = plotPolygonsIntersection(fig, ax, cn_font, newGdf, newTitle, oldGdf, oldTitle)
+                plotTitleXYLabels(fig, ax, cn_font, title, 'Longitude（经度）', 'Latitude（纬度）')
+                # myPlot.showBackend()
+
+                # Save the plot to a file
+                basename = path.basename(oldFile)
+                filename = basename.replace(".kml", ".png")
+
+                if ious:
+                    print(f'{newTitle} IoU {oldTitle}')
+                    for iou in ious:
+                        print(f'    {iou}') 
+                    myPlot.saveFig(fig, f'{savePath1}/{filename}', False, False)
+                    print('')
+                else:
+                    myPlot.saveFig(fig, f'{savePath2}/{filename}', False, False)
             except Exception as e:
-                print(f"No Data in {oldFile}!")
                 print(f'Exception: {e}\n')
-
-            plotTwoNoatms(ax, newGdf, oldGdf)
-            newTitle = myFile.getTitle(newFile)
-            newTitle = newTitle if '时' in newTitle else newTitle.replace('日', '日??时??分')
-            oldTitle = myFile.getTitle(oldFile)
-            ious, title = plotPolygonsIntersection(fig, ax, cn_font, newGdf, newTitle, oldGdf, oldTitle)
-            plotTitleXYLabels(fig, ax, cn_font, title, 'Longitude（经度）', 'Latitude（纬度）')
-            # myPlot.showBackend()
-
-            # Save the plot to a file
-            basename = path.basename(oldFile)
-            filename = basename.replace(".kml", ".png")
-
-            if ious:
-                print(f'{newTitle} IoU {oldTitle}')
-                for iou in ious:
-                    print(f'    {iou}') 
-                myPlot.saveFig(fig, f'{savePath1}/{filename}', False, False)
-                print('')
-            else:
-                myPlot.saveFig(fig, f'{savePath2}/{filename}', False, False)
-        except Exception as e:
-            print(f'Exception: {e}\n')
     print('\nFinished comparing!')
 
 #####################################################################################
