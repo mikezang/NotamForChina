@@ -244,7 +244,7 @@ def handleEvents(window, event, values, cn_font, newSelectedFile, oldSelectedFil
                         toogleOldFolders(window, False)
                         location, _ = myFile.getLocation(newSelectedFile)
                         if location:
-                            oldFolder = path.abspath(myShape.KML_FOLDERS[location])
+                            oldFolder = path.abspath(myShape.KML_FOLDERS[location[0]])
                             updateFolders(window, OLD_FOLDER, oldFolder, OLD_SUBFOLDERS)
                 elif selectedFiles[0][-4:] in '.gif,.png,.jpg,.jpeg,.webp':
                     image = myPlot.getImage(newSelectedFile, size=myExcel.IMAGE_SIZE)

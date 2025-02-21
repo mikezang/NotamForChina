@@ -229,7 +229,8 @@ def buildHeader(tle, text1, text3):
 
 ################################################################################################
 def buildTableCell(loc, date, time, degree, minute, second, azimuth, bgColor=None):
-    html = '<TR style="background-color:orange;">' if loc in bgColor and date in bgColor[loc] else '<TR>'
+    strDate = date.replace('年', '').replace('月', '').replace('日', '')
+    html = '<TR style="background-color:orange;">' if loc in bgColor and strDate in bgColor[loc] else '<TR>'
     html += f'<TD>{date}{time}</TD>'
     html += f'<TD>{degree:02.0f}°{minute:02.0f}\'{second:02.0f}"</TD>'
     html += f'<TD>{convertAzimuth(azimuth)}</TD></TR>\n'
@@ -265,7 +266,7 @@ def showTime(platform, passTime, tle, bgColor=None):
                     degree, minute, second = convertDMS(elevation)
                     max_date = max_elevation_time.date()
                     max_time = max_elevation_time.time()
-                    date = f'{max_date.year}{max_date.month:02}{max_date.day:02}'
+                    date = f'{max_date.year}年{max_date.month:02}月{max_date.day:02}日'
                     time = f'{max_time.hour:02}时{max_time.minute:02}分'
                     text = f"\t{date}{time}，仰角：{degree:02.0f}°{minute:02.0f}'{second:02.0f}\"，"
                     text += f"方位角：{convertAzimuth(azimuth)}"
