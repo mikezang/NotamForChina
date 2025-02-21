@@ -360,7 +360,7 @@ def getLocation(newFile):
     locations = readConfig(['Locations'], False)
     pattern = r'(' + locations.replace(',', '|') + ')'
     try:
-        locs = findall(pattern, newFile)
+        locs = findall(pattern, newFile.split('\\')[-1])
     except:
         pass
     if locs:

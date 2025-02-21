@@ -933,7 +933,7 @@ def plotIntersection(ax, newGdf, oldGdf):
                         except Exception as e:
                             pass
                     if iou > 0.01:
-                        text = f'{geomName} = {iou:05.1%}'
+                        text = f'{iou:6.1%} = {geomName}'
                         ious.append(text)
                         plotGeometry(ax, gpd.GeoDataFrame(geometry=[intersection]), color='orange', legend=text, zorder=4)
     return ious
