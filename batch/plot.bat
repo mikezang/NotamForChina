@@ -2,4 +2,4 @@
 
 cd \zang\python\RocketLaunch
 
-python plot.py
+python plot.py %1
