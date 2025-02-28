@@ -290,8 +290,8 @@ def readConfigLaunchCenters() -> dict:
     section = openConfig()
     count = int(section.get('FirCount'))
     for i in range(count):
-        firNames += section.get(f'FirName{i + 1}')
-        firLaunchCenters += section.get(f'FirLaunchCenter{i + 1}')
+        firNames += section.get(f'FirName{i + 1}') + ','
+        firLaunchCenters += section.get(f'FirLaunchCenter{i + 1}') + ','
     launchCenters = (dict(zip(firNames.split(','), firLaunchCenters.split(','))))
     return launchCenters
 

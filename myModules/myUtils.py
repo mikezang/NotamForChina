@@ -93,8 +93,6 @@ def convertLocation(loc) -> str:
     launchCenters = myFile.readConfigLaunchCenters()
     for l in loc.split('/'):
         ret2 = launchCenters[l]
-        # ret2 = constants.LOCATIONS_PATTERN[l]
-        # ret2 = constants.LOCATIONS_PATTERN[l].split('|')[1]
         if ret2 != '':
             return ret2
     return ''

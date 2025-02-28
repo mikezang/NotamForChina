@@ -1121,8 +1121,10 @@ def parseToDataFrame(dfOld, rocket:str=None, location=None, payload=None, startY
                 year = startYMD[:4]
                 lastYear = str(int(year) - 1)
                 lastStartYMD = f'{lastYear}{startYMD[4:]}'
-                mmdd = endYMD[4:] if endYMD[4:] != '0229' else '0228'
-                lastEndYMD = f'{lastYear}{mmdd}'
+                # mmdd = endYMD[4:] if endYMD[4:] != '0229' else '0228'
+                mm = endYMD[4:6]
+                dd = myDate.getLastdayOfMonth(lastYear, mm)
+                lastEndYMD = f'{lastYear}{mm}{dd}'
                 d1 = df[columnYear] >= pd.to_datetime(f'{lastStartYMD}')
                 d2 = df[columnYear] <= pd.to_datetime(f'{lastEndYMD}')
                 dfList.append(df[d1 & d2])
@@ -1170,6 +1172,7 @@ def parseToDataFrame(dfOld, rocket:str=None, location=None, payload=None, startY
                 else:
                     # #TODO: use Regexp to match
                     pattern = rf'{payload}' if payload in ['千帆', '星网'] else rf'{payload}.{{1,3}}号'
+                    pattern = rf'{payload}' #if payload in ['千帆', '星网'] else rf'{payload}.{{1,3}}号'
                     cond1 = df[columnPayload].apply(lambda text: bool(search(pattern, text)))
                     # startswith = True
                     # if payload[:1] == '^':

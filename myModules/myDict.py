@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from json import dumps, loads
 from os import path
 from myModules import myDate
@@ -6,15 +7,12 @@ from myModules import myDate
 def sortDictByValue(d: dict) -> dict:
     return {k : v for k, v in sorted(d.items(), key=lambda x: splitNotam(x))}
 
+################################################################################################
 def splitNotam(item):
     items = item[1].split(';')
-    # items[0]=Start Datetime
-    # items[1]=End Datetime
-    # items[2]=Location
-    # items[3]=Coordinates
-    # item[0]=Location/Number
-    return (items[0], -float(items[3].split('°')[0][1:]), items[2], item[0])
-    # return (items[0], items[1], -float(items[3].split('°')[0][1:]), items[2], item[0])
+    d = -float(items[3].split('°')[0][1:])
+    d = d if items[3][0] == 'N' else -d # sort latitude from higher to lower
+    return (items[0], d, items[2], item[0])
 
 ################################################################################################
 def sortDictByEndDate(d: dict):
@@ -39,11 +37,24 @@ def printNotam(dictData, start=''):
     print(f"NOTAM发射预测{start}\n")
 
 ################################################################################################
+def isNewLaunch(oldDate, newDate, hours=2):
+    dt1 = datetime.strptime(oldDate, '%Y/%m/%d %H:%M')
+    dt2 = datetime.strptime(newDate, '%Y/%m/%d %H:%M')
+    if dt2 - dt1 > timedelta(hours=hours):
+        return True
+    else:
+        return False
+    
+################################################################################################
 def getNotamDictString(d):
     msg = ''
+    lastDate = ''
     for i, (key, value) in enumerate(d.items()):
         items = value.split(';')
+        lastDate = items[0] if i == 0 else lastDate
+        msg += '\n' if isNewLaunch(lastDate, items[0]) else ''
         msg += f'{i + 1:02}: {items[2]},{key[-8:]},{items[0]},{items[1]};{myDate.getDDMM(items[3])}\n'
+        lastDate = items[0]
     return msg[:-1]
 
 ################################################################################################
