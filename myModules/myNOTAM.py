@@ -125,6 +125,8 @@ def getNoatmDict(notamDict, number, startDate, endDate, location, area):
         if max(c1)>= 0 and max(c2) >= 0 and max(c3) >= 0:
             area1 = notamDict[key].split(";")[3]
             area = area1 + "-" + area if area != area1 else area
+    if len(area.split('|')) > 1:
+        area = '-'.join([a for a in area.split('-') if len(a.split('|')) > 1 ])
     notamDict[key] = startDate + ";"
     notamDict[key] = notamDict[key] + endDate + ";"
     notamDict[key] = notamDict[key] + location + ";"
