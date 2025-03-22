@@ -106,7 +106,7 @@ def plotRocketChartRaceAnimation(df, rocket, startYear=None, endYear=None, no=''
     dfOk = dfList[1] # ok values
     dfAll = dfList[2] # all values
     if plotStartYear:
-        plotYear = myDate.convertToDate('2024')
+        plotYear = myDate.convertToDate(plotStartYear)
         dfFormat = dfFormat[dfFormat.index>=plotYear]
         dfOk = dfOk[dfOk.index>=plotYear] # ok values
         dfAll = dfAll[dfAll.index>=plotYear] # all values
@@ -144,7 +144,7 @@ def plot2(df, rocket, plotStartYear=None):
 ################################################################################################
 def plot3(excelFile, sheetName, plotStartYear=None, use_pinyin=False):
     condition = '在轨 >= -1 and 航天员 not in ["-","无人"]'
-    df = pd.read_excel(excelFile, sheetName, usecols='A:N', ).query(condition)
+    df = pd.read_excel(excelFile, sheetName, usecols='A:O', ).query(condition)
     # df = pd.read_excel(excelFile, sheetName)
     # df['发射日期'] = df['发射日期'].apply(lambda d: d.replace(hour=0, minute=0, second=0))
     # df['着陆日期'] = df['着陆日期'].apply(lambda d: d.replace(hour=23, minute=23, second=59))
@@ -202,9 +202,13 @@ def getSumLabel(df, iDate, cond, use_pinyin=False):
         dfNew.loc[cond2, 'days'] = (dfNew.loc[cond2, '着陆日期'] - dfNew.loc[cond2, '发射日期']).dt.days
 
     taikoColumn = '拼音' if use_pinyin else '航天员'
+    dfSumExit = dfNew[cond].groupby(taikoColumn)['出舱'].agg(['sum', 'count']).reset_index()
+    countExit = int(dfSumExit['sum'].max()) # 最大出舱次数
+    exitMaxName = '／'.join(dfSumExit[dfSumExit['sum'] == countExit][taikoColumn].tolist())
+
     dfSumCount = dfNew[cond].groupby(taikoColumn)['days'].agg(['sum', 'count']).reset_index()
-    countMax = dfSumCount['count'].max()
-    daysMax = int(dfSumCount['sum'].max())
+    countMax = dfSumCount['count'].max() # 最大在轨次数
+    daysMax = int(dfSumCount['sum'].max()) # 最大在轨日数
     countMaxName = '／'.join(dfSumCount[dfSumCount['count'] == countMax][taikoColumn].tolist())
     daysMaxName = '／'.join(dfSumCount[dfSumCount['sum'] == daysMax][taikoColumn].tolist())
 
@@ -225,9 +229,12 @@ def getSumLabel(df, iDate, cond, use_pinyin=False):
             daysMaxName = daysMaxName.ljust(lMax, '　')
     lMax = max(len(str(daysMax)), len(str(countMax)))
     if use_pinyin:
-        sumLabel = f'Max Days {daysMax:0{lMax}}：{daysMaxName}\nMax Times {countMax:0{lMax}}：{countMaxName}'
+        sumLabel = f'Max Days {daysMax:0{lMax}}：{daysMaxName}\n' 
+        sumLabel+= f'Max Times {countMax:0{lMax}}：{countMaxName}'
     else:
-        sumLabel = f'最多{daysMax:0{lMax}}日：{daysMaxName}\n最多{countMax:0{lMax}}次：{countMaxName}'
+        sumLabel = f'最多在轨{daysMax:0{lMax}}日：{daysMaxName}\n'
+        sumLabel+= f'最多在轨{countMax:0{lMax}}次：{countMaxName}\n'
+        sumLabel+= f'最多出舱{countExit:0{lMax}}次：{exitMaxName}'
     return sumLabel
 
 ################################################################################################
@@ -264,7 +271,7 @@ def plotShenzhouChartRaceAnimation(df, plotStartYear='', use_pinyin=False):
     dfWide = dfList[0]
     dfRank = dfList[1]
     if plotStartYear:
-        plotYear = myDate.convertToDate('2024')
+        plotYear = myDate.convertToDate(plotStartYear)
         dfWide = dfWide[dfWide.index>=plotYear]
         dfRank = dfRank[dfRank.index>=plotYear]
     myLogger.info(f'End parsing data to DataFrame')

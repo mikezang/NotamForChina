@@ -406,8 +406,8 @@ def main():
     with myNet.getFirefoxDriver(disableImage=True) as driver:
         try:
             date2 = getCTrip(driver)
-            date1 = getHuahuo(driver)
-            launch_date = combineValuesForSameDictKey(date1, date2)
+            # date1 = getHuahuo(driver)
+            launch_date = date2 #combineValuesForSameDictKey(date1, date2)
             printTrip(launch_date)
         except:
             myExcept.printExceptionTrace()

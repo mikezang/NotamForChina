@@ -411,20 +411,23 @@ def printRocketPayloadList(df, rocketPayload=None, startYear=None, endYear=None)
 def buildColumns(row, i, j):
     columns = []
     index = i * 50 + j + 1
+    allNo = row['总数']
+    czNo = row['长征']
+    nczNo = row['其他']
     dateSte = str(row['日期'])
     date = f'{dateSte[:4]}年{dateSte[5:7]}月{dateSte[8:10]}日'
     time = row['时间\n（UTC+8）'][:6]
     location = row['地点']
     spot = row['工位'].split('号')[0]
     location = spot[:2] + '<BR>' + spot[2:] if location == '海上' else location
-    sameLocaionDays = int(row['同地相\n隔天数']) if row['同地相\n隔天数'] else ''
-    sameRocketDays = int(row['同型相\n隔天数']) if row['同型相\n隔天数'] else ''
+    sameLocaionDays = int(row['同地相\n隔日数']) if row['同地相\n隔日数'] else ''
+    sameRocketDays = int(row['同箭相\n隔日数']) if row['同箭相\n隔日数'] else ''
     result = row['结果']
     result = f'{result[:2]}<BR>{result[2:]}' if len(result) > 2 else result
     orbit = row['轨道']
-    if (l := len(orbit)) > 6:
-        l //= 2
-        orbit = f'{orbit[:l]}<BR>{orbit[l:]}'
+    # if (l := len(orbit)) > 6:
+    #     l //= 2
+    #     orbit = f'{orbit[:l]}<BR>{orbit[l:]}'
     rocket = row['火箭']
     xuhao = row['序号']
     remark = row['备注']
@@ -435,6 +438,9 @@ def buildColumns(row, i, j):
     countFullWidth = myDate.lenFullWidth(orbit)
     orbit = orbit + ' ' * (8 - countFullWidth)
     columns.append(f'{index:03d}')
+    columns.append(allNo)
+    columns.append(czNo if czNo else '-')
+    columns.append(nczNo if nczNo else '-')
     columns.append(date)
     columns.append(time)
     columns.append(orbit)
@@ -452,11 +458,11 @@ def createHtmlTable(dfList, title):
     title += f'（截止{myDate.getJapanTime("%Y年%m月%d日")}）'
 
     html = myHtml.buildHtmlBegin(title)
-    headers = ['No', '日期', '北京时间', '轨道', '结果', '发射地<BR>发射船']
+    headers = ['发射<BR>次数', '总<BR>发射<BR>次数', '长征<BR>发射<BR>次数', '其他<BR>发射<BR>次数', '日期', '北京时间', '轨道', '结果', '发射地<BR>发射船']
     headers += ['同地<BR>相隔<BR>日数', '同箭<BR>相隔<BR>日数', '运载火箭', '载荷']
-    textAligns = ['', '', '', 'left', '', '', '', '', 'left', 'left']
-    widths = ['', '', '', '', '', '', '', '', '', '']
-    nowraps = ['nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap', '']
+    textAligns = ['', '', '', '', '', '', 'left', '', '', '', '', 'left', 'left']
+    widths = ['', '', '', '', '', '', '65px', '', '', '', '', '', '']
+    nowraps = ['nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap', '', 'nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap', '']
     html += myHtml.buildTableBegin(title, headers)
     # colorDict = myHtml.getCityColorDict()
 
@@ -484,9 +490,9 @@ def printList(dfList, rocketPayload):
             countFullWidth = myDate.lenFullWidth(rocket + xuhao)
             xuhao = xuhao + ' ' * (17 - countFullWidth)
             location = row['地点']
-            sameLocaionDays = int(row['同地相\n隔天数']) if row['同地相\n隔天数'] else '    '
+            sameLocaionDays = int(row['同地相\n隔日数']) if row['同地相\n隔日数'] else '    '
             sameLocaionDays = str(sameLocaionDays).ljust(4)
-            sameRocketDays = int(row['同型相\n隔天数']) if row['同型相\n隔天数'] else '    '
+            sameRocketDays = int(row['同箭相\n隔日数']) if row['同箭相\n隔日数'] else '    '
             sameRocketDays = str(sameRocketDays).ljust(4)
             result = row['结果']
             payloads = row['载荷']

@@ -535,7 +535,7 @@ def plotBarGraphByTime(cn_font, axLeft, dfList, byMonth=True):
     xTicks1 = [i + 1 - barWidth for i in range(0, len(xTickList))]
     xTicks2 = [i + 1 for i in range(0, len(xTickList))]
     xTicks3 = [i + 1 + barWidth for i in range(0, len(xTickList))]
-    xLabel = '发射月'
+    xLabel = '发射周'
 
     if byMonth:
         xTickLabels = [f'{an2cn(str(int(d)))}月' if d.isdigit() else d for d in nameList[0]]

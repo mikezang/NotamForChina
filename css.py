@@ -272,7 +272,7 @@ def showTime(platform, passTime, tle, bgColor=None):
                     text += f"方位角：{convertAzimuth(azimuth)}"
                     # print(text)
                     html += buildTableCell(loc, date, time, degree, minute, second, azimuth, bgColor)
-            print()
+            # print()
             html += buildTableEnd(tableId)
             tableId += 1
     html += myHtml.buildHtmlEnd()

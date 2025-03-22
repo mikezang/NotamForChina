@@ -5,6 +5,7 @@
 from datetime import datetime, timedelta
 import locale
 import sys
+from time import sleep
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from timeit import timeit
@@ -46,6 +47,7 @@ def getNotamDetail(driver):
         except NoSuchElementException:
             i += 1
             print('...', end='')
+            sleep(1)
             if i > 3:
                 print(f'{NEW_NOTAM_URL} is temporary down, try again later ...')
                 button = None
@@ -54,6 +56,7 @@ def getNotamDetail(driver):
         except:
             i += 1
             print('...', end='')
+            sleep(1)
             if i > 3:
                 break
             pass
@@ -135,7 +138,7 @@ def compareKmlList(kmlFiles):
 ################################################################################################
 def showRunTime(func):
     result = timeit(func, number=1, globals=globals())
-    print(f'\nFinished in {timedelta(seconds=result)}')
+    print(f'Finished in {timedelta(seconds=result)}\n')
 
 ################################################################################################
 if __name__ == "__main__":
