@@ -279,9 +279,10 @@ def createKmlFile(notams, title1='', city1='') -> None:
             coordsList = [myFile.convertDMS2DD(c) for c in coords]
 
             if lastStartDate == '' or myUtils.isNearTime(lastStartDate, startDate, 59):
-                center = getAreaCenter(coordsList)
-                if center not in centerCoords:
-                    centerCoords.append(center)
+                if len(coordsList) > 3:
+                    center = getAreaCenter(coordsList)
+                    if center not in centerCoords:
+                        centerCoords.append(center)
                 if isFirst:
                     launchCity, isFirst = getLaunchCity(city, coordsList, loc)
                                     

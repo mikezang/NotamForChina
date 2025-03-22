@@ -489,7 +489,7 @@ def plotVLineBetweenYearsMonths(ax, xDataList, dx=0.5, yMin=-0.24, yMax=0.8, mus
 
 ################################################################################################
 def getLogList(y):
-    yList1 = [0.5, 1, 10, 30, 90, 150, 200, 250, 300, 400, 500]
+    yList1 = [0.5, 1, 10, 40, 90, 150, 200, 250, 300, 400, 500]
     # yList1 = np.array([0.5, 1, 2, 3, 4, 5, 6, 8, 10, 20, 30, 40, 50, 60, 80, 100, 150, 200, 250, 300, 400, 500])
     yList2 = [800, 1000]
     # yList2 = np.array([600, 700, 800, 900, 1000])
@@ -963,7 +963,7 @@ def convertDataFrame2TimeSeries(df, use_pinyin=False):
                       min(pd.to_datetime(myDate.getJapanDate()), row['着陆日期'])), axis=1)
     df = (df.drop(columns=removeColumns).explode('日期', ignore_index=True)
           .sort_values(by=['日期', '排名']).reset_index(drop=True))
-    df.columns = ['航天员', '排名', '日期']
+    df.columns = ['航天员', '排名', '出舱', '日期']
     return df
 
 ################################################################################################

@@ -49,16 +49,25 @@ def isNewLaunch(oldDate, newDate, hours=2):
 def getNotamDictString(d):
     msg = ''
     lastDate = ''
-    for i, (key, value) in enumerate(d.items()):
+    i = 1
+    j = 0
+    for key, value in d.items():
         items = value.split(';')
-        lastDate = items[0] if i == 0 else lastDate
-        msg += '\n' if isNewLaunch(lastDate, items[0]) else ''
-        msg += f'{i + 1:02}: {items[2]},{key[-8:]},{items[0]},{items[1]};{myDate.getDDMM(items[3])}\n'
+        lastDate = items[0] if not lastDate  else lastDate
+        if isNewLaunch(lastDate, items[0]):
+            i += 1
+            j = 1
+            msg += '\n'
+        else:
+            j += 1
+        msg += f'{i}{chr(j + 64)}: {items[2]},{key[-8:]},{items[0]},{items[1]};{myDate.getDDMM(items[3])}\n'
         lastDate = items[0]
     return msg[:-1]
 
 ################################################################################################
 def printDict(d, withQuotation=False, hasNo=True):
+    i = 1
+    j = 1
     for i, (key, value) in enumerate(d.items()):
         no = f'{i + 1:02} ' if hasNo else ''
         item = f'{no}"{key}": "{value}"' if withQuotation else f'{no}{key}: {value}'

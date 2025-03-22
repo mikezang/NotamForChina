@@ -84,17 +84,18 @@ def buildHtmlBegin(title):
             function saveTableAsImage(tableId) {
                 const table = document.getElementById(tableId)
                 html2canvas(table).then(canvas => {
-                    const date = new Date();
-                    const year = date.getFullYear();
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const hours = String(date.getHours()).padStart(2, '0');
-                    const minutes = String(date.getMinutes()).padStart(2, '0');
-                    const seconds = String(date.getSeconds()).padStart(2, '0');
-                    const localTime = `${year}${month}${day}-${hours}${minutes}${seconds}`;
+                    //const date = new Date();
+                    //const year = date.getFullYear();
+                    //const month = String(date.getMonth() + 1).padStart(2, '0');
+                    //const day = String(date.getDate()).padStart(2, '0');
+                    //const hours = String(date.getHours()).padStart(2, '0');
+                    //const minutes = String(date.getMinutes()).padStart(2, '0');
+                    //const seconds = String(date.getSeconds()).padStart(2, '0');
+                    //const localTime = `${year}${month}${day}-${hours}${minutes}${seconds}`;
                     const link = document.createElement('a');
                     link.href = canvas.toDataURL('image/png');
-                    link.download = `${tableId}-${localTime}.png`;
+                    link.download = `${tableId}.png`;
+                    //link.download = `${tableId}-${localTime}.png`;
                     link.click();
                 });
             }
@@ -233,7 +234,7 @@ def buildTableCell(columns, textAligns, widths, nowraps):
         textAlignStr = f'text-align: {textAlign}' if textAlign else ''
         widthStr = f'width: {width}' if width else ''
         styleStr = f'style="{textAlignStr}; {widthStr};"' if textAlign or width else ''
-        if i == 4 or i == 5:
+        if i == 7 or i == 8:
             classSrc = f'class="{CITY_MAPPING[column[:2] if column[1:2] == '海' else column]}"'
         else:
             classSrc = ''

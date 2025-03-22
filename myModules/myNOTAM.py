@@ -80,7 +80,7 @@ def getNotamArea(contentSection) -> str:
             if radiusList:
                 area += f'+{radiusList[0]}'
         else:
-            area = '|'.join([a for a in area.split('-') if len(a.split('|')) > 3])
+            area = '|'.join([a for a in area.split('-') if len(a.split('|')) > 2])
     return area
 
 ################################################################################################
