@@ -110,7 +110,7 @@ class _BarChartRace(CommonChart):
         default_period_label = {'size': 12}
         if self.orientation == 'h':
             default_period_label['x'] = .95
-            default_period_label['y'] = .15 if self.sort == 'desc' else .85
+            default_period_label['y'] = .25 if self.sort == 'desc' else .75
             default_period_label['ha'] = 'right'
             default_period_label['va'] = 'center'
         else:
