@@ -14,7 +14,7 @@ from os import environ, makedirs, walk, path
 from PIL import Image
 from math import acos, sqrt, degrees, pi, ceil, floor
 from simplekml import Kml
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import io
 
 from myModules import myUtils
@@ -24,30 +24,20 @@ from myModules import myExcel
 from myModules import myKml
 from myModules import myFile
 
-KML_FOLDERS = {
-    '酒泉' : r'notams/maps/01.酒泉',
-    '西昌' : r'notams/maps/02.西昌',
-    '太原' : r'notams/maps/03.太原',
-    '文昌' : r'notams/maps/04.文昌',
-    '海南' : r'notams/maps/05.海南',
-    '海上' : r'notams/maps/10.海上',
-    '黄海' : r'notams/maps/10.海上',
-    '东海' : r'notams/maps/10.海上',
-    '南海' : r'notams/maps/10.海上',
-}
-
 TEMP_FILE_PATH = './temp/'
-NSF_PATH = './notams/maps/nsf/'
+NSF_PATH = './notams/kmls/nsf/'
 KML_PATH = './temp/'
-MAP_SHAPES_FOLDER = './natural_earth_vector'
-MAP_SHAPES_PATH_110m = f'{MAP_SHAPES_FOLDER}/110m_cultural'
+# MAP_SHAPES_FOLDER = './natural_earth_vector'
+# MAP_SHAPES_PATH_110m = f'{MAP_SHAPES_FOLDER}/110m_cultural'
+MAP_SHAPES_FOLDER = './maps'
+MAP_SHAPES_PATH_110m = f'{MAP_SHAPES_FOLDER}'
 COUNTRIES_SHAPE_110m = f'{MAP_SHAPES_PATH_110m}/ne_110m_admin_0_countries.shp'
 MAP_SHAPES_PATH = f'{MAP_SHAPES_FOLDER}/$_cultural'
 MAP_SHAPES_LIST_110m = [
 	f'{MAP_SHAPES_PATH_110m}/ne_110m_admin_0_countries.shp', 
 	f'{MAP_SHAPES_PATH_110m}/ne_110m_admin_0_countries_lakes.shp', 
-	f'{MAP_SHAPES_PATH_110m}/ne_110m_admin_0_boundary_lines_land.shp', 
 	f'{MAP_SHAPES_PATH_110m}/ne_110m_admin_0_countries_lakes.shp', 
+	f'{MAP_SHAPES_PATH_110m}/ne_110m_admin_0_boundary_lines_land.shp', 
 	f'{MAP_SHAPES_PATH_110m}/ne_110m_admin_1_states_provinces_lakes.shp'
 ]
 
@@ -353,8 +343,9 @@ def compareKmls(newFile=None, newKml=None):
         print(f"No Data in {newFile}!")
         return 
 
+    kmlFolder = myFile.readConfigLocations()
     for location in locationList:
-        folder = path.abspath(KML_FOLDERS[location])
+        folder = path.abspath(kmlFolder[location])
         if not path.isdir(folder):
             makedirs(folder, True)
         filename = path.basename(newFile)

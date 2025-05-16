@@ -284,6 +284,14 @@ def openConfig(section=None) -> tuple:
     return readSection
 
 ################################################################################################
+def readConfigLocations():
+    kmlFolders = {}
+    locations = readConfig('Locations')
+    for loc in locations:
+        kmlFolders[loc] = readConfig(loc)[0]
+    return kmlFolders
+
+################################################################################################
 def readConfigLaunchCenters() -> dict:
     firNames = '' #readConfigFirNames().split()
     firLaunchCenters = ''

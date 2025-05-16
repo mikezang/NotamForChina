@@ -1,7 +1,4 @@
 import io
-# import os
-# PySimpleGUI Developer Key
-# os.environ['PySimpleGUI_license'] = 'eJydJFMkaPWINVlobcn0NylzVgHUlKw8ZUSjIu6eIWkRRXlKdCm3VTsMbM3NBQl3cwiKIGsSIMkHxcpXYQ2OVTulcW27VCJnROCDIH6MMMToc6xpM7z1Qi08MPjxYa2AMYirwJiETUGKlcjKZFWY5tzKZkUiRQl7cuG8xWvBeHWL1hl4bin6RSWaZUXCJjztaKWP9UujInjRogxvLSCVJ6OSYBWJ1KlVRcmVlgy1cO3fQJiiO8i9JUN9aYW0tZlyIEinwdigT2mIFWtWZcUqxEh6cx3PQOiEOci5JOa7YJWg5HnaIZikwyipQD2a9HtfcRGbFyuyeRSNIy6GIPiRItsaIXkANB1CcY3XRPvSbGWTVKyDS7UrQ8iRORi2IcxoNVTbg0xENBSSIFsZIVkxRVhjdMGMVqJOcC3JNX11ZgWvQ2iPOMihIDwWNeCY8hxNOyCf8cy3MjDcI60CIqipwZiiR4GZFf0VZUU7Vz43cmGplHy3ZYX8MOiyO0imIKwoNWCG8VxwOkCz8Xy6MoD6Ia1bIwiNwqi0RYWh1whtaRWixrBrZiGlRPyCZQXPNtz9IwjVotiIenmRhHlNbRmtdpyRb3295pn4LWn9pShXb8mLd7AEZK2b1MhgaNWGwmuzYb2Z9RtkINiZwVibSTVEBbB9ZKGERVyQZVXTNjz5IPjyobi6MVT0MI2ALHjFIay0N8i745yuMWzukGuLNvzkEYiDf3QQ=8=M6cfd0f1ce97942ac714563c6eb9fff4e5e17ea366f2ebecb029772015e49bcd7bc099d9c7eba082b5b88e6510e4a82b0e9042ae87198c187d1ff2e9545990ed71bc7b29cab288cfc566d92ac9f7d406d99607ddff6a531dfffcbbe68283f84843ef67b4f4d78ca7bf44e67fae0980da79a54038e2526ad79c873978c868ed6c079da54d6fad6b10e9d0c71a264410a2217bd9e000bdc8660fb523fc5595864f46fb13598bfb86399871dec8fe916a8145a2f74bfa47731c6315455fae07ab6f2155c6df4d682c4cc522336af8c69e8161e9850af6281bdbffa3724c90a6d8da8c945ead1ca0d8ed3729a991264e4e61bd83f19438fe57effa07f4a1841c37ec4578bad12875c77404947b50ea5790d323dc1e9d88f48b6b38a16fada115a6ea902c6d62a61e81cfe1fe67a93e09f73bc86556d194c9b38727f61906d9da320b5dd7da5e713ab4e139fad910dc876d377ba267a3e1f532c505b3e801bea7c388c5ad9bb5bcc184a5e31be3f717a6890a2f01c75c1d054c0dcbd884787fca43fdc58142a0621f8bb71ff693da112ab38c4815e0e81c4cfaa689129539d1ac5d272689949484b0aeb9f189bd3529383823af517c97273a92066d28af58b5603094b773b42bf17fccb557e691ff5d2fcb31649fb1a3d6e08aa582a335967891bd65e92a757968816e21675566f698838096094352b7187366a6856f9cabcf50b6923'
 import random
 import subprocess
 from math import log, sqrt
@@ -294,6 +291,21 @@ def plotTextOnCenterOfBars(ax, bar, okList, fontsize=12, color=None):
             ax.text(x, y, ok, color=textColor, fontsize=fontsize, horizontalalignment='center', verticalalignment='center')
 
 ################################################################################################
+def plotTextInsideBars(cn_font, ax, bar, textList, fontsize=12, gap=0.2, color=None):
+    for i, (rect, text) in enumerate(zip(bar.patches, textList)):
+        barColor = bar[i].get_facecolor()[:3]
+        textColor = 'white' if isDarkColor(barColor) else 'black'
+        x, y = rect.get_xy()
+        w, h = rect.get_width(), rect.get_height()
+        x += w / 2
+        if ax.get_yscale() == 'log':
+            y = sqrt(h / 2) if y == 0 else sqrt(y * (y + h))
+        else:
+            y = y + h / 2 
+        plotTextVertical(cn_font, ax, x, y, gap, text, color=textColor, fontsize=fontsize)
+        # ax.text(x, y, text, color=textColor, fontsize=fontsize, ha='center', va='center')
+
+################################################################################################
 def plotTextOnCenterOfBar(ax, rect, ok, ng, fontsize=10, color='w'):
     # for rect, ok, ng in zip(bar.patches, okList, ngList):
     if ok > 0 and ok != ok + ng:
@@ -323,13 +335,22 @@ def plotXAxis(cn_font, ax, xLabel, xTicks, xTickLabels, minLim, maxLim, fontsize
     return hasGreyLable
 
 ################################################################################################
-def setYAxisLog(cn_font, ax, yTicks):
+def setYAxisLog(cn_font, ax, yTicks, text='发射数'):
     ax.set(yscale='log')
     ax.set_yticks(yTicks)
-    ax.set_ylabel('发射数', fontproperties=cn_font, loc='top')
+    ax.set_ylabel(text, fontproperties=cn_font, loc='top')
     ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%d'))
     ax.set_ylim(0.5, yTicks[-1])
     hideYTicks(ax, yTicks)
+
+################################################################################################
+def setYAxis(cn_font, ax, yTicks, text='发射数'):
+    ax.set_yticks(yTicks)
+    ax.set_ylabel(text, fontproperties=cn_font, loc='top')
+    ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
+    ax.yaxis.set_minor_formatter(mtick.FormatStrFormatter('%.2f'))
+    ax.set_ylim(0, yTicks[-1])
+    hideYTicks(ax, yTicks, False)
 
 ################################################################################################
 def plotYAxis(cn_font, ax, yLabel, yTicks, minLim, maxLim, fontsize=None, copyYAxis=True):
@@ -368,6 +389,15 @@ def plotRocketNumber(cn_font, ax, x, y, gap, label, fontsize, color):
         y1 = y + (count / 2 - i) * gap if i < count / 2 else y - (i - count / 2) * gap
         y1 -= gap / 2
         ax.text(x+1, y1, s=label[i], color=color, ha="center", va="center", fontproperties=cn_font, fontsize=fontsize)
+
+################################################################################################
+def plotTextVertical(cn_font, ax, x, y, gap, label, fontsize, color):
+    count = len(label) 
+    isLog = ax.get_yscale() == 'log'
+    for i in range(count):
+        y0 = gap * 2 * log(count - i + 3, 10) if isLog else gap
+        y1 = y + (count / 2 - i) * y0 - y0 / 4
+        ax.text(x, y1, s=label[i], color=color, ha="center", va="center", fontproperties=cn_font, fontsize=fontsize)
 
 def isDarkColor(rgb):
     return get_luminance(rgb) < 128
@@ -443,11 +473,12 @@ def plotLeftYAxis(cn_font, ax, yLabel, minLim, maxLim, percent=False, fontsize=1
         ax.yaxis.set_major_locator(mtick.MultipleLocator(0.05)) # Set the y-axis tick locator to increment in steps of 5%
 
 ################################################################################################
-def hideYTicks(ax, yTicks):
+def hideYTicks(ax, yTicks, showLess1=True):
     # Hide the tick labels for the other y-ticks
     other_yTicks = [tick for tick in ax.get_yticks() if tick not in yTicks]
     ax.set_yticklabels(['' for tick in other_yTicks], minor=True)
-    ax.set_yticklabels(['' if tick < 1.0 else tick for tick in yTicks])
+    if showLess1:
+        ax.set_yticklabels(['' if tick < 1.0 else tick for tick in yTicks])
 
 ################################################################################################
 def plotRightYAxis(cn_font, ax, yLabel, yTicks, fontsize=14, log=False):
@@ -920,6 +951,55 @@ def parseMonthData(df, columnYear, plotMonth):
     dfResult = df[df[columnYear].apply(lambda x: x.month) == plotMonth]
     return dfResult
 
+def parseMonthMaxData(df, columnYear, columnRocket):
+    df['year'] = df[columnYear].dt.year
+    df['month'] = df[columnYear].dt.month
+
+    # max count per month (latest yeat if tie)
+    maxName = '最多发射数'
+    avgName = '平均发射数'
+    totalName = '总发射数'
+    missingName = '无发射年数'
+    launchName = '有发射年数'
+    dfMonthlyCounts = (
+        df.groupby(['year', 'month'])
+        .size()
+        .reset_index(name=maxName)
+    )
+    dfMaxCounts = dfMonthlyCounts.groupby('month')[maxName].max().reset_index()
+    dfMerged = dfMonthlyCounts.merge(dfMaxCounts, on=['month', maxName])
+    dfResult = (
+        dfMerged.sort_values(by=['month', 'year'], ascending=[True, False])
+        .drop_duplicates('month')
+    )
+
+    # Average count per month since 1970 to now
+    dfAvgMonths = (
+        df.groupby('month')
+        .size()
+        .reset_index(name=totalName)
+    )
+    now = datetime.now()
+    totalMonths = {m: now.year - 1970 + (1 if m <= now.month else 0) for m in range(1, 13)}
+    dfMonths = df.drop_duplicates(subset=['year', 'month']).groupby('month')['year'].count()
+    months = {m: dfMonths.get(m, 0) for m in range(1, 13)}
+    dfMonths = dfMonths.reset_index()
+    dfMonths = dfMonths.rename(columns={'year': launchName})
+    missingMonths = {m: totalMonths[m] - dfMonths.get(m, 0) for m in range(1, 13)}
+    dfMissing = pd.DataFrame.from_dict(missingMonths, orient='index', columns=[missingName]).reset_index()
+    dfMissing = dfMissing.rename(columns={'index': 'month'})
+    dfAvgMonths[avgName] = dfAvgMonths[totalName] / dfAvgMonths['month'].map(months)
+    # dfMissing[missingPercent] = 
+    # Merge all to result df
+    dfResult = dfResult.merge(dfAvgMonths, on='month')[
+        ['year', 'month', maxName, avgName]
+    ]
+    dfResult = dfResult.merge(dfMonths, on='month')[
+        ['year', 'month', maxName, avgName, launchName]
+    ]
+    dfResult[avgName] = dfResult[avgName].map(lambda x: float(f'{x:.1f}'))
+    return dfResult
+
 def parseLocationData(df, columnRocket, columnLocation, columnNotNull, columnYear, startYear=None):
     df = df[~df[columnRocket].str.startswith('远征')]
     if startYear:
@@ -975,8 +1055,7 @@ def convertDataFrame2TWideTaikonaut(dfOld, use_pinyin=False):
     df['日期'] = df['日期'].fillna(today)
     df['count'] = np.where(df.航天员.duplicated(), 1, 0)
     column_order = df['航天员'].unique() # Reorder columns to match the original order
-    dfPivot = df.pivot_table(index='日期', columns='航天员', 
-                             values='count', aggfunc='sum', fill_value=0)[column_order]
+    dfPivot = df.pivot_table(index='日期', columns='航天员', values='count', aggfunc='sum', fill_value=0)[column_order]
     dfPivot.reset_index(inplace=True)
     dfPivot.loc[dfPivot.index[-1], '日期'] = dfPivot['日期'].iloc[-1].replace(hour=23, minute=59, second=59)
     dfPivot = dfPivot.set_index('日期')
@@ -1055,12 +1134,13 @@ def InterpolateGapTime(df):
 
 ################################################################################################
 def parseToDataFrame(dfOld, rocket:str=None, location=None, payload=None, startYear=None, endYear=None, 
-                               columnRocket='火箭', columnLocation='地点', columnPayload='载荷', 
-                               columnYear='日期', columnNotNull='结果', 
-                               headers=None, noAbort=True, mom=False,
-                               onlyFailed=False, isRocket=False, isAfterRetired=None, 
-                               seriesDict=None, isMaiden=False, isFirstLast=False, isLunarNewYear=False, 
-                               plotMonth=None, plotLocation=False, isShenzhou=False, use_pinyin=False):
+            columnRocket='火箭', columnLocation='地点', columnPayload='载荷', 
+            columnYear='日期', columnNotNull='结果', 
+            headers=None, noAbort=True, mom=False,
+            onlyFailed=False, isRocket=False, isAfterRetired=None, 
+            seriesDict=None, isMaiden=False, isFirstLast=False, isLunarNewYear=False, 
+            plotMonth=None, plotLocation=False, isShenzhou=False, use_pinyin=False,
+            isMonthMax=False):
     dfList = []
     
     if onlyFailed:
@@ -1090,6 +1170,9 @@ def parseToDataFrame(dfOld, rocket:str=None, location=None, payload=None, startY
         dfList.append(dfAll)
         dfList.append(dfCZ)
         dfList.append(dfNCZ)
+    elif isMonthMax:
+        dfMonthMax = parseMonthMaxData(df, columnYear, columnRocket)
+        dfList.append(dfMonthMax)
 
     elif startYear:
         if endYear is None:
@@ -1225,13 +1308,17 @@ def calcColsPerLine(newLabels):
 
 def split50perPage(df, count=50):
     dfList = []
-    if len(df) > count:
-        dfList = dict(list(df.groupby(np.arange(len(df)) // count)))
+    if len(df) > abs(count):
+        if count > 0: # Split DataFrame into chunks starting from head/top
+            dfList = dict(list(df.groupby(np.arange(len(df)) // count)))
+        else: # Split DataFrame into chunks starting from tail/bottom
+            dfList = dict(list(df.iloc[::-1].reset_index(drop=True).groupby(np.arange(len(df)) // abs(count))))
+            dfList = {i: g.iloc[::-1].reset_index(drop=True) for i, g in dfList.iems()}
     else:
         dfList.append(df)
     return dfList
 
-def getUnique20Colors(index: int):
+def getUnique20Colors(index: int = 12):
     return plt.cm.tab20(index)
 
 def getUniqueColorList(n: int):
