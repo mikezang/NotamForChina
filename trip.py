@@ -120,8 +120,10 @@ def getCTripList(driver):
             print('\n')
             break
         except:
-            if i == 4:
-                myExcept.printExceptionTrace()
+            if i >= 4:
+                # myExcept.printExceptionTrace()
+                print("Timeout!")
+                break
             else:
                 print('...', end='', flush=True)
                 sleep(3)
@@ -172,9 +174,11 @@ def parseCTripUrls(div1, div2):
     cTripDict = {}
     for pid, link in zip(div1, div2):
         title = link.find_element(By.TAG_NAME, 'h3').text
-        if '观礼' in title:
+        if True or '观礼' in title:
             url = pid.get_attribute("data-pid")
             city = getLaunchCity(title)
+            if not city:
+                continue
             if city not in cTripDict:
                 cTripDict[city] = []
             cTripDict[city].append((title, url))

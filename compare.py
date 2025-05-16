@@ -3,7 +3,7 @@ from os import path
 from timeit import timeit
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import matplotlib.pyplot as plt
 from simplekml import Kml
 from re import finditer, findall
@@ -192,7 +192,7 @@ def createMsaDropZonesKmlFile(oldFile):
         myFile.updateTempFile(notams)
 
 ################################################################################################
-MSA_RADIUS_PATTERN = r'为中心[、，](?:(\d{1,4})(海里|公里|米)为半径|半径(\d{1,4})(海里|公里|米))'
+MSA_RADIUS_PATTERN = r'为中心|圆心[、，](?:(\d{1,4})(海里|公里|千米|米)为半径|半径(\d{1,4})(海里|公里|千米|米))'
 def parseRadius(content):
     radiusMatch = findall(MSA_RADIUS_PATTERN, content)
     for m in radiusMatch:
@@ -203,7 +203,7 @@ def parseRadius(content):
 
 ###############################################################################
 def getRadius(m):
-    myDict = {'海里':1.852, '公里':1, '米':1000}
+    myDict = {'海里':1.852, '公里':1, '千米':1, '米':1000}
     if m[0] and m[1]:
         radius = int(m[0]) / myDict[m[1]]
     elif m[2] and m[3]:

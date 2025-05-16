@@ -192,15 +192,20 @@ def calculatePasses(locDict, startDate=None, hours=720, platform=None):
     return ret, tle
 
 ################################################################################################
+def buildHeader(tle, text1, text3):
+    html = f'<PRE>{text1}\n{tle[1]}\n{tle[2]}\n{text3}</PRE>'
+    return html
+
+################################################################################################
 def buildTableBegin(tableId, loc, text):
     html = ''
     if tableId == 0:
-        html += '<TABLE class=no-border>'
-        html += '<TR><TD rowspan=3>'
+        html += '<TABLE class=no-border>\n'
+        html += '<TR><TD rowspan=3>\n'
     elif tableId == 1:
-        html += '<TD>'
+        html += '<TD>\n'
     elif tableId in [2, 3]:
-        html += '<TR><TD>'
+        html += '<TR><TD>\n'
     html += f'<button onclick=saveTableAsImage("{loc}")>Save Table as {loc}.png</button><BR>\n'
     html += f'<TABLE class=borderOnly><TR><TD>\n'
     html += f'<TABLE class=border id={loc}>\n'
@@ -209,31 +214,23 @@ def buildTableBegin(tableId, loc, text):
     return html
 
 ################################################################################################
+def buildTableCell(loc, date, time, degree, minute, second, azimuth, bgColor=None):
+    strDate = date.replace('年', '').replace('月', '').replace('日', '')
+    html = '<TR style="background-color:orange;">' if loc in bgColor and strDate in bgColor[loc] else '<TR>'
+    html += f'<TD>{date}{time}</TD>'
+    html += f'<TD>{degree:02.0f}°{minute:02.0f}\'{second:02.0f}"</TD>\n'
+    html += f'<TD>{convertAzimuth(azimuth)}</TD></TR>\n'
+    return html
+
+################################################################################################
 def buildTableEnd(tableId):
-    html = "</TABLE>\n"
+    html = "</TABLE></TABLE>\n"
     if tableId == 0:
         html += '</TD>\n'
     elif tableId in [1, 2]:
         html += '</TD></TR>\n'
     else:
         html += '</TD></TR></TABLE></TD></TR></TABLE>\n'
-    return html
-
-################################################################################################
-def buildHeader(tle, text1, text3):
-    html = f'{text1}'
-    html += f'<PRE>{tle[1]}</PRE><PRE>{tle[2]}</PRE>'
-    html += f'{text3}'
-    # html += f'{text4}'
-    return html
-
-################################################################################################
-def buildTableCell(loc, date, time, degree, minute, second, azimuth, bgColor=None):
-    strDate = date.replace('年', '').replace('月', '').replace('日', '')
-    html = '<TR style="background-color:orange;">' if loc in bgColor and strDate in bgColor[loc] else '<TR>'
-    html += f'<TD>{date}{time}</TD>'
-    html += f'<TD>{degree:02.0f}°{minute:02.0f}\'{second:02.0f}"</TD>'
-    html += f'<TD>{convertAzimuth(azimuth)}</TD></TR>\n'
     return html
 
 ################################################################################################
@@ -249,10 +246,8 @@ def showTime(platform, passTime, tle, bgColor=None):
             mean_motion = float(tle[2][52:63])
             period = int(1440 / mean_motion)
             text1 = f"根据最新<A href={CSS_TLE_URL}>{platform}</A>轨道参数TLE数据<BR>"
-            # text2 = f"{tle[1]}\n{tle[2]}<BR>\n"
             text3 = f"{platform}轨道周期约<b>{period}分</b>"
             text4 = f"{platform}<b>{nowChina}</b>位于<b>{int(alt)}</b>公里太空<BR>"
-            # print(f'{text1}{text2}{text3}{text4}')
             html += buildHeader(tle, text1, text3)
         else:
             loc, values = key, passTime[key]
@@ -270,9 +265,7 @@ def showTime(platform, passTime, tle, bgColor=None):
                     time = f'{max_time.hour:02}时{max_time.minute:02}分'
                     text = f"\t{date}{time}，仰角：{degree:02.0f}°{minute:02.0f}'{second:02.0f}\"，"
                     text += f"方位角：{convertAzimuth(azimuth)}"
-                    # print(text)
                     html += buildTableCell(loc, date, time, degree, minute, second, azimuth, bgColor)
-            # print()
             html += buildTableEnd(tableId)
             tableId += 1
     html += myHtml.buildHtmlEnd()
@@ -450,7 +443,7 @@ def checkArgv(cities):
 ################################################################################################
 def createHtmlForElevation(cities):
     startDate = datetime.now(timezone.utc)
-    hours = 2100
+    hours = 24 * 33
     platform, bgColor = checkArgv(cities)#'酒泉': ['2024年10月30日'], '文昌': ['2024年11月11日', '2024年11月15日']}
     passTime, tle = calculatePasses(cities, startDate, hours, platform)
     html = showTime(platform, passTime, tle, bgColor)

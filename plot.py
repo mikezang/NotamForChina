@@ -3,7 +3,7 @@ from sys import argv
 from timeit import timeit
 from datetime import datetime, timedelta
 from openpyxl import load_workbook as loadXLSX
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 from re import findall 
 
 from myModules import myExcel

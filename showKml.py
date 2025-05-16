@@ -1,7 +1,7 @@
 from datetime import timedelta
 from timeit import timeit
 from os import path
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 from myModules import myPlot
 from myModules import myShape
@@ -73,7 +73,7 @@ def getWindow(newButtons, oldButtons):
     sg.theme('Python')
     sg.set_options(text_justification='right')
     newPath = 'c:/users/w802479/downloads' if myFile.isWindows() else '/users/mikezang/downloads'
-    oldPath = './notams/maps'
+    oldPath = './notams/kmls'
     newSubfolders, _ = myFile.listFoldersFiles(newPath)
     oldSubfolders, _ = myFile.listFoldersFiles(oldPath)
     # subfolders, extList = myFile.listFoldersFiles('notams/maps')
@@ -244,7 +244,8 @@ def handleEvents(window, event, values, cn_font, newSelectedFile, oldSelectedFil
                         toogleOldFolders(window, False)
                         location, _ = myFile.getLocation(newSelectedFile)
                         if location:
-                            oldFolder = path.abspath(myShape.KML_FOLDERS[location[0]])
+                            kmlFolders = myFile.readConfigLocations()
+                            oldFolder = path.abspath(kmlFolders[location[0]])
                             updateFolders(window, OLD_FOLDER, oldFolder, OLD_SUBFOLDERS)
                 elif selectedFiles[0][-4:] in '.gif,.png,.jpg,.jpeg,.webp':
                     image = myPlot.getImage(newSelectedFile, size=myExcel.IMAGE_SIZE)

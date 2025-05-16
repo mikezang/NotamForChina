@@ -1,4 +1,5 @@
 from timeit import timeit
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from cn2an import an2cn
@@ -357,7 +358,7 @@ def plotLineGraphByMonthOld(cn_font, ax, dfList, rocketType=''):
     leftYLabel = f'{rocketType}成功率'
 
     xLabel = '发射月'
-    xTickLabels = [f'{an2cn(str(int(d)))}月' if d.isdigit() else d for d in yearList[0]]
+    xTickLabels = [f'{an2cn(int(d))}月' if d.isdigit() else d for d in yearList[0]]
     
     colors = [['bo-', 'mx-'], ['go-', 'rx-']]
     for i, (okRate, okRates) in enumerate(zip(okRateList, okRatesList)):
@@ -400,9 +401,9 @@ def plotLineGraphByTime(cn_font, ax, dfList, byMonth=True):
     leftYLabel = f'成功率'
     xLabel = '发射月'
     if byMonth:
-        xTickLabels = [f'{an2cn(str(int(d)))}月' if d.isdigit() else d for d in yearList[0]]
+        xTickLabels = [f'{an2cn(int(d))}月' if d.isdigit() else d for d in yearList[0]]
     else:
-        xTickLabels = [f'星期{an2cn(str(int(d)))}' if d.isdigit() else d for d in yearList[0]]
+        xTickLabels = [f'星期{an2cn(int(d))}' if d.isdigit() else d for d in yearList[0]]
         xTickLabels[-2] = '星期日'
     xTicks1 = [i + 0.7 for i in range(0, len(xTickList))]
     xTicks2 = [i + 1.0 for i in range(0, len(xTickList))]
@@ -449,7 +450,7 @@ def plotLineGraphByYearMonth(cn_font, ax, dfList, startYear, rocketType='', byYe
         xTickLabels = yearList[0]
     else:
         xLabel = '发射月'
-        xTickLabels = [f'{an2cn(str(int(d[5:])))}月' if d[5:].isdigit() else d for d in yearList[0]]
+        xTickLabels = [f'{an2cn(int(d[5:]))}月' if d[5:].isdigit() else d for d in yearList[0]]
     
     if startYear == None:
         colors = [['bo-', 'mx-'], ['go-', 'rx-']]
@@ -535,12 +536,13 @@ def plotBarGraphByTime(cn_font, axLeft, dfList, byMonth=True):
     xTicks1 = [i + 1 - barWidth for i in range(0, len(xTickList))]
     xTicks2 = [i + 1 for i in range(0, len(xTickList))]
     xTicks3 = [i + 1 + barWidth for i in range(0, len(xTickList))]
-    xLabel = '发射周'
 
     if byMonth:
-        xTickLabels = [f'{an2cn(str(int(d)))}月' if d.isdigit() else d for d in nameList[0]]
+        xLabel = '发射月'
+        xTickLabels = [f'{an2cn(int(d))}月' if d.isdigit() else d for d in nameList[0]]
     else:
-        xTickLabels = [f'星期{an2cn(str(int(d)))}' if d.isdigit() else d for d in nameList[0]]
+        xLabel = '发射周'
+        xTickLabels = [f'星期{an2cn(int(d))}' if d.isdigit() else d for d in nameList[0]]
         xTickLabels = ['星期日' if item == '星期七' else item for item in xTickLabels]
     myPlot.plotXAxis(cn_font, axLeft, xLabel, xTickList, xTickLabels, 0, len(xTickList) + 1, inVerticle=False)
 
@@ -623,15 +625,16 @@ def plotTitleLegendByMonthOld(cn_font, title, rocketType=''):
     plt.title(title, fontproperties=cn_font, fontsize=18)
 
 ################################################################################################
-def plotTitleLegendByTime(cn_font, title):
-    handles = [
-        Line2D([0], [0], linestyle='none', mfc='blue', mec='blue', marker='s', label=f'其他'),
-        Line2D([0], [0], linestyle='none', mfc='green', mec='green', marker='s', label=f'长征'),
-        Line2D([0], [0], linestyle='none', mfc='orange', mec='orange', marker='s', label=f'全部'),
-        Line2D([0], [0], linestyle='none', mfc='red', mec='red', marker='s', label=f'失败'),
-    ]
+def plotTitleLegendByTime(cn_font, title, onlyTitle=False):
+    if not onlyTitle:
+        handles = [
+            Line2D([0], [0], linestyle='none', mfc='blue', mec='blue', marker='s', label=f'其他'),
+            Line2D([0], [0], linestyle='none', mfc='green', mec='green', marker='s', label=f'长征'),
+            Line2D([0], [0], linestyle='none', mfc='orange', mec='orange', marker='s', label=f'全部'),
+            Line2D([0], [0], linestyle='none', mfc='red', mec='red', marker='s', label=f'失败'),
+        ]
 
-    plt.legend(handles=handles, loc='upper center', ncol=4, prop=cn_font)
+        plt.legend(handles=handles, loc='upper center', ncol=4, prop=cn_font)
     plt.title(title, fontproperties=cn_font, fontsize=18)
 
 ################################################################################################
@@ -673,7 +676,7 @@ def plotLineGraphByYearMonthNew(cn_font, ax, dfList, startYear, rocketType=[]):
     leftYLabel = '成功率'
 
     xLabel = '发射月'
-    xTickLabels = [f'{an2cn(str(int(d[5:])))}月' if d[5:].isdigit() else d for d in yearList[0]]
+    xTickLabels = [f'{an2cn(int(d[5:]))}月' if d[5:].isdigit() else d for d in yearList[0]]
 
     # Set y axis
     myPlot.plotLeftYAxis(cn_font, ax, leftYLabel, -0.05, 1.10, True)
@@ -832,6 +835,64 @@ def plotGraphByMonth(cn_font, df, title, startYear=None, rocketList=None):
             myPlot.saveFig(fig, f'{savePath}') 
 
 ################################################################################################
+def plotGraphByMonthMax(cn_font, df, title, rocketList):
+    dfList = myPlot.parseToDataFrame(df, columnYear='日期', columnNotNull='结果', isMonthMax=True)
+
+    if '全部' in rocketList:
+        newTitle = myPlot.getPlotTitle(f'中国全部{title}')
+        savePath = f'./images/{newTitle}.png'
+        fig, axLeft =  myShape.getFigure()
+        plotBarGraphByMonthMax(cn_font, axLeft, dfList)
+        plotTitleLegendByTime(cn_font, newTitle, True)
+        myPlot.showBackend()
+        myPlot.saveFig(fig, f'{savePath}') 
+
+################################################################################################
+def plotBarGraphByMonthMax(cn_font, axLeft, dfList):
+    df = dfList[0]
+    yearList = list(df['year'])
+    monthList = list(df['month'])
+    maxList = list(df['最多发射数'])
+    avgList = list(df['平均发射数'])
+    launchList = list(df['有发射年数'])
+
+     # Set y axis
+    axRight = axLeft.twinx()
+    yAvgTicks = [0, 0.50, 1.00, 1.50, 2.00, 2.50, 3.00, 3.50, avgList[-1] + 0.5]
+    yMaxTicks = [1, 5, 10, maxList[-1] + 2]
+    myPlot.setYAxis(cn_font, axLeft, yAvgTicks, '平均发射数')
+    myPlot.setYAxisLog(cn_font, axRight, yMaxTicks, '最多发射数')
+
+    # Set x axis
+    barWidth = 0.4
+    xTickList = list(range(1, len(yearList) + 1))
+    xMaxTicks = [i + 1 + barWidth / 2 for i in range(0, len(xTickList))]
+    xAvgTicks = [i + 1 - barWidth / 2 for i in range(0, len(xTickList))]
+    xTicks = [i + 1 for i in range(0, len(xTickList))]
+    xLabel = '发射月'
+
+    # xTickLabels = [f'{year}年\n{an2cn(int(month))}月' for year, month in zip(yearList, monthList)]
+    xTickLabels = [f'{an2cn(int(month))}月' for month in monthList]
+    myPlot.plotXAxis(cn_font, axLeft, xLabel, xTickList, xTickLabels, 0, len(xTickList) + 1, inVerticle=False)
+
+    colors = [myPlot.getUnique20Colors(i) for i in range(0, 12)]
+    xYearLabels = [f'{year}年最多' for year in yearList]
+    xAvgLabels = [f'有发射{years}年平均' for years in launchList]
+
+    barAvg = axLeft.bar(xAvgTicks, avgList, color=colors, edgecolor='k', width=barWidth, zorder=1)
+    axLeft.bar_label(barAvg, fontsize=12, label_type='edge')
+    myPlot.plotTextInsideBars(cn_font, axLeft, barAvg, xAvgLabels, fontsize=14)
+
+    barMax = axRight.bar(xMaxTicks, maxList, color=colors, edgecolor='k', width=barWidth, zorder=1)
+    axRight.bar_label(barMax, fontsize=14, label_type='edge')
+    myPlot.plotTextInsideBars(cn_font, axRight, barMax, xYearLabels, fontsize=14)
+
+    x = np.array(xTicks)
+    midpoints = (x[:-1] + x[1:]) / 2
+    for pos in midpoints:
+        axRight.axvline(pos, color='black', linestyle='--')
+
+################################################################################################
 def plotGraphByYearMonth(cn_font, df, title, startYear=None, endYear=None, byYear=True, mom=False, rocketList=[]):
     dfList = myPlot.parseToDataFrame(df, columnYear='日期', columnNotNull='结果', startYear=startYear, endYear=endYear, mom=mom)
     if startYear:
@@ -895,6 +956,7 @@ def plot1(cn_font, df, years=None, seriesList=None):
     title1 = '运载火箭发射年统计'
     title2 = '运载火箭发射月统计'
     title3 = '运载火箭发射周统计'
+    title4 = '运载火箭发射月最多平均统计'
 
     if years:
         for year in years:
@@ -908,8 +970,10 @@ def plot1(cn_font, df, years=None, seriesList=None):
                 endYYMMMM = f'{year}12' if today.year < int(year) else f'{year}{today.strftime("%m")}'
                 plotGraphByYearMonth(cn_font, df, title2, startYYMMMM, endYYMMMM, mom=True, rocketList=seriesList)
     elif seriesList:
+        # TODO: split only recent 30 years
         plotGraphByYearMonth(cn_font, df, title1, rocketList=seriesList)
         plotGraphByMonth(cn_font, df, title2, rocketList=seriesList)
+        plotGraphByMonthMax(cn_font, df, title4, rocketList=seriesList)
         plotGraphByWeek(cn_font, df, title3, rocketList=seriesList)
 
 
