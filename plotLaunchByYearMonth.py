@@ -858,7 +858,7 @@ def plotBarGraphByMonthMax(cn_font, axLeft, dfList):
 
      # Set y axis
     axRight = axLeft.twinx()
-    yAvgTicks = [0, 0.50, 1.00, 1.50, 2.00, 2.50, 3.00, 3.50, avgList[-1] + 0.5]
+    yAvgTicks = [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, avgList[-1] + 1.5]
     yMaxTicks = [1, 5, 10, maxList[-1] + 2]
     myPlot.setYAxis(cn_font, axLeft, yAvgTicks, '平均发射数')
     myPlot.setYAxisLog(cn_font, axRight, yMaxTicks, '最多发射数')

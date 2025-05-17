@@ -192,7 +192,7 @@ def createMsaDropZonesKmlFile(oldFile):
         myFile.updateTempFile(notams)
 
 ################################################################################################
-MSA_RADIUS_PATTERN = r'为中心|圆心[、，](?:(\d{1,4})(海里|公里|千米|米)为半径|半径(\d{1,4})(海里|公里|千米|米))'
+MSA_RADIUS_PATTERN = r'为中心|圆心[、，](?:(\d{1,4})(海里|公里|千米|米)为半径)|(?:半径(\d{1,4})(海里|公里|千米|米))'
 def parseRadius(content):
     radiusMatch = findall(MSA_RADIUS_PATTERN, content)
     for m in radiusMatch:
