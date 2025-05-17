@@ -997,7 +997,7 @@ def parseMonthMaxData(df, columnYear, columnRocket):
     dfResult = dfResult.merge(dfMonths, on='month')[
         ['year', 'month', maxName, avgName, launchName]
     ]
-    dfResult[avgName] = dfResult[avgName].map(lambda x: float(f'{x:.1f}'))
+    dfResult[avgName] = dfResult[avgName].map(lambda x: float(f'{x:.2f}'))
     return dfResult
 
 def parseLocationData(df, columnRocket, columnLocation, columnNotNull, columnYear, startYear=None):
