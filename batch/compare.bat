@@ -1,4 +1,5 @@
 @echo off
 cd \zang\python\RocketLaunch
 
-python compare.py %1
+echo starting compare in background ...
+start /b python compare.py %1 run

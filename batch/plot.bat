@@ -2,4 +2,5 @@
 
 cd \zang\python\RocketLaunch
 
-python plot.py %1
+echo starting plot in background ...
+start /b python plot.py %1 run

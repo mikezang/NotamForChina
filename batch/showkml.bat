@@ -2,5 +2,6 @@
 
 cd \zang\python\rocketlaunch
 
-python showkml.py
+echo starting showkml in background ...
+start /b python showkml.py run
 
