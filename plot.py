@@ -535,10 +535,23 @@ def main():
     df = myPlot.readDataFromSheetNew(EXCEL_FILE, SHEET_LAUNCH)
 
     if len(argv) > 1:
-        rocketsPayloads = argv[1].split('/')
-        plotLaunchByDate.printRocketsPayloadsList(df, rocketsPayloads)
-        myFile.playSound()
-        return
+        if argv[1].lower() == 'allvideos':
+            cn_font = myPlot.init(True)
+            year = myDate.getThisYear()
+            categoriesChecked = ['民营']#, '其他', '长征', '系列', '全部', '在轨航天员']
+            for category in categoriesChecked:
+                if category == '在轨航天员':
+                    plotLaunchBarChartRace.plot3(EXCEL_FILE, SHEET_TAIKO, year)
+                else:
+                    df = myPlot.readDataFromSheetNew(EXCEL_FILE, SHEET_LAUNCH)
+                    plotLaunchBarChartRace.plot2(df, category, year)
+            myFile.playSound()
+            return
+        elif argv[1].lower() != 'run':
+            rocketsPayloads = argv[1].split('/')
+            plotLaunchByDate.printRocketsPayloadsList(df, rocketsPayloads)
+            myFile.playSound()
+            return
     
     myGUI.setScreenDpiAware()
 

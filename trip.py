@@ -26,7 +26,7 @@ SPAN_XPATH = "//span[@class='js_article_create_time album__item-info-item']"
 TEMP_FILE_PATH = './temp/'
 
 DAYS_DIFF = {
-    "早鸟优惠仅3天": 0,
+    "2日" : 1,
     "2天" : 1,
     "3天" : 1,
     "3日" : 1,

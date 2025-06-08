@@ -234,9 +234,8 @@ def buildTableEnd(tableId):
     return html
 
 ################################################################################################
-def showTime(platform, passTime, tle, bgColor=None):
+def showTime(platform, passTime, tle, bgColor=None, minAngle=75):
     platform = platform.replace(' ', '')
-    minAngle = 75
     html = myHtml.buildHtmlBegin(f'{platform}轨道预测')
     tableId = 0
     for i, key in enumerate(passTime):
@@ -443,10 +442,10 @@ def checkArgv(cities):
 ################################################################################################
 def createHtmlForElevation(cities):
     startDate = datetime.now(timezone.utc)
-    hours = 24 * 33
+    hours = 24 * 60
     platform, bgColor = checkArgv(cities)#'酒泉': ['2024年10月30日'], '文昌': ['2024年11月11日', '2024年11月15日']}
     passTime, tle = calculatePasses(cities, startDate, hours, platform)
-    html = showTime(platform, passTime, tle, bgColor)
+    html = showTime(platform, passTime, tle, bgColor, minAngle=60)
     filename = f'{TEMP_FILE_PATH}中国空间站轨道预测.html'
     # filename = f'{TEMP_FILE_PATH}中国空间站轨道预测{myDate.getJapanTimeFilename()}.html'
     myFile.saveTextFile(filename, html)

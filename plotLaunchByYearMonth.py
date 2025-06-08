@@ -880,7 +880,7 @@ def plotBarGraphByMonthMax(cn_font, axLeft, dfList):
     xAvgLabels = [f'有发射{years}年平均' for years in launchList]
 
     barAvg = axLeft.bar(xAvgTicks, avgList, color=colors, edgecolor='k', width=barWidth, zorder=1)
-    axLeft.bar_label(barAvg, fontsize=12, label_type='edge')
+    axLeft.bar_label(barAvg, fmt='%.02f', fontsize=12, label_type='edge')
     myPlot.plotTextInsideBars(cn_font, axLeft, barAvg, xAvgLabels, fontsize=14)
 
     barMax = axRight.bar(xMaxTicks, maxList, color=colors, edgecolor='k', width=barWidth, zorder=1)
