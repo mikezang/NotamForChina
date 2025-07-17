@@ -59,13 +59,18 @@ goto :EOF
 @echo X - Exit
 
 :Input
+for /f %%a in ('wmic os get LocalDateTime ^| find "."') do set datetime=%%a
+set defaultDate=%datetime:~0,8%
+set coverDate=%defaultDate%
+
 set option=
 set/p option=Select :
 if "%option%"=="x" GOTO EOF
 if "%option%"=="X" GOTO EOF
 if "%option%"=="a" call plotAllVideos && GOTO EOF
 if "%option%"=="A" call plotAllVideos && GOTO EOF
-if "%option%"=="0" set/p coverDate=Input Cover Date : && call cover %coverDate% && GOTO Usage
+rem if "%option%"=="0" set /p coverDate=Enter Cover Date [%defaultDate%]: && call cover %coverDate% && GOTO Usage
+if "%option%"=="0" echo 截止日期：%coverDate% && pause && call cover %coverDate% && GOTO Usage
 if "%option%"=="1" call merge mergelist\ListImageThisYear.txt videos\中国运载火箭发射统计（今年）.mp4 && GOTO Usage
 if "%option%"=="2" call merge mergelist\ListImageMonth.txt videos\中国运载火箭发射统计（月别）.mp4 && GOTO Usage
 if "%option%"=="3" call merge mergelist\ListImageLocation.txt videos\中国运载火箭发射统计（地别）.mp4 && GOTO Usage
