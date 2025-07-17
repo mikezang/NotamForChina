@@ -37,7 +37,7 @@ def printNotam(dictData, start=''):
     print(f"NOTAM发射预测{start}\n")
 
 ################################################################################################
-def isNewLaunch(oldDate, newDate, hours=2):
+def isNewLaunch(oldDate, newDate, hours=2.0):
     dt1 = datetime.strptime(oldDate, '%Y/%m/%d %H:%M')
     dt2 = datetime.strptime(newDate, '%Y/%m/%d %H:%M')
     if dt2 - dt1 > timedelta(hours=hours):
@@ -54,7 +54,7 @@ def getNotamDictString(d):
     for key, value in d.items():
         items = value.split(';')
         lastDate = items[0] if not lastDate  else lastDate
-        if isNewLaunch(lastDate, items[0]):
+        if isNewLaunch(lastDate, items[0], 1.5):
             i += 1
             j = 1
             msg += '\n'

@@ -291,7 +291,7 @@ def plotTextOnCenterOfBars(ax, bar, okList, fontsize=12, color=None):
             ax.text(x, y, ok, color=textColor, fontsize=fontsize, horizontalalignment='center', verticalalignment='center')
 
 ################################################################################################
-def plotTextInsideBars(cn_font, ax, bar, textList, fontsize=12, gap=0.2, color=None):
+def plotTextInsideBars(cn_font, ax, bar, textList, fontsize=12, gap=0.1, color=None):
     for i, (rect, text) in enumerate(zip(bar.patches, textList)):
         barColor = bar[i].get_facecolor()[:3]
         textColor = 'white' if isDarkColor(barColor) else 'black'
@@ -395,8 +395,13 @@ def plotTextVertical(cn_font, ax, x, y, gap, label, fontsize, color):
     count = len(label) 
     isLog = ax.get_yscale() == 'log'
     for i in range(count):
-        y0 = gap * 2 * log(count - i + 3, 10) if isLog else gap
-        y1 = y + (count / 2 - i) * y0 - y0 / 4
+        if isLog:
+            yLog = log(y, 10)
+            offsetLog = - (i - (count - 1) / 2) * gap
+            y1 = 10 ** (yLog + offsetLog)
+        else:
+            y0 = gap
+            y1 = y + (count / 2 - i) * y0 - y0 / 4
         ax.text(x, y1, s=label[i], color=color, ha="center", va="center", fontproperties=cn_font, fontsize=fontsize)
 
 def isDarkColor(rgb):
@@ -992,10 +997,10 @@ def parseMonthMaxData(df, columnYear, columnRocket):
     # dfMissing[missingPercent] = 
     # Merge all to result df
     dfResult = dfResult.merge(dfAvgMonths, on='month')[
-        ['year', 'month', maxName, avgName]
+        ['year', 'month', maxName, totalName, avgName]
     ]
     dfResult = dfResult.merge(dfMonths, on='month')[
-        ['year', 'month', maxName, avgName, launchName]
+        ['year', 'month', maxName, totalName, avgName, launchName]
     ]
     dfResult[avgName] = dfResult[avgName].map(lambda x: float(f'{x:.2f}'))
     return dfResult

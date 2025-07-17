@@ -390,7 +390,7 @@ def compareKmls(newFile=None, newKml=None):
                 filename = basename.replace(".kml", ".png")
 
                 if ious:
-                    print(f'{newTitle} IoU {oldTitle}')
+                    print(f'{oldTitle} IoU {newTitle}')
                     for iou in ious:
                         print(f'    {iou}') 
                     myPlot.saveFig(fig, f'{savePath1}/{filename}', False, False)
@@ -537,7 +537,7 @@ def plotPolygonsIntersection(fig, ax, cn_font, newPolys, newTitle, oldPolys=None
     # Calculate NOTAM drop zones Jaccard Similarity Index and plot intersection polygons
     ious = plotIntersection(ax, newPolys, oldPolys)
     # plot title, axis and NOTAM drop zones
-    title = f'{newTitle}\n{oldTitle}'
+    title = f'{oldTitle}\n{newTitle}'
     for ios in ious:
         title += f'\n{ios}'
     return ious, title
@@ -914,7 +914,7 @@ def plotIntersection(ax, newGdf, oldGdf):
                 if isinstance(oldGeom, Polygon):
                     oldIndex += 1
                     oldName = oldGdf.iloc[j]["Name"]
-                    geomName = f'{newName} IoU {oldName}'
+                    geomName = f'{oldName} IoU {newName}'
                     iou = 0.0
 
                     if newGeom.intersects(newGeom):
