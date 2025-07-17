@@ -52,16 +52,16 @@ def create_cover_image(text, fontPath='', fontSize=48, width=864, height=504, ba
 ################################################################################################
 def main():
     if len(argv) > 1:
-        date = argv[1]
+        date = argv[1]    
+        if len(argv[1]) == 8:
+            date = f'{date[:4]}年{date[4:6]}月{date[6:8]}日'
     else:
         date = myDate.getJapanDate('%Y年%m月%d日')
 
-    text = f"截止{date}\n中国运载火箭发射统计"
+    text = f"{date}\n中国运载火箭发射统计"
+    text = f'截止{text}' if not text.startswith('截止') else text
     print(f'Create Cover as below:\n{text}')
     create_cover_image(text, background_color="orange")
-    # else:
-    #     print("Usage:")
-    #     print(f"\tpython {argv[0]} Text")
 
 ################################################################################################
 def showRunTime(func):

@@ -174,7 +174,7 @@ def parseCTripUrls(div1, div2):
     cTripDict = {}
     for pid, link in zip(div1, div2):
         title = link.find_element(By.TAG_NAME, 'h3').text
-        if True or '观礼' in title:
+        if '纯玩私家小团' not in title:
             url = pid.get_attribute("data-pid")
             city = getLaunchCity(title)
             if not city:

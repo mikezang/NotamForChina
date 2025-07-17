@@ -852,22 +852,26 @@ def plotBarGraphByMonthMax(cn_font, axLeft, dfList):
     df = dfList[0]
     yearList = list(df['year'])
     monthList = list(df['month'])
+    totalList = list(df['总发射数'])
     maxList = list(df['最多发射数'])
     avgList = list(df['平均发射数'])
     launchList = list(df['有发射年数'])
 
      # Set y axis
     axRight = axLeft.twinx()
-    yAvgTicks = [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, avgList[-1] + 1.5]
-    yMaxTicks = [1, 5, 10, maxList[-1] + 2]
-    myPlot.setYAxis(cn_font, axLeft, yAvgTicks, '平均发射数')
-    myPlot.setYAxisLog(cn_font, axRight, yMaxTicks, '最多发射数')
+    axLeft.get_yaxis().set_visible(False)
+    yTotalTicks = [1, 1.5, 2.0, 2.5, 3.0, 3.5, 5, 10, 50, 100, totalList[-1] + 30]
+    myPlot.setYAxisLog(cn_font, axRight, yTotalTicks, '发射数')
+    # yAvgTicks = [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, avgList[-1] + 1.5]
+    # yMaxTicks = [1, 5, 10, maxList[-1] + 2]
+    # myPlot.setYAxis(cn_font, axLeft, yAvgTicks, '平均发射数')
 
     # Set x axis
-    barWidth = 0.4
+    barWidth = 0.3
     xTickList = list(range(1, len(yearList) + 1))
-    xMaxTicks = [i + 1 + barWidth / 2 for i in range(0, len(xTickList))]
-    xAvgTicks = [i + 1 - barWidth / 2 for i in range(0, len(xTickList))]
+    xMaxTicks = [i + 1 + barWidth for i in range(0, len(xTickList))]
+    xTotalTicks = [i + 1 for i in range(0, len(xTickList))]
+    xAvgTicks = [i + 1 - barWidth for i in range(0, len(xTickList))]
     xTicks = [i + 1 for i in range(0, len(xTickList))]
     xLabel = '发射月'
 
@@ -876,16 +880,21 @@ def plotBarGraphByMonthMax(cn_font, axLeft, dfList):
     myPlot.plotXAxis(cn_font, axLeft, xLabel, xTickList, xTickLabels, 0, len(xTickList) + 1, inVerticle=False)
 
     colors = [myPlot.getUnique20Colors(i) for i in range(0, 12)]
-    xYearLabels = [f'{year}年最多' for year in yearList]
     xAvgLabels = [f'有发射{years}年平均' for years in launchList]
+    xTotalLabels = [f'有发射{years}年总数' for years in launchList]
+    xYearLabels = [f'{year}年最多' for year in yearList]
 
-    barAvg = axLeft.bar(xAvgTicks, avgList, color=colors, edgecolor='k', width=barWidth, zorder=1)
-    axLeft.bar_label(barAvg, fmt='%.02f', fontsize=12, label_type='edge')
-    myPlot.plotTextInsideBars(cn_font, axLeft, barAvg, xAvgLabels, fontsize=14)
+    barAvg = axRight.bar(xAvgTicks, avgList, color=colors, edgecolor='k', width=barWidth, zorder=1)
+    axRight.bar_label(barAvg, fmt='%.01f', fontsize=10, label_type='edge')
+    myPlot.plotTextInsideBars(cn_font, axRight, barAvg, xAvgLabels, fontsize=12, gap=0.06)
+
+    barTotal = axRight.bar(xTotalTicks, totalList, color=colors, edgecolor='k', width=barWidth, zorder=1)
+    axRight.bar_label(barTotal, fontsize=12, label_type='edge')
+    myPlot.plotTextInsideBars(cn_font, axRight, barTotal, xTotalLabels, fontsize=12)
 
     barMax = axRight.bar(xMaxTicks, maxList, color=colors, edgecolor='k', width=barWidth, zorder=1)
-    axRight.bar_label(barMax, fontsize=14, label_type='edge')
-    myPlot.plotTextInsideBars(cn_font, axRight, barMax, xYearLabels, fontsize=14)
+    axRight.bar_label(barMax, fontsize=12, label_type='edge')
+    myPlot.plotTextInsideBars(cn_font, axRight, barMax, xYearLabels, fontsize=12)
 
     x = np.array(xTicks)
     midpoints = (x[:-1] + x[1:]) / 2
