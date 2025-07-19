@@ -144,11 +144,11 @@ def findConvertLatitudeLongitude(latlon):
         newLatLon2 = f"{groupDict['latDir']}"
         newLatLon2 += f"{groupDict['latDeg']}°"
         newLatLon2 += f"{groupDict['latMin']}'"
-        newLatLon2 += f"{groupDict['latSec']}\"" if groupDict['latSec'] != "" else ""
+        newLatLon2 += f"{groupDict['latSec'].partition('.')[0]}\"" if groupDict['latSec'] != "" else ""
         newLatLon2 += ","
         newLatLon2 += f"{groupDict['lonDir']}"
         newLatLon2 += f"{groupDict['lonDeg']}°"
         newLatLon2 += f"{groupDict['lonMin']}'"
-        newLatLon2 += f"{groupDict['lonSec']}\"" if groupDict['lonSec'] != "" else ""
+        newLatLon2 += f"{groupDict['lonSec'].partition('.')[0]}\"" if groupDict['lonSec'] != "" else ""
     return newLatLon2
 
