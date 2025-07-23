@@ -976,7 +976,7 @@ def lineStringToPointGdf(lineGdf):
     return pointGdf
 
 ###############################################################################
-def calculateAngle(point1, point2, point3):
+def calculateAngle(point1, point3, point2):
     # angle = angle between line from point1 to point2 then to point3
     # a = length from point1 to point2
     #   = sqrt((lon1 - lon2) * (lon1 - lon2) + (lat1 - lat2) * (lat1 - lat2))
