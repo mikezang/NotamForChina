@@ -225,7 +225,7 @@ def updateKmlFile(kml: Kml, title: str, filePath='', notams=None):
                 #     myFile.updateTempFile(notams)
             else:
                 filename = ''
-                print(f'Not update to file "{filePath}{title}.kml"\n')
+                print(f'Keep to file "{filePath}{title}.kml"\n')
     except FileNotFoundError:
         saveKmlFile(kml, title, filePath)
         # if notams:
@@ -1050,13 +1050,10 @@ def _getCity(cities, coordsList):
 
 ###############################################################################
 def getLaunchCity(cities, coordsList, loc):
-    if len(cities) > 2:
-        if len(coordsList) == 1: # launch spot
-            launchCity = _getCity(cities, coordsList)
-        elif len(coordsList) > 3: # drop zone
-            launchCity, launchAngle = _getLaunchCities(loc, cities, coordsList)
-    else:
-        launchCity = cities
+    if len(coordsList) == 1: # launch spot
+        launchCity = _getCity(cities, coordsList)
+    elif len(coordsList) > 3: # drop zone
+        launchCity, launchAngle = _getLaunchCities(loc, cities, coordsList)
     isFirst = False if len(coordsList) > 3 else True
     return launchCity, isFirst
 
