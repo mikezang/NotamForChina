@@ -1052,8 +1052,10 @@ def _getCity(cities, coordsList):
 def getLaunchCity(cities, coordsList, loc):
     if len(coordsList) == 1: # launch spot
         launchCity = _getCity(cities, coordsList)
-    elif len(coordsList) > 3: # drop zone
+    elif len(coordsList) >= 3: # drop zone
         launchCity, launchAngle = _getLaunchCities(loc, cities, coordsList)
+    else:
+        launchCity = cities
     isFirst = False if len(coordsList) > 3 else True
     return launchCity, isFirst
 
