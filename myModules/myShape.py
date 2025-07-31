@@ -268,7 +268,7 @@ def createKmlFile(notams, title1='', city1='') -> None:
                 radius = [0, 10]
             coordsList = [myFile.convertDMS2DD(c) for c in coords]
 
-            if lastStartDate == '' or myUtils.isNearTime(lastStartDate, startDate, 59):
+            if lastStartDate == '' or myUtils.isNearTime(lastStartDate, startDate, 90):
                 if len(coordsList) > 3:
                     center = getAreaCenter(coordsList)
                     if center not in centerCoords:
@@ -976,7 +976,7 @@ def lineStringToPointGdf(lineGdf):
     return pointGdf
 
 ###############################################################################
-def calculateAngle(point1, point3, point2):
+def calculateAngle(point1, point2, point3):
     # angle = angle between line from point1 to point2 then to point3
     # a = length from point1 to point2
     #   = sqrt((lon1 - lon2) * (lon1 - lon2) + (lat1 - lat2) * (lat1 - lat2))

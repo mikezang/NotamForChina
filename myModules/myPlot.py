@@ -291,19 +291,39 @@ def plotTextOnCenterOfBars(ax, bar, okList, fontsize=12, color=None):
             ax.text(x, y, ok, color=textColor, fontsize=fontsize, horizontalalignment='center', verticalalignment='center')
 
 ################################################################################################
-def plotTextInsideBars(cn_font, ax, bar, textList, fontsize=12, gap=0.1, color=None):
+def plotTextInsideBars(cn_font, ax, bar, textList, fontsize=12, gap=0.1, color=None, vAlign='top'):
     for i, (rect, text) in enumerate(zip(bar.patches, textList)):
         barColor = bar[i].get_facecolor()[:3]
         textColor = 'white' if isDarkColor(barColor) else 'black'
         x, y = rect.get_xy()
         w, h = rect.get_width(), rect.get_height()
-        x += w / 2
-        if ax.get_yscale() == 'log':
-            y = sqrt(h / 2) if y == 0 else sqrt(y * (y + h))
+        plotTextVertical(cn_font, ax, x, y, w, h, gap, text, color=textColor, fontsize=fontsize, vAlign=vAlign)
+
+################################################################################################
+def plotTextVertical(cn_font, ax, x, y, w, h, gap, label, fontsize, color, vAlign='top'):
+    count = len(label) 
+    isLog = ax.get_yscale() == 'log'
+    x0 = x + w / 2
+    if vAlign == 'center':
+        y0 = y + h / 2 
+    else:
+        y0 = y + h
+
+    for i in range(count):
+        if vAlign == 'center':
+            if isLog:
+                yLog = log(y0, 10)
+                offsetLog = - (i - (count - 1) / 2) * gap
+                y1 = 10 ** (yLog + offsetLog)
+            else:
+                y1 = y0 + (count / 2 - i) * gap - gap / 4
         else:
-            y = y + h / 2 
-        plotTextVertical(cn_font, ax, x, y, gap, text, color=textColor, fontsize=fontsize)
-        # ax.text(x, y, text, color=textColor, fontsize=fontsize, ha='center', va='center')
+            if isLog:
+                yLog = log(y0, 10)
+                y1 = 10 ** (yLog - (i + 1) * gap)
+            else:
+                y1 = y0 - i * gap
+        ax.text(x0, y1, s=label[i], color=color, ha="center", va="center", fontproperties=cn_font, fontsize=fontsize)
 
 ################################################################################################
 def plotTextOnCenterOfBar(ax, rect, ok, ng, fontsize=10, color='w'):
@@ -389,20 +409,6 @@ def plotRocketNumber(cn_font, ax, x, y, gap, label, fontsize, color):
         y1 = y + (count / 2 - i) * gap if i < count / 2 else y - (i - count / 2) * gap
         y1 -= gap / 2
         ax.text(x+1, y1, s=label[i], color=color, ha="center", va="center", fontproperties=cn_font, fontsize=fontsize)
-
-################################################################################################
-def plotTextVertical(cn_font, ax, x, y, gap, label, fontsize, color):
-    count = len(label) 
-    isLog = ax.get_yscale() == 'log'
-    for i in range(count):
-        if isLog:
-            yLog = log(y, 10)
-            offsetLog = - (i - (count - 1) / 2) * gap
-            y1 = 10 ** (yLog + offsetLog)
-        else:
-            y0 = gap
-            y1 = y + (count / 2 - i) * y0 - y0 / 4
-        ax.text(x, y1, s=label[i], color=color, ha="center", va="center", fontproperties=cn_font, fontsize=fontsize)
 
 def isDarkColor(rgb):
     return get_luminance(rgb) < 128
@@ -764,7 +770,7 @@ def readUpperStageDict(df):
     return dictUpperStages, dfLastLaunch
 
 ################################################################################################
-def getUpperStageDict(dfList, columnRocket='火箭', columnNumber='序号', columnRemark='备注'):
+def getUpperStageDict(dfList, columnRocket='火箭', columnNumber='遥号', columnRemark='备注'):
     # Constructing the dictionary
     result_dict = {}
     for df in dfList:
@@ -780,7 +786,7 @@ def getLastLaunch(df, columnResult):
     # Case 1: Get the Last Row
     lastRow = df[df[columnResult] != ''].iloc[-1]
 
-    # # Case 2: Get the Last Two Rows (checking if 序号 is null)
+    # # Case 2: Get the Last Two Rows (checking if 遥号 is null)
     # if pd.isnull(last_row[columnResult]):
     #     last_rows = df.iloc[-2:]
     #     # print('\nCase 2 - Last Two Rows:')
@@ -859,7 +865,7 @@ def parseLunarNewYear(df, columnYear, columnRocket, columnLocation, columnNotNul
         columnYear: lunarNewYearDates,
         columnLocation: '中国',
         columnNotNull: '成功',
-        '序号': '',
+        '遥号': '',
         '载荷': '',
     })
     dfCopy = pd.concat([df, dfLunarNewYears]).sort_values(columnYear).reset_index()
