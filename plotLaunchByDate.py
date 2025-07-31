@@ -60,7 +60,7 @@ def plotBarGraphByDate(cn_font, ax, df, colorDict=None, fontsize=12, upperStages
         # Plot 载荷 text inside bar
         myPlot.plotPayloadInsideBar(cn_font, ax, yDataList, rocketList, payloadList, colorDict, fontsize, payload)
     else:
-        # Plot 火箭序号 text inside bar
+        # Plot 火箭遥号 text inside bar
         myPlot.plotRocketNumberInsideBar(cn_font, ax, yDataList, xuhaoList, rocketList, upperList, colorDict, fontsize, upperStages, spotList, title=title)
 
     # Plot year on top of bar when startYear is different from endYear
@@ -395,7 +395,7 @@ def printRocketPayloadList(df, rocketPayload=None, startYear=None, endYear=None)
         print(f'{rocketPayload} not found!\n')
     else:
         if len(dfRocketList[0]) > 0:
-            printList(dfRocketList, rocketPayload)
+            printList(dfRocketList, rocketPayload, True)
             if rocketPayload:
                 title = f'{rocketPayload}运载火箭发射历史'
             else:
@@ -429,7 +429,7 @@ def buildColumns(row, i, j):
     #     l //= 2
     #     orbit = f'{orbit[:l]}<BR>{orbit[l:]}'
     rocket = row['火箭']
-    xuhao = row['序号']
+    xuhao = row['遥号']
     remark = row['备注']
     xuhao = f'{xuhao}<BR>{remark}' if hasUpperStage(remark) else xuhao
     countFullWidth = myDate.lenFullWidth(rocket + xuhao)
@@ -475,16 +475,19 @@ def createHtmlTable(dfList, title):
     return html
 
 ################################################################################################
-def printList(dfList, rocketPayload):
+def printList(dfList, rocketPayload, singleRocket=False):
+    yaoMax = int(myFile.readConfig(['最大遥号'])[0])
+    yaoList = [i for i in range(1, yaoMax, 1)]
+    yaoMax = 1
     dfList = [dfList[key] for key in sorted(dfList.keys())] if isinstance(dfList, dict) else dfList
-    print(f'{"*" * 50} Start of {rocketPayload} {"*" * 50}')
+    print(f'\n{"*" * 50} Start of {rocketPayload} {"*" * 50}')
     for i, df in enumerate(dfList):
         for j, (_, row) in enumerate(df.iterrows()):
             index = i * 50 + j + 1
             date = str(row['日期'])[:10]
             time = row['时间\n（UTC+8）'][:6].replace('时',':').replace('分','')
             rocket = row['火箭']
-            xuhao = row['序号']
+            xuhao = row['遥号']
             remark = row['备注']
             xuhao = f'{xuhao}/{remark}' if hasUpperStage(remark) else xuhao
             countFullWidth = myDate.lenFullWidth(rocket + xuhao)
@@ -500,7 +503,22 @@ def printList(dfList, rocketPayload):
             countFullWidth = myDate.lenFullWidth(orbit)
             orbit = orbit + ' ' * (8 - countFullWidth)
             print(f'{index:03d}: {date} {time} {result} {location} {sameLocaionDays} {sameRocketDays} {orbit} {rocket}{xuhao} {payloads}')
+
+            if singleRocket and rocketPayload and xuhao[0] == '遥':
+                yaoHao = xuhao[1:].partition('/')[0]
+                if int(yaoHao) in yaoList:
+                    yaoList.remove(int(yaoHao))
+                yaoMax = int(yaoHao) if int(yaoHao) > yaoMax else yaoMax
     print(f'{"*" * 51} End of {rocketPayload} {"*" * 51}\n')
+
+    if singleRocket and rocketPayload:
+        if rocketPayload == '快舟一号甲':
+            yaoMax = 33 if 33 > yaoMax else yaoMax
+            yaoList.remove(33)
+        yaoList = [i for i in yaoList if not (yaoMax < i <= 200)]
+        yaoList.append(int(yaoMax + 1))
+        print(f'{rocketPayload}最大使用遥号： {yaoMax}')
+        print(f'{rocketPayload}尚未使用遥号： {yaoList}\n')
 
 ###############################################################################
 def parseYears(rocketPayload):

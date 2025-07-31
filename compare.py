@@ -179,8 +179,11 @@ def createMsaDropZonesKmlFile(oldFile):
                 coordsList = [myFile.convertDMS2DD(c) for c in coords]
                 if 'SD' in number:
                     color = myFile.readConfig('海上')[1]
+                    p1 = myFile.readConfig('海阳')[2].split('+')
                 elif 'HN'in number or 'GD' in number:
                     color = myFile.readConfig('文昌')[1]
+                    p1 = myFile.readConfig('海南')[2].split('+')
+
                 if len(coordsList) == 1:
                     radius = parseRadius(content)
                     if radius > 0:
@@ -188,7 +191,9 @@ def createMsaDropZonesKmlFile(oldFile):
                         # color = myFile.readConfig('海上')[1]
                         myShape.drawCircle(kml, coordsList, f'{location}/{number}', color=color, radius=radius)
                 else:
-                    myShape.drawPolygon(kml, coordsList, f'{location}/{number}', )
+                    myShape.drawPolygon(kml, coordsList, f'{location}/{number}', color=color)
+                    p2 = myShape.getAreaCenter(coordsList)
+                    myShape.drawLine(kml, [p1, p2])
                 notams = myNOTAM.getNoatmDict(notams, number, startDate, endDate, location, area)
                 lastStart = startDate
                 lastEnd = endDate
