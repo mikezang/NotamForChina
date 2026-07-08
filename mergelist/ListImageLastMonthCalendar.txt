@@ -1,0 +1,10 @@
+#countdown=5
+#fps=10
+#width=1678
+#height=1190
+#fontsize=48
+#keepFilename=True
+#mergeFile=False
+#copyFile=True
+calendar/202606.png
+calendar/202607.png

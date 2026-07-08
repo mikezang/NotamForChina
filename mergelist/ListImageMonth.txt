@@ -1,14 +1,17 @@
 #slide: left|right|None, default: None
 #slide=left
 #countdown: seconds|0, default: 0 no countdown
-#countdown=10
+#countdown=5
 images/系列别发射日统计/中国运载火箭01月发射日统计.png
 images/系列别发射日统计/中国运载火箭02月发射日统计.png
-images/系列别发射日统计/中国运载火箭03月发射日统计.png
-images/系列别发射日统计/中国运载火箭04月发射日统计.png
+images/系列别发射日统计/中国运载火箭03月发射日统计1.png
+images/系列别发射日统计/中国运载火箭03月发射日统计2.png
+images/系列别发射日统计/中国运载火箭04月发射日统计1.png
+images/系列别发射日统计/中国运载火箭04月发射日统计2.png
 images/系列别发射日统计/中国运载火箭05月发射日统计1.png
 images/系列别发射日统计/中国运载火箭05月发射日统计2.png
-images/系列别发射日统计/中国运载火箭06月发射日统计.png
+images/系列别发射日统计/中国运载火箭06月发射日统计1.png
+images/系列别发射日统计/中国运载火箭06月发射日统计2.png
 images/系列别发射日统计/中国运载火箭07月发射日统计1.png
 images/系列别发射日统计/中国运载火箭07月发射日统计2.png
 images/系列别发射日统计/中国运载火箭08月发射日统计1.png
@@ -21,6 +24,7 @@ images/系列别发射日统计/中国运载火箭11月发射日统计1.png
 images/系列别发射日统计/中国运载火箭11月发射日统计2.png
 images/系列别发射日统计/中国运载火箭12月发射日统计1.png
 images/系列别发射日统计/中国运载火箭12月发射日统计2.png
+images/系列别发射日统计/中国运载火箭12月发射日统计3.png
 images/中国全部运载火箭发射月最多平均统计.png
 images/中国全部运载火箭发射月统计.png
 images/中国全部运载火箭发射周统计.png
