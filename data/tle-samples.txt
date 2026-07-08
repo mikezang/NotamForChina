@@ -1,0 +1,58 @@
+# Line 1
+# Field	Columns	Content	Example
+# 01	01		Line number	1
+# 02	03–07	Satellite catalog number	48274
+# 03	08		Classification (U: unclassified, C: classified, S: secret) [12]	U
+# 04	10–11	International Designator (last two digits of launch year)	21
+# 05	12–14	International Designator (launch number of the year)	035
+# 06	15–17	International Designator (piece of the launch)	A
+# 07	19–20	Epoch year (last two digits of year)	23
+# 08	21–32	Epoch (day of the year and fractional portion of the day)	233.00000000
+# 09	34–43	First derivative of mean motion; the ballistic coefficient [13]	 .00028440
+# 10	45–52	Second derivative of mean motion (decimal point assumed) [13]	00000-0
+# 11	54–61	B*, the drag term, or radiation pressure coefficient (decimal point assumed) [13]	31863-3
+# 12	63–63	Ephemeris type (always zero; only used in undistributed TLE data) [14]	0
+# 13	65–68	Element set number. Incremented when a new TLE is generated for this object.[13]	999
+# 14	69		Checksum (modulo 10)	7
+
+# Line 2
+# Field	Columns	Content	Example
+# 01	01		Line number	2
+# 02	03–07	Satellite Catalog number	48274
+# 03	09–16	Inclination (degrees)	41.4735
+# 04	18–25	Right ascension of the ascending node (degrees)	121.9147
+# 05	27–33	Eccentricity (decimal point assumed)	0009816
+# 06	35–42	Argument of perigee (degrees)	203.0544
+# 07	44–51	Mean anomaly (degrees)	77.2882
+# 08	53–63	Mean motion (revolutions per day)	15.60955095
+# 09	64–68	Revolution number at epoch (revolutions)	13196
+# 10	69		Checksum (modulo 10)	7
+
+20230821
+          1         2         3
+0123456789012345678901234567890
+1 48274U 21035A   23233.00000000  .00028440  00000-0  31863-3 0  9991
+2 48274  41.4735 121.9147 0009816 203.0544  77.2882 15.60955095131967
+
+20230823
+1 48274U 21035A   23235.00000000  .00026913  00000-0  31615-3 0  9991
+2 48274  41.4737 109.7400 0010191 216.7096 157.5884 15.61068452132289
+
+20230825
+1 48274U 21035A   23237.00000000  .00028821  00000-0  33709-3 0  9999
+2 48274  41.4741  97.5638 0010507 230.0483 238.9974 15.61174576132594
+
+20230828
+1 48274U 21035A   23240.00000000  .00028813  00000-0  32704-3 0  9998
+2 48274  41.4741  79.2958 0010799 249.7000 182.9483 15.61344497133068
+
+20230830
+1 48274U 21035A   23242.00000000  .00028274  00000-0  17226-3 0  9993
+2 48274  41.4741  67.1136 0010859 262.5415 266.8720 15.61470553133375
+
+
+
+
+
+1 48274U 21035A 2460599.50000000 0.00026913  00000-0  31615-3 0  9999
+2 48274  41.4737 109.7400 0010191 216.7096 1.6065 15.60909473 00000
