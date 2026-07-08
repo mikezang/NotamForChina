@@ -1,0 +1,26 @@
+curl 'https://m.ctrip.com/restapi/soa2/12433/batchPriceCalendar?_fxpcqlniredt=09031051218548117739&x-traceID=09031051218548117739-1782450950373-2845284' \
+  -H 'accept: */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9' \
+  -H 'channelid: 116' \
+  -H 'content-type: application/json' \
+  -b 'GUID=09031051218548117739; UBT_VID=1782450548114.b218GJVCG78V; nfes_isSupportWebP=1; _resDomain=https%3A%2F%2Fak-s-cw.tripcdn.com; w_lid=016a3e098799d114d6f7; _RGUID=f049d8c0-07a7-4133-94f5-3bc1b99ead51; w_tuid=I32OqLLy5OzSTvLRVPCcbZXhU25aiXY7E2qW6USIBeWsGniMW38aM+rGK0yQ9o3kys65OQMz/KKYk4ZMH/Uzuy1GKiOLXuaFxrE4HMk4ZsHfU+sJ8mx/Vuhe+QdOzpINYF76VLtO9ioF9HO8VaPxQT1rX9kjmvFyJFP51fMBp1z/0tditqLKI66rgSbBUj6fvQ==:1_1_1_1.u8QZC/lLjUJ2+xo1pCigxPtg4hEqCGQNb39Nt2v2r08=; _pd=%7B%22_o%22%3A33%2C%22s%22%3A202%2C%22_s%22%3A1%7D; _bfa=1.1782450548114.b218GJVCG78V.1.1782450639526.1782450942583.1.4.600001565' \
+  -H 'cookieorigin: https://m.ctrip.com' \
+  -H 'origin: https://m.ctrip.com' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://m.ctrip.com/webapp/xtour/detail?productid=33466809&isRedirect=tour_h5' \
+  -H 'sec-ch-ua: "Google Chrome";v="149", "Chromium";v="149", "Not)A;Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "macOS"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36' \
+  -H $'w-payload-source: 1.0.9@102\u0021rVhS6l90GLRbKSk2OE4n+6t2KPNP96GSKraPKSFVOlVRKlbL9EV/KSAbOrK2+ET5+rApbbbpOSknOEq5+rq5KST2bEVbKtb5+rbSKrb/Kr4p+EqL+EApOSTS+tbpOSknOEq5OrtRKrALQP4nKrdBma9ENSTRFkb=' \
+  -H 'x-ctx-locale: zh-CN' \
+  -H 'x-ctx-ubt-pageid: 600001565' \
+  -H 'x-ctx-ubt-pvid: 4' \
+  -H 'x-ctx-ubt-sid: 1' \
+  -H 'x-ctx-ubt-vid: 1782450548114.b218GJVCG78V' \
+  -H 'x-ctx-wclient-req: 6b07a10aa48f570c5e6a0a19881ef594' \
+  -H 'x-vac-platform: h5' \
+  --data-raw '{"productTuples":[{"productId":33466809,"departureCityId":44}],"verifyBeginDate":"2026-06-27","days":100,"controlParams":{"needQueryTourGroup":false,"needPreferentialPriceDetails":true,"needDailyMinPrices":false,"needVipPrice":true,"needPromotionSummaryList":true},"MarketingInfo":{"AllianceId":0,"SId":0},"Channel":116,"ChannelId":116,"DistributionChannelId":116,"Version":"857006","head":{"cid":"09031051218548117739","ctok":"","cver":"1.0","lang":"01","sid":"8888","syscode":"09","auth":"","xsid":"","extension":[]}}'
