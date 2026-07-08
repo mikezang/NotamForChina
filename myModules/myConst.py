@@ -81,42 +81,22 @@ PRINT_NSF_LENGTH = 120
 TIMEZONE_SHANGHAI = 'Asia/Shanghai'
 TIMEZONE_TOKYO = 'Asia/Tokyo'
 
-#N1234E12345/N123456E1234567/S1234E12345/S123456E1234567
-PATTERN1 = r'([NS]\d{4,6}[EW]\d{5,7})'
-#1234N12345E/123456N1234567E/1234S12345E/123456S1234567E
-#12.34N123.45E/1234.56N12345.67E/12.34S123.45E/1234.56S12345.67E
-PATTERN3 = r'(\d{4,6}\.?\d{0,2}[NS] ?\d{5,7}\.?\d{0,2}[EW])'
-#123456.1S1234567.1E/123456.1S123456.1E/123800.00N0920000.00E     
-PATTERN5 = r'(\d{4,6}\.\d{1,2}[NS]\d{4,7}\.\d{1,2}[EW])'
-#0104N/14436E   
-PATTERN6 = r'(\d{4,6}[NS]\/\d{5,7}[EW])'
-#37-53-79N120-18-58E/37-53.7N120-18.5E/13°33′46″N，117°57′26″E
-PATTERN7 = r'(\d{2}[°-]\d{2}[′.-]?\d{0,3}″?[NS][ \/]?\d{2,3}[°-]\d{2}[′.-]?\d{0,3}″?[EW])'
-
-NEW_PATTERN1  = r'(?P<latDir>[NS])(?P<latDeg>\d{2})(?P<latMin>\d{2})(?P<latSec>\d{0,2})'
-NEW_PATTERN1 += r'(?P<lonDir>[EW])(?P<lonDeg>\d{2,3})(?P<lonMin>\d{2})(?P<lonSec>\d{0,2})'
-NEW_PATTERN2  = r'(?P<latDeg>\d{2})[-°.]?(?P<latMin>\d{2})[-′.]?(?P<latSec>\d{0,2}\.?\d{0,2})″?(?P<latDir>[NS])'
+NEW_PATTERN1  = r'(?P<latDir>[NS])(?P<latDeg>\d{2})(?P<latMin>\d{0,2})(?P<latSec>\d{0,2})'
+NEW_PATTERN1 += r'(?P<lonDir>[EW])(?P<lonDeg>\d{2,3})(?P<lonMin>\d{0,2})(?P<lonSec>\d{0,2})'
+NEW_PATTERN2  = r'(?P<latDeg>\d{2})[-°.]?(?P<latMin>\d{0,2})[-′.]?(?P<latSec>\d{0,2}\.?\d{0,2})″?(?P<latDir>[NS])'
 NEW_PATTERN2 += r'[，,\/]?'
-NEW_PATTERN2 += r'(?P<lonDeg>\d{2,3})[-°.]?(?P<lonMin>\d{2})[-′.]?(?P<lonSec>\d{0,2}\.?\d{0,2})″?(?P<lonDir>[EW])'
+NEW_PATTERN2 += r'(?P<lonDeg>\d{2,3})[-°.]?(?P<lonMin>\d{0,2})[-′.]?(?P<lonSec>\d{0,2}\.?\d{0,2})″?(?P<lonDir>[EW])'
+NEW_PATTERN3  = r'(?P<latDeg>\d{2})-(?P<latMin>\d{0,2}\.\d{0,2})(?P<latDir>[NS])'
+NEW_PATTERN3 += r'[，,\/]?'
+NEW_PATTERN3 += r'(?P<lonDeg>\d{2,3})-(?P<lonMin>\d{0,2}.\d{0,2})(?P<lonDir>[EW])'
 
-PATTERNS = (
-    PATTERN1,
-    PATTERN3,
-    PATTERN5,
-    PATTERN6,
-    PATTERN7,
-)
-
-PATTERN_RADIUS = r'[WITH RADIUS OF ](\d{1,2})[KM]'
+PATTERN_RADIUS = r'(?:SEGMENT|AREA)WITHINACIRCLECENTEREDATN\d{6}E\d{7}WITHRADIUSOF(\d{1,3})(KM)'
 PATTERN_LATITUDE_LONGITUDE =  r'([NS]\d{4,6}[EW]\d{5,7}|'
 PATTERN_LATITUDE_LONGITUDE += r'\d{4,6}\.?\d{0,2}[NS]\d{5,7}\.?\d{0,2}[EW]|'
 PATTERN_LATITUDE_LONGITUDE += r'\d{4,6}\.\d{1,2}[NS]\d{5,7}\.\d{1,2}[EW]|'
 PATTERN_LATITUDE_LONGITUDE += r'\d{4,6}[NS]\/\d{5,7}[EW])'
-# PATTERN_LATITUDE_LONGITUDE += PATTERN7 #
 PATTERM_QUESTION = r'/(\d{4,6}[NS]\d{5,7}[EW])\d{3}'
 
-# MSA_PATTERN_LATITUDE_LONGITUDE = r'(\d{2}\-\d{2}[.-]\d{2}[NS])(\d{3}\-\d{2}[.-]\d{2}[EW])'
-# MSA_PATTERN_LATITUDE_LONGITUDE = r'(\d{2}[°-]\d{2}[′.-]\d{1,3}"?[NS])/?(\d{2,3}[°-]\d{2}[′.-]\d{1,3}"?[EW])'
 MSA_PATTERN_LATITUDE_LONGITUDE =  r'(\d{2}[°-]\d{2}[\′.-]?\d{0,3}″?[NS][ \/]?\d{2,3}[°-]\d{1,2}[′.-]?\d{0,3}"?[EW])'
 MSA_PATTERN_LATITUDE_LONGITUDE1 = r'(\d{2}[°-]\d{2}[′.-]\d{1,3}″?[NS]/?\d{2,3}[°-]\d{1,2}[′.-]\d{1,3}"?[EW])'
 MSA_PATTERN_DATE = r'FROM(\d{0,2})(\d{0,4})[UTC]{0,3}([A-Z]{0,4})\.?(\d{0,2})TO(\d{0,2})(\d{0,4})[UTC]{0,3}([A-Z]{0,4})\.?(\d{0,2})'
@@ -133,7 +113,6 @@ NOTAM_NUMBER_ERROR = r'1345/16'
 NOTAM_NUMBER_INVALID = r'C1832/19'
 PATTERN_NOTAM_NUMBER = r'[^R]([A-Z]\d{4}/\d{2}|1345/16)[^.0]'
 PATTERN_NOTAM_NUMBER_NEW = r'([A-Z]\d{4}/\d{2})'
-# PATTERN_NOTAM_NUMBER = PATTERN_NOTAM_NUMBER = r'[^R]([A-Z]\d{4}/\d{2}|1345/16)[^.0(]'
 
 HYDROPAC_PATTERN = 'MSACHINA|HAZARDOUS|ROCKETLAUNCHING|ROCKETLAUNCHSCHEDULED' #r'HYDROPAC(\d{4}/\d{2})'
 HYDROPAC_PATTERN_DATES = r'(\d{1,2})(\d{4})Z([A-Z]{0,3})TO(\d{1,2})(\d{4})Z?([A-Z]{3})'

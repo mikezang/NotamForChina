@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta
 from json import dumps, loads
 from os import path
-from myModules import myDate
+
+from myModules import myFile
 
 ################################################################################################
 def sortDictByValue(d: dict) -> dict:
@@ -10,9 +10,11 @@ def sortDictByValue(d: dict) -> dict:
 ################################################################################################
 def splitNotam(item):
     items = item[1].split(';')
-    d = -float(items[3].split('°')[0][1:])
-    d = d if items[3][0] == 'N' else -d # sort latitude from higher to lower
-    return (items[0], d, items[2], item[0])
+    startTime = items[0]
+    latitude = myFile.convertDMS2DD(items[3].split('|')[0])[1]
+    location = items[2]
+    locationNumber = item[0]
+    return (startTime, -latitude, location, locationNumber)
 
 ################################################################################################
 def sortDictByEndDate(d: dict):
@@ -29,40 +31,20 @@ def sortDictByKey(d: dict, reverse=False):
     return  {k : v for k, v in sorted(d.items(), key=lambda x: x[0], reverse=reverse)}
 
 ###############################################################################################
-def printNotam(dictData, start=''):
+def printNotam(strData, filenames, start=''):
     print(f"\nNOTAM发射预测{start}")
     print("================================")
-    print(getNotamDictString(dictData))
+    if filenames:
+        lines = strData.split('\n\n')
+        msg = ''
+        for line, filename in zip(lines, filenames):
+            msg += f'{line}\n{filename.split('/')[-1]}\n\n'
+        print(msg[:-2])
+    else: 
+        print(strData)
+    # print(getNotamDictString(dictData))
     print("================================")
     print(f"NOTAM发射预测{start}\n")
-
-################################################################################################
-def isNewLaunch(oldDate, newDate, hours=2.0):
-    dt1 = datetime.strptime(oldDate, '%Y/%m/%d %H:%M')
-    dt2 = datetime.strptime(newDate, '%Y/%m/%d %H:%M')
-    if dt2 - dt1 > timedelta(hours=hours):
-        return True
-    else:
-        return False
-    
-################################################################################################
-def getNotamDictString(d):
-    msg = ''
-    lastDate = ''
-    i = 1
-    j = 0
-    for key, value in d.items():
-        items = value.split(';')
-        lastDate = items[0] if not lastDate  else lastDate
-        if isNewLaunch(lastDate, items[0], 1.5):
-            i += 1
-            j = 1
-            msg += '\n'
-        else:
-            j += 1
-        msg += f'{i}{chr(j + 64)}: {items[2]},{key[-8:]},{items[0]},{items[1]};{myDate.getDDMM(items[3])}\n'
-        lastDate = items[0]
-    return msg[:-1]
 
 ################################################################################################
 def printDict(d, withQuotation=False, hasNo=True):

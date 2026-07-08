@@ -1,3 +1,6 @@
+from datetime import date, datetime, time
+import numpy as np
+import pandas as pd
 
 
 IMAGE_SIZE = (800, 800)
@@ -5,39 +8,61 @@ IMAGE_SIZE = (800, 800)
 EXCEL_COLUMN_ROCKET = '火箭'
 EXCEL_COLUMN_NUMBER = '遥号'
 EXCEL_COLUMN_DATE = '日期'
+EXCEL_COLUMN_TIME = '时间\n（UTC+8）'
 EXCEL_COLUMN_LOCATION = '地点'
 EXCEL_COLUMN_SPOT = '工位'
 EXCEL_COLUMN_RESULT = '结果'
 EXCEL_COLUMN_PAYLOAD = '载荷'
 EXCEL_COLUMN_REMARKS = '备注'
 
-# color is reverse order from google map
-# COLOR_JIUQUAN = "ff1427a5"
-# COLOR_TAIYUAN = "ff0051e6"
-# COLOR_XICHANG = "ff25a8f9"
-# COLOR_WENCHANG = "ff2f8b55"
-# COLOR_HAINAN = "ff2f8b55"
-# COLOR_SEA = "ffAB4939" #"ff9b5701"
+################################################################################################
+def parseExcelSheetLaunch(excelFile, sheetName, onlyFailed=False, withCancel=False, withPredict=False):
+    df = pd.read_excel(excelFile, sheetName, header=0, usecols='A:O', dtype={EXCEL_COLUMN_SPOT: str})
+    cond1 = True if withCancel else df[EXCEL_COLUMN_RESULT] != '中止'
+    cond2 = ~df[EXCEL_COLUMN_RESULT].isna() if not withPredict else ~df[EXCEL_COLUMN_TIME].isna()
+    # cond3 = df[myExcel.EXCEL_COLUMN_RESULT] != '成功'
+    df = df[cond1 & cond2]
+    pd.set_option('future.no_silent_downcasting', True)
+    df.replace('-', np.nan, inplace=True) # Replace '-' with NaN
+    df.replace([None, np.nan], '', inplace=True) # Replace None with empty string
+    return df
 
-# Latitude and Longitude for laucnh center
-# COODINATE_JIUQUAN = "100.3,40.96666666666667"
-# COODINATE_TAIYUAN = "111.604815,38.84257"
-# COODINATE_XICHANG = "102.03333,28.25"
-# COODINATE_WENCHANG = "110.95,19.616666666666667"
-# COODINATE_HAINAN = "110.95,19.616666666666667"
-# COODINATE_HAIYANG = "121°14'15\",36°40'40\""
+################################################################################################
+def parseExcelSheetLaunchTime(excelFile, sheetName, columnList):
+    df = pd.read_excel(excelFile, sheetName, skiprows=2, header=None, usecols='A:E,J,M', converters={2: lambda x: str(x).replace('\n', '/')})
+    df.columns = columnList
+    df[columnList] = df[columnList].ffill()
+    df = df.dropna(how='all')
+    df = df.dropna(subset=[columnList[-1]])
+    return df
 
-# CITIES = {
-#     "酒泉" : f"酒泉|{COODINATE_JIUQUAN}|{COLOR_JIUQUAN}",
-#     "太原" : f"太原|{COODINATE_TAIYUAN}|{COLOR_TAIYUAN}",
-#     "西昌" : f"西昌|{COODINATE_XICHANG}|{COLOR_XICHANG}",
-#     "文昌" : f"文昌|{COODINATE_WENCHANG}|{COLOR_WENCHANG}",
-#     "海南" : f"海南|{COODINATE_HAINAN}|{COLOR_HAINAN}",
-#     "海阳" : f"海阳|{COODINATE_HAIYANG}",
-#     "海上" : f"海上|,|{COLOR_SEA}",
-#     "黄海" : f"黄海|,|{COLOR_SEA}",
-#     "东海" : f"东海|,|{COLOR_SEA}",
-#     "南海" : f"南海|,|{COLOR_SEA}",
-#     "东风航天城" : f"酒泉|{COODINATE_JIUQUAN}|{COLOR_JIUQUAN}",
-# }
+################################################################################################
+def excel_time_to_timedelta(x):
+    # Case 1 — already timedelta
+    if isinstance(x, pd.Timedelta):
+        return x
+    # Case 2 — Excel float (fraction of a day)
+    if isinstance(x, (float, int)):
+        return pd.to_timedelta(x, unit='d')
+    # Case 3 — Python datetime.time
+    if isinstance(x, time):
+        return pd.to_timedelta(
+            x.hour * 3600 + x.minute * 60 + x.second,
+            unit='s'
+        )
+    # Case 4 — full datetime.datetime (Excel date+time)
+    if isinstance(x, datetime):
+        # Excel datetime is [days since 1899] + [time fraction]
+        # So convert to float first:
+        excel_float = x.toordinal() - date(1899,12,30).toordinal() + \
+                      (x.hour*3600 + x.minute*60 + x.second)/86400
+        return pd.to_timedelta(excel_float, unit='d')
+    # Case 5 — string “hh:mm:ss” or “mm:ss”
+    if isinstance(x, str):
+        try:
+            return pd.to_timedelta(x)
+        except:
+            pass
+    # fallback: NA
+    return pd.NaT
 

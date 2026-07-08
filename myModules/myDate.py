@@ -61,6 +61,10 @@ def getThisYear():
     return getJapanDate()[:4]
 
 ################################################################################################
+def getThisMonth():
+    return getJapanDate()[4:6]
+
+################################################################################################
 def getChinaTimeFromLocal(year, month, day):
     return datetime(year, month, day, tzinfo=ZoneInfo(myConst.TIMEZONE_SHANGHAI))
 
@@ -117,21 +121,24 @@ def convertDate(oldDate) -> str:
     return oldDate
 
 ################################################################################################
-def convertToLocalDate(utcDate, tz, isLocalTime=False):
+def convertToLocalDate(utcDate, tz=myConst.TIMEZONE_SHANGHAI, isLocalTime=False, fmt=None):
     if not isLocalTime:
         utcDate1 = datetime.strptime(utcDate, "%Y/%m/%d %H:%M").replace(tzinfo=UTC)
     else:
         utcDate1 = datetime.strptime(utcDate, "%Y/%m/%d %H:%M").replace(tzinfo=ZoneInfo(tz))
-    return utcDate1.astimezone(ZoneInfo(tz))
+    if fmt is None:
+        return utcDate1.astimezone(ZoneInfo(tz))
+    else:
+        return utcDate1.astimezone(ZoneInfo(tz)).strftime(fmt)
 
 ################################################################################################
 def convertToDate(d: str):
     from dateutil import parser
     try:
         if len(d) == 4:
-            d = f'{d}0101'
+            d = f'{int(d) - 1}{getThisMonth()}01'
         elif len(d) == 6:
-            d = f'{d}01'
+            d = f'{int(d) - 1}{d[4:6]}01'
         return parser.parse(d)
     except:
         myExcept.printExceptionTrace() 

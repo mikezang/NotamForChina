@@ -3,26 +3,19 @@
 """
 # pylint: disable=W0603,W0622,W0703,C0103,C0116,C0301,E1101
 
-import logging
 import subprocess
 import ctypes
 from hashlib import md5
-from json import dumps, loads, dump, load
 from sys import argv
-from glob import glob
-from pytz import timezone, UTC
-from time import localtime, strftime, time
-from datetime import datetime, timedelta, date
-from calendar import monthrange
-from re import compile, findall, finditer, match, search
-from os import path, curdir, makedirs, remove, chdir, listdir
+from pytz import timezone
+from datetime import datetime, timedelta
+from re import compile, findall
 
 from myModules import myConst
 from myModules import myExcept
-from myModules import myExcel
-from myModules import myFile
+from myModules import myConfig
+from myModules import mySys
 from myModules import myDate
-from myModules import myDict
 
 startTime = 0
 
@@ -31,7 +24,7 @@ startTime = 0
 
 ################################################################################################
 def getTempPath():
-    if myFile.isWindows():
+    if mySys.isWindows():
         return 'c:/temp'
     else:
         return '/tmp'
@@ -52,25 +45,6 @@ def isSameFileInDict(file: str, dictFiles: dict) -> tuple:
         return False, dictFiles
 
 ################################################################################################
-# def removePngHeader(videoFileList):
-#     import subprocess
-#     newDir = 'new/'
-#     makedirs(newDir, exist_ok=True)
-#     count =len(videoFileList)
-#     for videoFile in videoFileList:
-#         ifStr = f'if={videoFile}'
-#         ofStr = f'of={newDir}{videoFile}'
-#         ibs = 'ibs=8'
-#         skip = 'skip=1'
-#         o = subprocess.check_output(['dd', ifStr, ofStr, ibs, skip], stderr=subprocess.STDOUT)
-#         no = videoFile.replace('.ts', '')
-#         percent = int(no) * 100 // count
-#         number = f'{no}/{count}{percent:02}%)'
-#         print(f'{number}: {o}')
-#         remove(videoFile)
-#     chdir(newDir)
-
-################################################################################################
 ##  Styles:
 ##  0 : OK
 ##  1 : OK | Cancel
@@ -85,59 +59,8 @@ def msgbox(title, text, style):
 ################################################################################################
 def getCityCoordinate(city) -> tuple:
     # p1s = myExcel.CITIES[city].split('|')[1].split(',')
-    p1s = myFile.readConfig(city)[2].split('+')
+    p1s = myConfig.readConfig(city)[2].split('+')
     return (float(p1s[0]), float(p1s[1])) # lon, lat
-
-################################################################################################
-def convertLocation(loc) -> str:
-    launchCenters = myFile.readConfigLaunchCenters()
-    for l in loc.split('/'):
-        ret2 = launchCenters[l]
-        if ret2 != '':
-            return ret2
-    return ''
-
-################################################################################################
-#itemArray[0]: startDateUTC
-#itemArray[1]: endDateUTC
-#itemArray[2]: location
-#itemArray[3]: coordinates
-def devideToFiles(notams: dict) -> dict:
-    notamFiles = {}
-
-    for number, item in notams.items():
-        itemArray = item.split(';')
-        startDate = itemArray[0]
-        endDate = itemArray[1]
-        loc = itemArray[2]
-        coordsArray = itemArray[3]
-        city = convertLocation(itemArray[2])
-
-    return notamFiles
-
-################################################################################################
-def findLatitudeLongitude(p, s) -> str:
-    ret1 = ''
-    itemsiter = finditer(p, s)
-    items = findall(p, s)
-    count = len(items)
-    lastEnd = 0
-
-    for item, itemiter in zip(items, itemsiter):
-        tempCoord = convertLatitudeLongitude(p, item)
-        if ret1 != '' and lastEnd + 10 < itemiter.start():
-           ret1 = ret1[:-1] + '-' + tempCoord + '|' 
-        elif tempCoord not in ret1:
-            ret1 += tempCoord + '|'
-        lastEnd = itemiter.end()
-    return ret1.rstrip("|")
-
-################################################################################################
-def convertLatitudeLongitude(p, s) -> str:
-    if match(p, s):
-        return myFile.convertPatterns(s, p)
-    else:
-        return s
 
 ################################################################################################
 def getYYYYMMDD(year):
@@ -152,16 +75,6 @@ def convertNotamDate(oldDate):
         return oldDate
     elif 'EST' in oldDate:
         return datetime.strptime(oldDate, '%m/%d/%Y %H%MEST').strftime("%Y/%m/%d %H:%M")
-    # elif '年' in oldDate:
-    #     if '-' in oldDate:
-    #         dates = oldDate.split("-")
-    #         date1 = datetime.strptime(dates[0], '%Y年%m月%d日')
-    #         date2 = datetime.strptime(dates[1], '%Y年%m月%d日')
-    #         diff = date2 - date1
-    #         date3 = date1 + timedelta(diff.days / 2)
-    #         return date3.strftime("%Y/%m/%d")
-    #     else:
-    #         return datetime.strptime(oldDate, '%Y年%m月%d日')
     else:
         return datetime.strptime(oldDate, '%m/%d/%Y %H%M').strftime("%Y/%m/%d %H:%M")
     
@@ -172,16 +85,6 @@ def hasCoordinates(city) -> bool:
         if isinstance(lat, float) and isinstance(lon, float):
             return True
     return False
-
-################################################################################################
-# timeDiff = minutes
-def isNearTime(date1, date2, timeDiff) -> bool:
-    d1 = datetime.strptime(date1, "%Y/%m/%d %H:%M")
-    d2 = datetime.strptime(date2, "%Y/%m/%d %H:%M")
-    d = d2 - d1
-    if d.total_seconds() > timeDiff * 60:
-        return False
-    return True
 
 ################################################################################################
 # timeDiff = minutes
@@ -229,19 +132,6 @@ def checkCommand(inputCommand) -> bool:
         if command == inputCommand or inputCommand[:3] == command:
             return True
     return False
-
-################################################################################################
-# def getChromeDriver():
-#     options = ChromeOptions()
-#     if HEADLESS == 1:
-#         options.add_argument('--headless')
-#     options.add_experimental_option('excludeSwitches', ['enable-logging'])
-#     return webdriver.Chrome(options=options)
-
-################################################################################################
-def printList(l):
-    for i, value in enumerate(l):
-        print(f'{i + 1:02} {value}')
 
 ################################################################################################
 def runCommand(command):
@@ -308,47 +198,6 @@ def isInvalidEndDateUtc(endDateUtc):
         return True
     return False
 
-def isChinaNotamOld(condition: str) -> bool:
-    ret1 = 'AGGG' in condition
-    ret1 |= 'KZAK' in condition
-    ret1 |= 'VCCF' in condition
-    ret1 |= 'VVHM' in condition
-    ret1 |= 'VVHN' in condition
-    ret1 |= 'VYYF' in condition
-    ret1 |= 'WIIF' in condition
-    ret1 |= 'YBBB' in condition
-    ret1 |= 'YMMM' in condition
-    ret1 &= 'CHINA' in condition
-    if ret1:
-        return ret1
-    
-    ret3 = ('RKRR' in condition) & ('KOREA' not in condition)
-    ret3 |= 'RJJJ' in condition
-    ret3 |= 'RPHI' in condition
-    ret3 |= 'RCAA' in condition
-    ret3 |= 'VHHK' in condition
-    ret3 |= 'WSJC' in condition
-    ret3 &= 'AEROSPACE' in condition
-    if ret3:
-        return ret3
-    
-    ret4 = 'ZBPE' in condition
-    ret4 |= 'ZGZU' in condition
-    ret4 |= 'ZHWH' in condition
-    ret4 |= 'ZJSA' in condition
-    ret4 |= 'ZLHW' in condition
-    ret4 |= 'ZPKM' in condition
-    ret4 |= 'ZSHA' in condition
-    ret4 |= 'ZWUQ' in condition
-    ret4 |= 'ZYSH' in condition
-    ret4 &= ('TEMPORARY DANGER AREA ESTABLISHED' in condition) | ('TEMPORARY RESTRICTED AREA ESTABLISHED BOUNDED' in condition)
-    if ret4:
-        return ret4
-    
-    ret2 = 'NFFF' in condition
-    ret2 &= 'TEMPO DANGER AREA ACTIVATED' in condition
-    return ret2
-
 ################################################################################################
 def isNotChinaNotam(location: str, condition: str) -> bool:
     if (location == 'YBBB' or location == 'YMMM') and 'CHINESE' not in condition:
@@ -408,18 +257,6 @@ def kanji2int(kanjis: str, error="raise", style="auto") -> int:
             else:
                 raise ValueError(f"unexpected letter: {word}")
         return num + current_num + current_mini_num
-
-################################################################################################
-# def getGreatCircleCoodinates(lon1, lat1, lon2, lat2):
-#     g = pyproj.Geod(ellps='WGS84')
-#     _, _, dist = g.inv(lon1, lat1, lon2, lat2)
-
-#     # calculate line string along path with segments <= 1 km
-#     # lonlats = g.npts(startlong, startlat, endlong, endlat, 1 + int(dist / 1000))
-#     lonlats = g.npts(lon1, lat1, lon2, lat2, 1 + int(dist / 100000), initial_idx=0, terminus_idx=0) #<=100 km?
-
-#     # npts doesn't include start/end points, so prepend/append them
-#     return lonlats
 
 ################################################################################################
 def readNotamDictDetailFromTextFile(filename):

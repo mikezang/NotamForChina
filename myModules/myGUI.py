@@ -1,6 +1,6 @@
 import FreeSimpleGUI as sg
 
-from myModules import myFile
+from myModules import mySys
 
 ################################################################################################
 def moveWindow(window, x=None, y=None):
@@ -17,7 +17,7 @@ def moveWindow(window, x=None, y=None):
 def make_dpi_aware():
     import ctypes
     import platform
-    if myFile.isWindows() and int(platform.release()) >= 8:
+    if mySys.isWindows() and int(platform.release()) >= 8:
         ctypes.windll.shcore.SetProcessDpiAwareness(True)
 
 ################################################################################################

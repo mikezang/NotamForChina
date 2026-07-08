@@ -83,7 +83,14 @@ def getFirefoxDriver(headless=1, disableImage=True, log=False) -> webdriver:
     # options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", 'false')
     options.set_preference("intl.accept_languages", "zh-CN,zh")
     options.set_preference("extensions.translations.disabled", True)
-    options.set_preference('general.useragent.override', myConst.header['User-Agent'])
+    options.set_preference("general.useragent.override", myConst.header["User-Agent"])
+    
+    options.set_preference("dom.webdriver.enabled", False)
+    options.set_preference("media.volume_scale", "0.0")
+    options.set_preference("browser.tabs.warnOnClose", False)
+    options.set_preference("browser.tabs.warnOnOpe", False)
+    options.set_preference("tookkit.startip.max_resumed_crashes", -1)
+
     if headless == 1:
         options.headless = True
         options.add_argument('--headless')

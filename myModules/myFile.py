@@ -1,18 +1,16 @@
-import configparser
 from datetime import datetime, timedelta
 from glob import glob
 from os import chdir, curdir, listdir, makedirs, path, remove, system, walk
 from pathlib import Path
-from re import findall, finditer, search, sub
+from re import sub
 import subprocess
-from sys import platform
 from typing import NamedTuple
 import unicodedata
 from pytz import timezone
 
 from myModules import myConst
 from myModules import myDate
-from myModules import myDict
+from myModules import mySys
 
 TEMP_FILE_PATH = './temp/'
 
@@ -33,33 +31,6 @@ def parseFileInfo(filenameOrig: str): # filename='video/01.mp4'
     extension = baseName[-4:]
     fileInfo = FileInfo(filenameOrig, baseName, folderName, absFolder, fileName, extension)
     return fileInfo
-
-################################################################################################
-def isLinux() -> bool:
-    if platform == "linux" or platform == "linux2":# linux
-        return True
-    elif platform == "darwin":# Mac OS X
-        return False
-    elif platform == "win32":# Windows
-        return False
-
-################################################################################################
-def isWindows() -> bool:
-    if platform == "linux" or platform == "linux2":# linux
-        return False
-    elif platform == "darwin":# Mac OS X
-        return False
-    elif platform == "win32":# Windows
-        return True
-
-################################################################################################
-def isMacOS() -> bool:
-    if platform == "linux" or platform == "linux2":# linux
-        return False
-    elif platform == "darwin":# macOS
-        return True
-    elif platform == "win32":# Windows
-        return False
 
 ################################################################################################
 def saveTextFile(filename: str, newText: str, openFile=True, noSound=False, showMsg=True):
@@ -83,24 +54,45 @@ def saveTextFile(filename: str, newText: str, openFile=True, noSound=False, show
         f.write(newText)
 
     # Opening the text file in its default editor
-    if isWindows() and openFile:
+    if mySys.isWindows() and openFile:
         system(f'start {filename}')
     if not noSound:
-        if isWindows():
+        if mySys.isWindows():
             playSound('Alarm03.wav')
-        elif isMacOS():
+        elif mySys.isMacOS():
             playSound('Alarm03.wav')
-        elif isLinux():
+        elif mySys.isLinux():
             playSound('train.wav')
 
 ################################################################################################
-def updateTempFile(notams: dict):
+def getNotamListString(notams):
+    msg = ''
+    for i, notam in enumerate(notams, 1):
+        maxLoc = 4
+        for j, values in enumerate(notam, 1):
+            for key, value in values.items():
+                maxLoc = max(maxLoc, len(value.split(';')[2]))
+
+        for j, values in enumerate(notam, 1):
+            for key, value in values.items():
+                items = value.split(';')
+                loc = items[2].rjust(maxLoc)
+                number = '/'.join(key.rsplit('/', 2)[1:]).rjust(8)
+                startDate = items[0]
+                endDate = items[1]
+                area = myDate.getDDMM(items[3])
+                msg += f'{i:02d}{chr(j + 64)}: {loc},{number},{startDate},{endDate};{area}\n'
+        msg += '\n'
+    return msg[:-2]
+
+################################################################################################
+def updateTempFile(notams: list):
     filename = f'{TEMP_FILE_PATH}notam{myDate.getJapanTimeFilename()}.txt'
     createFolder(filename)
+    dataString = getNotamListString(notams)
     newText = f"NOTAM发射预测\n"
     newText += "================================\n"
-    newText += myDict.getNotamDictString(notams)
-
+    newText += dataString
     try:
         isNew = True
         oldFiles = glob(f'{TEMP_FILE_PATH}notam*.txt')
@@ -114,6 +106,7 @@ def updateTempFile(notams: dict):
             saveTextFile(filename, newText)
     except FileNotFoundError:
         saveTextFile(filename, newText)
+    return isNew, dataString
 
 ################################################################################################
 def listFiles(folder: str='.', extension: str=None, excludeFile=None, onlyFilename=False, includeSubFolder=True, prefix: str=None):
@@ -131,10 +124,6 @@ def listFiles(folder: str='.', extension: str=None, excludeFile=None, onlyFilena
                     yield filepath
 
 ################################################################################################
-def listFilesByGlob(partOfFilename):
-    return glob(partOfFilename)
-
-################################################################################################
 def createFolder(filePath):
     folderPath = path.dirname(filePath)
     folder = Path(folderPath)
@@ -144,15 +133,15 @@ def createFolder(filePath):
 ################################################################################################
 def playSound(filename:str=None):
     if filename is None:
-        if isWindows() or isMacOS():
+        if mySys.isWindows() or mySys.isMacOS():
             filename = 'Alarm03.wav'
         elif isLinux():
             filename = 'train.wav'
-    if isWindows():
+    if mySys.isWindows():
         path = 'C:/Windows/media/'
-    elif isLinux():
+    elif mySys.isLinux():
         path = '//usr//lib//libreoffice//share//gallery//sounds//'
-    elif isMacOS():
+    elif mySys.isMacOS():
         path = '//Users//mikezang//music//'
 
     from playsound import playsound
@@ -214,10 +203,21 @@ def isMediaFile(fileName):
     return False
 
 ################################################################################################
-def readTextFile(filename, tripLinefeed=False):
+def readTextFile(filename, tripLinefeed=False, skipSharp=True):
     with open(filename, encoding='utf-8') as f:
-        lines = [line.rstrip('\n') for line in f.readlines()] if tripLinefeed else f.readlines()
-        return [convertToDiacritic(line) for line in lines]
+        lines = []
+        sharpLines = []
+        if skipSharp:
+            while line := f.readline():
+                if line.startswith('#'):
+                    sharpLines.append(line)
+                else:
+                    lines.append(line)
+        else:
+            lines = f.readlines()
+        lines = [line.rstrip('\n') for line in lines] if tripLinefeed else lines
+        sharpLines = [line.rstrip('\n') for line in sharpLines] if tripLinefeed else sharpLines
+        return [convertToDiacritic(line) for line in lines], sharpLines
 
 ################################################################################################
 def convertToDiacritic(text, mode="NFC"):
@@ -269,129 +269,24 @@ def getFileDuration(filename: str) -> float:
 
 ################################################################################################
 def keepOneLineChar():
-    if isWindows():
+    if mySys.isWindows():
         return '^'
     else:
         return '\\'
 
 ################################################################################################
-def openConfig(section=None) -> tuple:
-    config_ini = configparser.ConfigParser()
-    config_ini.read('config.ini', encoding='utf-8')
-    if section is None:
-        section = 'DEFAULT'
-    readSection = config_ini[section]
-    return readSection
-
-################################################################################################
-def readConfigLocations():
-    kmlFolders = {}
-    locations = readConfig('Locations')
-    for loc in locations:
-        kmlFolders[loc] = readConfig(loc)[0]
-    return kmlFolders
-
-################################################################################################
-def readConfigLaunchCenters() -> dict:
-    firNames = '' #readConfigFirNames().split()
-    firLaunchCenters = ''
-    section = openConfig()
-    count = int(section.get('FirCount'))
-    for i in range(count):
-        firNames += section.get(f'FirName{i + 1}') + ','
-        firLaunchCenters += section.get(f'FirLaunchCenter{i + 1}') + ','
-    launchCenters = (dict(zip(firNames.split(','), firLaunchCenters.split(','))))
-    return launchCenters
-
-################################################################################################
-def readConfigFirNames() -> str:
-    section = openConfig()
-    count = int(section.get('FirCount'))
-    firNames = ''
-    for i in range(count):
-        firName = section.get(f'FirName{i + 1}')
-        firName = ' '.join([x.split('~')[0] for x in firName.split(',')])
-        if firNames:
-            firNames += ' '
-        firNames += firName
-    return firNames
-
-################################################################################################
-def readConfig(keys=None, returnList=True) -> tuple:
-    read_default = openConfig()
-    values = []
-
-    if keys is None:
-        values.append(read_default.get('ExcelFile'))
-        # values.append(read_default.get('SheetLaunch'))
-        values.append(read_default.get('Years'))
-        rockets = []
-        rockets.append(read_default.get('RocketsCZ'))
-        rockets.append(read_default.get('RocketsNCZ'))
-        rockets.append(read_default.get('Rockets'))
-        values.append(rockets)
-        retired = []
-        retired.append(read_default.get('RetiredCZ'))
-        retired.append(read_default.get('RetiredNCZ'))
-        retired.append(read_default.get('Retired'))
-        retired.append(read_default.get('RetiredDate'))
-        values.append(retired)
-        series = []
-        series.append(read_default.get('SeriesCZ'))
-        series.append(read_default.get('SeriesNCZ'))
-        series.append(read_default.get('SeriesCZRockets'))
-        series.append(read_default.get('SeriesNCZRockets'))
-        series.append(read_default.get('Series'))
-        values.append(series)
-        values.append(read_default.get('Privates'))
-        values.append(read_default.get('Locations'))
-        values.append(read_default.get('Categories'))
-        values.append(read_default.get('Payloads'))
-        return values
-    else:
-        keys = [keys] if isinstance(keys, str) else keys
-        if returnList:
-            valueList = []
-            for key in keys:
-                values = read_default.get(key)
-                for value in values.split(','):
-                    valueList.append(value)
-            return valueList
-        else:
-            values = ''
-            for key in keys:
-                values += read_default.get(key)
-            return values
-
-################################################################################################
-def getLocation(newFile):
-    locations = readConfig(['Locations'], False)
-    pattern = r'(' + locations.replace(',', '|') + ')'
-    try:
-        locs = findall(pattern, newFile.split('\\')[-1])
-    except:
-        pass
-    if locs:
-        if locs[0] == '文昌':
-            locs.append('海南') 
-        if locs[0] == '海南':
-            locs.append('文昌') 
-        return locs, locations
-    return None, locations
-
-################################################################################################
-def convertTitle(utcStartDate, utcEndDate, loc, loc1=None, isLocalTime=False) -> str:
-    loc = loc1 if loc == '' else loc
+def convertTitle(utcStartDate, utcEndDate, city, city1=None, isLocalTime=False) -> str:
+    city = city1 if city == '' else city
     if utcStartDate != '' and utcEndDate != '':
-        startTime = myDate.convertToLocalDate(utcStartDate, myConst.TIMEZONE_SHANGHAI, isLocalTime=isLocalTime)
+        startTime = myDate.convertToLocalDate(utcStartDate, isLocalTime=isLocalTime)
         lastEndTime = myDate.convertToLocalDate(utcEndDate, myConst.TIMEZONE_SHANGHAI, isLocalTime=isLocalTime)
         endTime = datetime(startTime.year, startTime.month, startTime.day, lastEndTime.hour, lastEndTime.minute)
         endTime = endTime + timedelta(days=1) if str(endTime) < str(startTime) else endTime 
         endTime = timezone(myConst.TIMEZONE_SHANGHAI).localize(endTime)
         launchTime = startTime + (endTime - startTime) / 3
-        return f'{launchTime.strftime("%Y年%m月%d日%H时%M分")}{loc}'
+        return f'{launchTime.strftime("%Y年%m月%d日%H时%M分")}{city}'
     else:
-        return loc
+        return city
 
 #N16°33',E093°17'
 #N16°33'44",E093°17'66"
@@ -414,86 +309,6 @@ def convertDMS2DD(old) -> tuple:
         new.insert(0, direction[coord_dir] * (int(coord2[0]) + int(coord2[1]) / 60.0 + int(coord2[2]) / 3600.0))
         # new.append(direction[coord_dir] * (int(coord2[0]) + int(coord2[1]) / 60.0 + int(coord2[2]) / 3600.0))
     return new
-
-################################################################################################
-def convertPatterns(s, p) -> str:
-    if p == myConst.PATTERN1:
-        s = convertPattern1(s)
-    elif p == myConst.PATTERN3:
-        s = convertPattern3(s)
-    elif p == myConst.PATTERN5:
-        s = convertPattern5(s)
-    elif p == myConst.PATTERN6:
-        s = convertPattern6(s)
-    elif p == myConst.PATTERN7:
-        s = convertPattern7(s)
-    return s
-
-################################################################################################
-#r'([NS]\d{4,6}E\d{5,7})
-#N1234E12345
-#012345678901234
-#N123456E1234567
-def convertPattern1(s):
-    if len(s) == 15:
-        return f"{s[0:3]}°{s[3:5]}'{s[5:7]}\",{s[7:11]}°{s[11:13]}'{s[13:15]}\""
-    return f"{s[0:3]}°{s[3:5]}',{s[5:9]}°{s[9:11]}'"
-
-################################################################################################
-#r'(\d{4,6}[NS]\d{5,7}E)'
-def convertPattern3(s):
-    if len(s) == 21:
-        #174800.00N1152300.00E
-        return f"{s[9:10]}{s[0:2]}°{s[2:4]}'{s[4:6]}\",{s[20:21]}{s[10:13]}°{s[13:15]}'{s[15:17]}\""
-    elif len(s) == 15:
-        #174800N1152300E
-        return f"{s[6:7]}{s[0:2]}°{s[2:4]}'{s[4:6]}\",{s[14:15]}{s[7:10]}°{s[10:12]}'{s[12:14]}\""
-    if len(s) == 14:
-        #174800N152300E
-        return f"{s[6:7]}{s[0:2]}°{s[2:4]}'{s[4:6]}\",{s[13:14]}{s[7:9]}°{s[9:11]}'{s[11:13]}\""
-    #1748N1523E
-    return f"{s[4:5]}{s[0:2]}°{s[2:4]}',{s[10:11]}{s[5:8]}°{s[8:10]}'"
-
-################################################################################################
-#r'(\d{4,6}\.\d{1,2}[NS]\d{5,7}\.\d{1,2}E)'
-def convertPattern5(s):
-    if len(s) == 15:
-        return f"{s[6:7]}{s[0:2]}°{s[2:4]}'{s[4:6]}\",{s[14:15]}{s[7:10]}°{s[10:12]}'{s[12:14]}\""
-    if len(s) == 10:
-        return f"{s[4:5]}{s[0:2]}°{s[2:4]}',{s[9:10]}0{s[5:7]}°{s[7:9]}'"
-    return f"{s[4:5]}{s[0:2]}°{s[2:4]}',{s[10:11]}{s[5:8]}°{s[8:10]}'"
-
-################################################################################################
-#1234[NS]/12345E
-#0123456789ABCDEF
-#123456N/1234567E
-def convertPattern6(s):
-    if len(s) == 16:
-        return f"{s[6:7]}{s[0:2]}°{s[2:4]}'{s[4:6]}\",{s[15:16]}{s[8:11]}'°{s[11:13]}'{s[13:15]}\""
-    return f"{s[4:5]}{s[0:2]}°{s[2:4]}',{s[11:12]}{s[6:9]}°{s[9:11]}'"
-
-################################################################################################
-#0123456789012345678901
-#37-42.4N120-10.8E
-#18-18.60N118-09.46E
-#37-42-46N120-10-98E
-def convertPattern7(s):
-    if len(s) == 19:
-        if '.' in s:
-            nSecond = str(int(s[6:8]) * 6 / pow(10, len(s[6:8]) - 1))[:2]
-            eSecond = str(int(s[16:18]) * 6 / pow(10, len(s[16:18]) - 1))[:2]
-            ret = f"{s[8:9]}{s[0:2]}°{s[3:5]}'{nSecond}\",{s[18:19]}{s[9:12]}°{s[13:15]}'{eSecond}\""
-        else:
-            ret =  f"{s[8:9]}{s[0:2]}°{s[3:5]}'{s[6:8]}\",{s[18:19]}{s[9:12]}°{s[13:15]}'{s[16:18]}\""
-    elif len(s) == 21:
-        nSecond = str(int(s[6:9]) * 6 / pow(10, len(s[6:9]) - 1))[:2]
-        eSecond = str(int(s[17:20]) * 6 / pow(10, len(s[17:20]) - 1))[:2]
-        ret =  f"{s[9]}{s[0:2]}°{s[3:5]}'{nSecond}\",{s[20]}{s[10:13]}°{s[14:16]}'{eSecond}\""
-    elif len(s) == 13:
-        ret =  f"{s[5:6]}{s[0:2]}°{s[3:5]}',{s[12:13]}{s[6:9]}°{s[10:12]}'"
-    else:
-        ret = f"{s[7:8]}{s[0:2]}°{s[3:5]}',{s[16:17]}{s[8:11]}°{s[12:14]}'"
-    return ret
 
 ################################################################################################
 def removeAllSpaces(s):
@@ -534,34 +349,6 @@ def listFoldersFiles(curPath: str='.', extension: str='*.*'):
         resultFiles.insert(0, '..')
     chdir(oldPath)
     return resultFiles, extList
-
-################################################################################################
-def readConfigRetiredDict():
-    retiredRockets = readConfig('Retired')
-    retiredDates = readConfig('RetiredDate')
-    retiredDict = dict(zip(retiredRockets, retiredDates))
-    return retiredDict
-
-################################################################################################
-def readConfigSeriesDictList():
-    czList = readConfig('SeriesCZ')
-    nczList = readConfig('SeriesNCZ')
-    czRocketList = readConfig('SeriesCZRockets')
-    nczRocketList = readConfig('SeriesNCZRockets')
-    seriesList = []
-    for cz, czRocket in zip(czList, czRocketList):
-        czRockets = czRocket.split('+')
-        seriesDict = {}
-        for rocket in czRockets:
-            seriesDict[rocket] = f'{cz}系列'
-        seriesList.append(seriesDict)
-    for ncz, nczRocket in zip(nczList, nczRocketList):
-        nczRockets = nczRocket.split('+')
-        seriesDict = {}
-        for rocket in nczRockets:
-            seriesDict[rocket] = f'{ncz}系列'
-        seriesList.append(seriesDict)
-    return seriesList
 
 ################################################################################################
 def getColorFromKml(color):

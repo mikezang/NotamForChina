@@ -15,8 +15,8 @@ def trimFrames(inputFile, startFrame, endFrame, outputFile):
 # merge newPart to old as new mp4 file
 # ffmpeg -i IN -c copy -bsf:v noise=drop=between(n\,20\,30) OUT
 def testTrimMergeVideo(oldVideo, oldFile, newFile):
-    oldFrames = myFile.readTextFile(oldFile)
-    newFrames = myFile.readTextFile(newFile)
+    oldFrames, _ = myFile.readTextFile(oldFile)
+    newFrames, _ = myFile.readTextFile(newFile)
     oldList, newList = diffFrames(oldFrames, newFrames)
     trimFrames(oldVideo, oldList[1] - oldList[2], oldList[1], 
                            oldVideo.replace('.mp4', f'-trim{oldList[2]}.mp4'))
