@@ -2,22 +2,23 @@
 
 chcp 65001
 
-set t=600
-if not "%1" == "" set t=%1
+rem set t=600
+rem if not "%1" == "" set t=%1
 
 cd C:\zang\python\RocketLaunch
 :loop
-python notam.py
-
-echo;
-
 pushd .
 cd temp
 for /f %%i in ('dir /b *.km?') do call :processKML %%i
 for /f %%i in ('dir /b notam*.txt') do call :processTXT %%i
 
 popd 
-goto :sleep
+
+python notamnew.py %1
+
+echo;
+
+goto :eof
 
 :processKML
 set now=%date%-%time:~0,5%

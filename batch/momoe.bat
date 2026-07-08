@@ -1,10 +1,11 @@
 @echo off
 
 IF [%1]==[] goto usage
+IF [%2]==[] goto usage
 
 cd \zang\python\Rocket*
 
-call merge %1 videos\中国运载火箭发射统计-momoe.mp4
+call merge %1 %2 rem videos\中国运载火箭发射统计-momoe.mp4
 
 goto :EOF
 

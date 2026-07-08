@@ -1,0 +1,1 @@
+ffmpeg -i img1.png -i img2.png -i img3.png -i img4.png -i img5.png -i img6.png -filter_complex "[0:v]scale=-1:5127[v0]; [1:v]scale=-1:5127[v1]; [2:v]scale=-1:5127[v2]; [3:v]scale=-1:5127[v3]; [4:v]scale=-1:5127[v4]; [5:v]scale=-1:5127[v5]; [v0][v1][v2][v3][v4][v5]hstack=inputs=6" output.png
