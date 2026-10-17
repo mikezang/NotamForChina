@@ -1,30 +1,31 @@
 import logging
 import time
-import numpy as np
 import bar_chart_race as bcr
-import pandas as pd
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from timeit import timeit
 
 from myModules import myFile
+from myModules import myConfig
+from myModules import myPlotInit
 from myModules import myPlot
+from myModules import myExcel
 from myModules import myDate
 
 DATA_FILE_PATH = './data/'
 TEMP_FILE_PATH = './temp/'
 
 ################################################################################################
-def sumLabel(rocket, All, Ok, startYear=''):
+def rocketSumLabel(rocket, All, Ok, startYear=''):
     sumAll, sumOk = int(All), int(Ok)
     percent = 0 if sumOk == 0 or sumAll == 0 else sumOk / sumAll * 100
     rocket1 = '全部' if rocket == '系列' else rocket
     s = f'{rocket1}:'
-    s += f'{int(sumOk):02}/{int(sumAll):02}＝成功率' if startYear else f'{int(sumOk):03}/{int(sumAll):03}＝成功率'
-    s += f'{percent:05.1f}%' if int(percent) == 100 or int(percent) == 0 else f'{percent:02.2f}%'
+    s += f'{int(sumOk):02}/{int(sumAll):02}＝' if startYear else f'{int(sumOk):03}/{int(sumAll):03}＝'
+    s += f'{percent:05.1f}%成功率' if int(percent) == 100 or int(percent) == 0 else f'{percent:02.2f}%成功率'
     return s
 
 ################################################################################################
-def getFilenameAndTitle(isAfterRetired, rocket, no='', startYear='', endYear='', plotStartYear=''):
+def getFilenameAndTitle(isAfterRetired, rocket, no='', startYear='', endYear='', plotStartYear='', count=0):
     if isAfterRetired == None:
         retired = '-noRetired'
         retiredTitle = '(发射数优先)'
@@ -32,13 +33,14 @@ def getFilenameAndTitle(isAfterRetired, rocket, no='', startYear='', endYear='',
         retired = '' if isAfterRetired else '-beforeRetired'
         retiredTitle = '(现役期间优先)' if isAfterRetired else '(现役优先)'
     if startYear:
-        years = f'{startYear}' if startYear == endYear - 1 else f'{startYear}～{endYear - 1}'
+        years = f'{startYear}年' if int(startYear) == int(endYear) - 1 else f'{startYear}～{int(endYear) - 1}年'
     else:
         years = ''
-    plotYear = '至' + plotStartYear if plotStartYear else ''
+    plotYear = f'至{plotStartYear}年'  if plotStartYear else ''
     title = f'中国{rocket}运载火箭发展史{retiredTitle}'
     title = f'{years}' + title if startYear else title
     title = f'{plotYear}' + title if plotStartYear else title
+    title = title[:-1] + '前30)' if count > 30 else title
     no = '' if no == None else no
     filename = f'videos/{plotYear}'
     filename += 'years/' if startYear else ''
@@ -55,13 +57,14 @@ def plotRocketChartRaceAnimation(df, rocket, startYear=None, endYear=None, no=''
             realOk = myPlot.get_nearest_row(dfOk, iDate)[label]
             valAll, valOk = int(realAll), int(realOk)
             percent = 0 if valOk == 0 or valAll == 0 else valOk / valAll * 100
-            ret = f'{int(valOk)}/{int(valAll):.0f}＝成功率'
-            ret += f'{percent:.0f}%' if int(percent) == percent else f'{percent:.2f}%'
-            retiredRocketsDict = myFile.readConfigRetiredDict() #constants.RETIRED_ROCKETS
+            ret = f'{int(valOk)}/{int(valAll):.0f}＝'
+            ret += f'{percent:.0f}%成功率' if int(percent) == percent else f'{percent:.2f}%成功率'
+            retiredRocketsDict = myConfig.readConfigRetiredDict() #constants.RETIRED_ROCKETS
 
             if label in retiredRocketsDict:
                 retiredDate = retiredRocketsDict[label]
                 if isAfterRetired:
+                    import pandas as pd
                     ret += f'({retiredDate[:4]}年退役)' if iDate >= pd.Timestamp(retiredDate) else ''
                 else:
                     ret += f'({retiredDate[:4]}年退役)'
@@ -73,17 +76,17 @@ def plotRocketChartRaceAnimation(df, rocket, startYear=None, endYear=None, no=''
         czRowOk = myPlot.get_nearest_row(dfOk, iDate)
         realSumAll = czRowAll.sum()
         realSumOk = czRowOk.sum()
-        s = sumLabel(rocket, realSumAll, realSumOk, startYear)
+        s = rocketSumLabel(rocket, realSumAll, realSumOk, startYear) + '\n'
         s1, s2 = '', ''
         if rocket in ['系列', '全部']:
             czSumAll = czRowAll[czRowAll.index.str.startswith('长征')].sum()
             czSumOk = czRowOk[czRowOk.index.str.startswith('长征')].sum()
-            s1 = sumLabel('长征', czSumAll, czSumOk, startYear) + '\n'
+            s1 = rocketSumLabel('长征', czSumAll, czSumOk, startYear) + '\n'
             nczSumAll = realSumAll - czSumAll
             nczSumOk = realSumOk - czSumOk
-            s2 = sumLabel('其他', nczSumAll, nczSumOk, startYear) + '\n'
-        s = f'{s1}{s2}{s}'
-        return {'x': .95, 'y': .2, 's': s, 'ha': 'right', 'size': 10}
+            s2 = rocketSumLabel('其他', nczSumAll, nczSumOk, startYear)
+        s = f'{s}{s1}{s2}'
+        return {'x': .975, 'y': .03, 's': s, 'ha': 'right', 'size': 10}
 
     def tickFunc(val, pos):
         if pos == 0:
@@ -101,7 +104,7 @@ def plotRocketChartRaceAnimation(df, rocket, startYear=None, endYear=None, no=''
     # xxx is launch counts, 
     # yyy is luanch counts successfully    
     isAfterRetired = True
-    dfList = myPlot.parseToDataFrame(df, isAfterRetired=isAfterRetired, isRocket=True, startYear=startYear, endYear=endYear, rocket=rocket, columnYear='日期', columnNotNull='结果')
+    dfList = myPlot.parseToDataFrame(df, isAfterRetired=isAfterRetired, isRocket=True, startYear=startYear, endYear=endYear, rocket=rocket, columnDate='日期', columnNotNull='结果')
     dfFormat = dfList[0]
     dfOk = dfList[1] # ok values
     dfAll = dfList[2] # all values
@@ -112,17 +115,18 @@ def plotRocketChartRaceAnimation(df, rocket, startYear=None, endYear=None, no=''
         dfAll = dfAll[dfAll.index>=plotYear] # all values
     myLogger.info(f'End parsing data to DataFrame')
 
-    filename, title = getFilenameAndTitle(isAfterRetired, rocket, no, startYear, endYear, plotStartYear)
+    filename, title = getFilenameAndTitle(isAfterRetired, rocket, no, startYear, endYear, plotStartYear, len(dfFormat.columns))
     myLogger.info(f'Start ploting bar char race: {filename}')
     myFile.createFolder(filename)
     periodTemplate = '%Y年%m月%d日'
     rocketsCount = min(30, len(dfFormat.columns))
-    labelFontSize = 5 if rocketsCount >= 30 else 7
-    # stepsPerPeriod = 20 if startYear else 10
+    labelFontSize = 5 if rocketsCount >= 30 else 6 if rocketsCount >= 20 else 7
+    fig_kwargs = {'figsize': (6, 3.375), 'dpi': 320}
+    print(f'运载火箭数: {len(dfFormat.columns)}')
 
     bcr.bar_chart_race(dfAll, dfFormat, 
         save_last_frame_image=True, plot_last_frames=False, last_frames_count=100,
-        save_frames_csv=False, incremental_plot=False,
+        save_frames_csv=False, incremental_plot=False, fig_kwargs=fig_kwargs,
         title=title, filename=filename,interpolate_period=True, #steps_per_period=stepsPerPeriod,  
         tick_template=tickFunc, period_summary_func=sumFunc, bar_texttemplate=barFunc, 
         period_template=periodTemplate, filter_column_colors=True, 
@@ -134,7 +138,7 @@ def plot1(df, startYears):
     rocket = '全部'
     for i, startYear in enumerate(startYears):
         endYear = int(startYears[i + 1]) if i < len(startYears) - 1 else 1 + int(startYears[-1])
-        plotRocketChartRaceAnimation(df, rocket, startYear=int(startYear), endYear=endYear)
+        plotRocketChartRaceAnimation(df, rocket, startYear=startYear, endYear=str(endYear))
 
 ################################################################################################
 def plot2(df, rocket, plotStartYear=None):
@@ -142,18 +146,20 @@ def plot2(df, rocket, plotStartYear=None):
         plotRocketChartRaceAnimation(df, rocket, plotStartYear=plotStartYear)
 
 ################################################################################################
-def plot3(excelFile, sheetName, plotStartYear=None, use_pinyin=False):
+def plot3(excelFile, sheetName, plotStartYear=None, days=30, plotLastFrames=True, use_pinyin=False):
+    import pandas as pd
     condition = '在轨 >= -1 and 航天员 not in ["-","无人"]'
-    df = pd.read_excel(excelFile, sheetName, usecols='A:O', ).query(condition)
-    # df = pd.read_excel(excelFile, sheetName)
-    # df['发射日期'] = df['发射日期'].apply(lambda d: d.replace(hour=0, minute=0, second=0))
-    # df['着陆日期'] = df['着陆日期'].apply(lambda d: d.replace(hour=23, minute=23, second=59))
-    plotShenzhouChartRaceAnimation(df, plotStartYear, use_pinyin)
+    df = pd.read_excel(excelFile, sheetName, usecols='A:N', ).query(condition)
+    dfExit = pd.read_excel(excelFile, '出舱', usecols='A:G', )
+    plotShenzhouChartRaceAnimation(df, dfExit, plotStartYear, days=days, plotLastFrames=plotLastFrames, use_pinyin=use_pinyin)
 
 ################################################################################################
 def getAge(born, ageYear=None):
-    today = date.today() if ageYear == None else ageYear
-    return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+    if isinstance(born, datetime) == True:
+        today = date.today() if ageYear == None else ageYear
+        return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+    else:
+        return '?'
 
 ################################################################################################
 def getBarLabel(taikonaut, iDate, use_pinyin=False):
@@ -161,11 +167,13 @@ def getBarLabel(taikonaut, iDate, use_pinyin=False):
     endList = [end for end in taikonaut['着陆日期']]
     bornList = [born for born in taikonaut['出生日期']]
     noList = [no for no in taikonaut['批次']]
+    roleList = [role for role in taikonaut['类型']]
 
     if use_pinyin:
         shipList = [ship for ship in taikonaut['缩写']]
     else:
-        shipList = [ship[:-1].replace('舟', '') for ship in taikonaut['飞船']]
+        # shipList = [ship[:-1].replace('舟', '') if len(ship) > 3 else ship for ship in taikonaut['飞船']]
+        shipList = [ship for ship in taikonaut['缩写']]
 
     daysList = []
     shipDaysList = []
@@ -181,18 +189,21 @@ def getBarLabel(taikonaut, iDate, use_pinyin=False):
             daysList.append(realDays)
             shipDaysList.append(f'{ship}({realDays})')
 
+    role = roleList[0]
     no = int(noList[0])
     age = getAge(bornList[0], iDate)
     realDays = int(sum(daysList))
     ships = '+'.join(reversed(shipDaysList))
-    batchAge = f'B{no}-A{age}:' if use_pinyin else f'第{no}批{age}岁:'
+    batchAge = f'B{no}-A{age}:' if use_pinyin else f'第{no}批{age}岁{role}:'
     dyas = f'D{realDays}' if use_pinyin else f'{realDays}日'
     barLabel = f'{batchAge}{dyas}={ships}' if ships else f'{batchAge}{dyas}'
     return barLabel
 
 ################################################################################################
-def getSumLabel(df, iDate, cond, use_pinyin=False):
+def getSumLabel(df, dfExit, iDate, cond, condExit):
+    import numpy as np
     dfNew = df.copy()
+    dfNewExit = dfExit.copy()
     dfNew['days'] = np.nan
     cond1 = (iDate >= dfNew['发射日期']) & (iDate <= dfNew['着陆日期'])
     if cond1.any():
@@ -201,44 +212,44 @@ def getSumLabel(df, iDate, cond, use_pinyin=False):
     if cond2.any():
         dfNew.loc[cond2, 'days'] = (dfNew.loc[cond2, '着陆日期'] - dfNew.loc[cond2, '发射日期']).dt.days
 
-    taikoColumn = '拼音' if use_pinyin else '航天员'
-    dfSumExit = dfNew[cond].groupby(taikoColumn)['出舱'].agg(['sum', 'count']).reset_index()
-    countExit = int(dfSumExit['sum'].max()) # 最大出舱次数
-    exitMaxName = '／'.join(dfSumExit[dfSumExit['sum'] == countExit][taikoColumn].tolist())
-
-    dfSumCount = dfNew[cond].groupby(taikoColumn)['days'].agg(['sum', 'count']).reset_index()
-    countMax = dfSumCount['count'].max() # 最大在轨次数
-    daysMax = int(dfSumCount['sum'].max()) # 最大在轨日数
-    countMaxName = '／'.join(dfSumCount[dfSumCount['count'] == countMax][taikoColumn].tolist())
-    daysMaxName = '／'.join(dfSumCount[dfSumCount['sum'] == daysMax][taikoColumn].tolist())
-
-    l1 = len(daysMaxName)# - ('(' in daysMaxName)
-    l2 = len(countMaxName)# - ('(' in countMaxName)
-    lMax = max(l1, l2)
-    if l1 > l2:
-        if use_pinyin:
-            countMaxName = countMaxName.ljust(lMax, ' ')
-        else:
-            lMax = lMax - ('(' in daysMaxName)
-            countMaxName = countMaxName.ljust(lMax, '　')
-    elif l1 < l2:
-        if use_pinyin:
-            daysMaxName = daysMaxName.ljust(lMax, ' ')
-        else:
-            lMax = lMax + ('(' in daysMaxName)
-            daysMaxName = daysMaxName.ljust(lMax, '　')
-    lMax = max(len(str(daysMax)), len(str(countMax)))
-    if use_pinyin:
-        sumLabel = f'Max Days {daysMax:0{lMax}}：{daysMaxName}\n' 
-        sumLabel+= f'Max Times {countMax:0{lMax}}：{countMaxName}'
+    taikoColumn = '航天员'
+    dfSumExit = dfNewExit[condExit].groupby(taikoColumn)['出舱'].agg(['sum']).reset_index()
+    if dfSumExit.empty:
+        sumExitMax = 0
+        sumExitMaxLabel = ''
     else:
-        sumLabel = f'最多在轨{daysMax:0{lMax}}日：{daysMaxName}\n'
-        sumLabel+= f'最多在轨{countMax:0{lMax}}次：{countMaxName}\n'
-        sumLabel+= f'最多出舱{countExit:0{lMax}}次：{exitMaxName}'
+        # 累计最大出舱次数
+        sumExitMax = int(dfSumExit['sum'].max()) 
+        sumExitMaxLabel = '／'.join(dfSumExit[dfSumExit['sum'] == sumExitMax][taikoColumn].tolist()[::-1])
+
+    dfSumCount = dfNew[cond].groupby(taikoColumn).agg(
+            sum=('days', 'sum'),
+            count=('days', lambda x: ((x > 0) & (dfNew.loc[x.index, '缩写'] != 'CSS')).sum())
+        ).reset_index()
+    # 累计最大在轨日数
+    sumDaysMax = int(dfSumCount['sum'].max()) 
+    sumDaysMaxLabel = '／'.join(dfSumCount[dfSumCount['sum'] == sumDaysMax][taikoColumn].tolist()[::-1])
+    # 累计最大在轨次数
+    sumCountMax = dfSumCount['count'].max() 
+    sumCountMaxLabel = '／'.join(dfSumCount[dfSumCount['count'] == sumCountMax][taikoColumn].tolist()[::-1])
+
+    l1 = len(sumDaysMaxLabel)
+    l2 = len(sumExitMaxLabel)
+    l3 = len(sumCountMaxLabel)
+    lMax = max(l1, l2, l3)
+    sumDaysMaxLabel = sumDaysMaxLabel.ljust(lMax + ('(' in sumDaysMaxLabel), '　')
+    sumExitMaxLabel = sumExitMaxLabel.ljust(lMax + ('(' in sumExitMaxLabel), '　') if sumExitMaxLabel else ''
+    sumCountMaxLabel = sumCountMaxLabel.ljust(lMax + ('(' in sumCountMaxLabel), '　')
+    persons = (str(len(set(dfSumCount['航天员'])))).ljust(2 * lMax)
+    
+    sumLabel = f'累计最多在轨{str(sumDaysMax).rjust(4)}日：{sumDaysMaxLabel}\n'
+    sumLabel+= f'累计最多在轨{str(sumCountMax).rjust(4)}次：{sumCountMaxLabel}\n'
+    sumLabel+= f'累计最多出舱{str(sumExitMax).rjust(4)}次：{sumExitMaxLabel}\n' if sumExitMaxLabel else ''
+    sumLabel+= f'累计在轨航天员人数：{persons}'
     return sumLabel
 
 ################################################################################################
-def plotShenzhouChartRaceAnimation(df, plotStartYear='', use_pinyin=False):
+def plotShenzhouChartRaceAnimation(df, dfExit, plotStartYear='', days=30, plotLastFrames=True, use_pinyin=False):
     def barFunc(days, taiko, iDate):
         taikonaut = myPlot.get_nearest_taikonaut(df, iDate, taiko, use_pinyin)
         if int(days) == 0:
@@ -254,11 +265,12 @@ def plotShenzhouChartRaceAnimation(df, plotStartYear='', use_pinyin=False):
     def sumFunc(vals, ranks):
         iDate = vals.name
         cond = ((iDate >= df['发射日期']) & (iDate <= df['着陆日期'])) | (iDate >= df['着陆日期'])
+        condExit = (iDate >= dfExit['出舱日期'])
         if cond.any():
-            sumLabel = getSumLabel(df, iDate, cond, use_pinyin)
+            sumLabel = getSumLabel(df, dfExit, iDate, cond, condExit)
         else:
             sumLabel = ''
-        return {'x': .95, 'y': .03, 's': sumLabel, 'ha': 'right', 'size': 10}
+        return {'x': .975, 'y': .03, 's': sumLabel, 'ha': 'right', 'size': 10}
 
     def tickFunc(val, pos):
         vals = str(val).split('.')
@@ -279,18 +291,31 @@ def plotShenzhouChartRaceAnimation(df, plotStartYear='', use_pinyin=False):
     if use_pinyin:
         filename, title = 'videos\\ChinaTaikonautsOrbitBarChartRace.mp4', 'China Taikonauts Orbit Bar Chart Race (On-orbit Priority)'
     else:
-        plotYear = '至' + plotStartYear if plotStartYear else ''
-        filename, title = f'videos\\{plotYear}中国航天员在轨动态条形图.mp4', f'{plotYear}中国航天员在轨动态条形图(在轨优先)'
+        year = myDate.getThisYear()
+        plotYear = f'至{year}年' if year else ''
+        filename = f'videos\\{plotYear}中国航天员在轨动态条形图.mp4' if plotLastFrames else f'videos\\中国航天员在轨历史动态条形图.mp4'
+        title = f'{plotYear}中国航天员在轨动态条形图(在轨优先)' if plotLastFrames else f'中国航天员在轨历史动态条形图(在轨优先)'
+    
+    count = len(dfWide.columns)
+    title = title[:-1] + '前30)' if count > 30 else title
     myLogger.info(f'Start ploting bar char race: {filename}')
     myFile.createFolder(filename)
     periodTemplate = '%B %d, %Y' if use_pinyin else '%Y年%m月%d日'
+    period_label={'x': .98, 'y': .25, 'ha': 'right', 'va': 'center'}
+    fig_kwargs = {'figsize': (6, 3.375), 'dpi': 320}
+    steps_per_period = 10
+    frames = days * steps_per_period
+    peopleCount = min(30, len(dfWide.columns))
+    labelFontSize = 5 if peopleCount >= 30 else 6 if peopleCount >= 20 else 7
+    print(f'航天员数: {len(dfWide.columns)}')
 
     bcr.bar_chart_race(dfWide, dfRank, 
-        save_last_frame_image=True, plot_last_frames=True, last_frames_count=1000,
-        save_frames_csv=False, incremental_plot=False,
-        title=title, filename=filename,interpolate_period=True, steps_per_period=10,  
+        save_last_frame_image=True, plot_last_frames=plotLastFrames, last_frames_count=frames,
+        save_frames_csv=False, incremental_plot=False, fig_kwargs=fig_kwargs, 
+        title=title, filename=filename,interpolate_period=True, steps_per_period=steps_per_period,  
         tick_template=tickFunc, period_summary_func=sumFunc, bar_texttemplate=barFunc, 
-        period_template=periodTemplate, filter_column_colors=True)
+        period_label=period_label, period_template=periodTemplate, filter_column_colors=True,
+        tick_label_font=labelFontSize, bar_label_font=labelFontSize, n_bars=peopleCount)
 
     myLogger.info(f'End ploting bar char race: ---------------------------')
 
@@ -301,15 +326,15 @@ def main():
     myLogger = logging.getLogger('main')
 
     myLogger.info(f'Start: *****************************')
-    myPlot.init(True)
+    myPlotInit.init(True)
 
     myLogger.info(f'Start reading data:')
     excelFile = f"{DATA_FILE_PATH}ChinaRocketLaunch.xlsx"
-    sheetName = "中国航天员"
+    sheetName = "乘组"
     plot3(excelFile, sheetName, '2024')
 
     sheetName = "发射纪录"
-    df = myPlot.readDataFromSheetNew(excelFile, sheetName)
+    df = myExcel.parseExcelSheetLaunch(excelFile, sheetName)
     myLogger.info(f'End reading data:')
 
     startYears = ['1970', '1980', '1990', '2000']

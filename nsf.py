@@ -4,24 +4,24 @@
 """
 # pylint: disable=W0105,W0511,W0703,C0103,C0116,C0301
 
-from json import dump, load
+from pathlib import Path
+from sys import argv, stdout
 import locale
 from re import findall, finditer, search, sub, IGNORECASE
 from datetime import date, datetime, timedelta
-import sys
 from timeit import timeit
 from pytz import UTC, timezone
-from selenium.webdriver.common.by import By
+from os import makedirs
 
 from myModules import myConst
 from myModules import myExcept
-from myModules import myConst
 from myModules import myNet
 from myModules import myFile
-from myModules import myDate
+from myModules import myConfig
 from myModules import myDict
 
 TEMP_FILE_PATH = './temp/'
+HTML_FOLDER = TEMP_FILE_PATH + "/nsf/"
 
 ################################################################################################
 def splitTitle(item: list) -> str:
@@ -41,20 +41,6 @@ def splitTitle(item: list) -> str:
     return key
 
 ################################################################################################
-def sortByTitle(d: dict) -> dict:
-    return {k : v for k, v in sorted(d.items(), key=lambda x: splitTitle(x))}
-
-################################################################################################
-def writeNsfToFile(nsfDict):
-    filename = f'{TEMP_FILE_PATH}nsfLinkList.html'
-    newText = f"<H2>Chinese Launchers POST List</H2>"
-    nsfDict = sortByTitle(nsfDict)
-    for i, (key, value) in enumerate(nsfDict.items()):
-        values = value.split(':')
-        newText += f'{i + 1:03}-{values[0]}: <a target=_blank href={key}>{':'.join(values[1:])}</a><br>'
-    myFile.saveTextFile(filename, newText)
-
-################################################################################################
 def isPastDate(oldDate) -> bool:
     baseDate = date.today()
     if baseDate >= oldDate.date():
@@ -71,32 +57,10 @@ def updateNotamDict(notamDict, notam) -> dict:
 
 ################################################################################################
 def printNsf(launch_date) -> None:
+    from myModules import myDate
     print(f"\nNSF发射数据{myDate.getJapanTime()}")
     print("==============================")
     printNsfDict(launch_date)
-
-################################################################################################
-def getNsfUrl(driver, page) -> dict:
-    urls = {}
-    myNet.elementLocatedBy(driver, By.CLASS_NAME, "table_grid")
-    table = driver.find_element(By.CLASS_NAME, "table_grid")
-    rows = table.find_elements(By.TAG_NAME, "tr")
-
-    for row in rows:
-        cols = row.find_elements(By.TAG_NAME, "td")
-
-        for col in cols:
-            className = col.get_attribute("class")
-            if 'stickybg' in className or 'lockedbg' in className:
-                continue
-
-            if "subject" in className:
-                ahref = row.find_element(By.TAG_NAME, "a")
-                href = ahref.get_attribute("href") + ';all'
-                href = sub(r'PHPSESSID\=[a-z0-9]+\&', '', href)
-                title = ahref.text
-                urls[href] = f'Page{page:02}: {title}'
-    return urls
 
 ################################################################################################
 def getDateFromTitle(title) -> str:
@@ -172,14 +136,14 @@ def parseNsfContent(driver, i, title, basePage, baseUrl) -> None:
 
     coodinatesNotam = findall(myConst.PATTERN_LATITUDE_LONGITUDE, html)
     if coodinatesNotam:
-        coords.append(f'{[myFile.findConvertLatitudeLongitude(c) for c in coodinatesNotam]}')
+        coords.append(f'{[myFile.convertLatitudeLongitude(c) for c in coodinatesNotam]}')
         print(coodinatesNotam)
     else:
         coords.append([])
 
     coodinatesMsa = findall(myConst.MSA_PATTERN_LATITUDE_LONGITUDE1, html)
     if coodinatesMsa:
-        coords.append(f'{[myFile.findConvertLatitudeLongitude(c) for c in coodinatesMsa]}')
+        coords.append(f'{[myFile.convertLatitudeLongitude(c) for c in coodinatesMsa]}')
         print(coodinatesMsa)
     else:
         coords.append([])
@@ -192,6 +156,7 @@ def parseNsfContent(driver, i, title, basePage, baseUrl) -> None:
 
 ################################################################################################
 def updateDictToJsonFile(nsf_data, filename, isBackup=False):
+    from myModules import myDate
     nsf_old = loadDictFromJsonFile(filename)
 
     if nsf_old is not None:
@@ -212,12 +177,14 @@ def updateDictToJsonFile(nsf_data, filename, isBackup=False):
 
 ################################################################################################
 def saveDictToJsonFile(nsfDict, filename):
+    from json import dump, load
     print(f'Save   to file "{filename}.json"')
     with open(f'{filename}.json', "w", encoding="utf-8") as f:
         dump(nsfDict, f, ensure_ascii=False, indent=2)
 
 ################################################################################################
 def loadDictFromJsonFile(filename):
+    from json import dump, load
     try:
         with open(f'{filename}.json', encoding="utf-8") as f:
             print(f'Load from file "{filename}.json".')
@@ -227,6 +194,7 @@ def loadDictFromJsonFile(filename):
 
 ################################################################################################
 def updateNsfNotamJsonFile(nsf_new, filename):
+    from myModules import myDate
     nsf_old = loadDictFromJsonFile(filename)
 
     if nsf_old is not None:
@@ -352,6 +320,7 @@ def getNsfNotam(content, year, j) -> dict:
                 numberSet.add(number)
         print(f'{sorted(numberSet)}')
     else:
+        from myModules import myDate
         startDates, endDates = getNsfDatesGroup(content)
         endDatesList = [(m.group(1), m.start(), m.end()) for m in endDates]
         countDates = len(endDatesList)
@@ -542,6 +511,7 @@ def getNsfNumbers(content) -> list:
 
 ################################################################################################
 def getNsfNotamData1(content) -> tuple:
+    from myModules import myDate
     # startDate, endDate = getNsfDate(content)
     startDate, endDate, endIndex = getNsfDateIndex(content)
     area = myFile.formatLatitudeLongitude(getNsfAreaGroup(content[:endIndex]))
@@ -556,7 +526,7 @@ def getFirRegExPattern(fir:str):
 
 ################################################################################################
 def getNsfLocation(content) -> str:
-    firNames = myFile.readConfigFirNames()
+    firNames = myConfig.readConfigFirNames()
     pattern = getFirRegExPattern(firNames)
     locations = finditer(pattern, content)
     if locations:
@@ -852,6 +822,7 @@ def removeDuplicateNotams(notamDict) -> dict:
 
 ################################################################################################
 def getNsfPages(driver) -> int:
+    from selenium.webdriver.common.by import By
     myNet.elementLocatedBy(driver, By.CLASS_NAME, "pagesection")
     pagesection = driver.find_element(By.CLASS_NAME, "pagesection")
     pages = pagesection.find_elements(By.CLASS_NAME, "navPages")
@@ -866,12 +837,6 @@ def getRocketName(title) -> str:
 def getNsfCity(title) -> str:
     m = search(myConst.NSF_CITY_PATTERN, title, IGNORECASE)
     return myConst.NSF_CITIES[m.group().upper()] if m else '未知'
-
-# ################################################################################################
-# def drawNsfNotam(nsf_luanchList, titleForCheck) -> None:
-#     for title, notams in nsf_luanchList.items():
-#         if isinstance(notams, list) and (titleForCheck == '' or title == titleForCheck):
-#             myFile.createNsfKmlFile(title, notams)
 
 ################################################################################################
 def printTitlePages(title, lastPage, i) -> None:
@@ -894,18 +859,188 @@ def printTitlePages(title, lastPage, i) -> None:
 # D.D° ⇒ D°M'S":    Int(D) = D°, Int((D - Int(D)) * 60) = M', (((D - Int(D)) * 60) - Int((D - Int(D)) * 60)) * 60 = S"
 
 ################################################################################################
+def getNsfUrl(driver, page) -> dict:
+    from selenium.webdriver.common.by import By
+    urls = {}
+    myNet.elementLocatedBy(driver, By.CLASS_NAME, "table_grid")
+    table = driver.find_element(By.CLASS_NAME, "table_grid")
+    rows = table.find_elements(By.TAG_NAME, "tr")
+
+    for row in rows:
+        cols = row.find_elements(By.TAG_NAME, "td")
+
+        for col in cols:
+            className = col.get_attribute("class")
+            if 'stickybg' in className or 'lockedbg' in className:
+                continue
+
+            if "subject" in className:
+                ahref = row.find_element(By.TAG_NAME, "a")
+                href = ahref.get_attribute("href") + ';all'
+                href = sub(r'PHPSESSID\=[a-z0-9]+\&', '', href)
+                title = ahref.text
+                urls[href] = f'Page{page:02}: {title}'
+    return urls
+
+################################################################################################
+def parseTextFileToDict(filename):
+    with open(filename, encoding="utf-8") as f:
+        lines = f.readlines()
+
+    urls = {}
+    for i, line in enumerate(lines):
+        if i > 0:
+            key = line.split('href=')[1].split('>')[0]
+            value1 = line.split('-')[1].split(':')[0]
+            value2 = line.split('>')[1].split('<')[0]
+            value = value1 + ":" + value2
+            urls[key] = value
+            # print({key: value})
+    return urls
+
+################################################################################################
+def sortByTitle(d: dict) -> dict:
+    return {k : v for k, v in sorted(d.items(), key=lambda x: splitTitle(x))}
+
+################################################################################################
+def writeNsfToFile(nsfDict, filename):
+    newText = f"<H2>Chinese Launchers POST List</H2>\n"
+    nsfDict = sortByTitle(nsfDict)
+    for i, (key, value) in enumerate(nsfDict.items()):
+        values = value.split(':')
+        newText += f'{i + 1:04}-{values[0]}: <a target=_blank href={key}>{':'.join(values[1:])}</a><br>\n'
+        # newText += f'{i + 1:04}: <a target=_blank href={key}>{':'.join(values[1:])}</a><br>\n'
+    myFile.saveTextFile(filename, newText, openFile=False)
+
+################################################################################################
+def parseNsfHtml(soup, page):
+    urls = {}
+    table = soup.find(class_="table_grid")
+    rows = table.find_all("tr")
+
+    for row in rows:
+        cols = row.find_all("td")
+
+        for col in cols:
+            className = col.get("class")
+            if 'stickybg' in className or 'stickybg2' in className or 'lockedbg' in className:
+                continue
+
+            if "subject" in className:
+                ahref = row.find("a")
+                href = ahref.get("href") + ';all'
+                href = sub(r'PHPSESSID\=[a-z0-9]+\&', '', href)
+                title = ahref.text
+                urls[href] = f'Page{page:02}: {title}'
+    return urls
+
+NSF_FILENAME_TEMPLATE = "https___forum.nasaspaceflight.com_index.php_board=40.*.html"
+MSA_FILENAME_TEMPLATE = "中华人民共和国海事局航警火箭*.html"
+
+################################################################################################
+def parseNsfHtmlFiles(htmlFolder):
+    from bs4 import BeautifulSoup
+    newNsfDict = {}
+    files = sorted(Path(htmlFolder).glob(NSF_FILENAME_TEMPLATE), key=lambda p: int(search(r'board=40\.(\d+)', p.name).group(1)))
+    for page, filename in enumerate(files, 1):
+        with open(filename, encoding="utf-8") as f:
+            href = f'{filename.name[:-5].replace('___', '://')}'
+            print(f"Page{page:02}: {href}")
+            soup = BeautifulSoup(f, "lxml")
+            # soup = BeautifulSoup(f, "html.parser")
+            newNsfDict.update(parseNsfHtml(soup, page))
+    return newNsfDict
+
+################################################################################################
+def parseMsaHtmlFiles(htmlFolder):
+    from bs4 import BeautifulSoup
+    newNsfDict = {}
+    files = sorted(Path(htmlFolder).glob(MSA_FILENAME_TEMPLATE), key=lambda p: int(search(r'board=40\.(\d+)', p.name).group(1)))
+    for page, filename in enumerate(files, 1):
+        with open(filename, encoding="utf-8") as f:
+            href = f'{filename.name[:-5].replace('___', '://')}'
+            print(f"Page{page:02}: {href}")
+            soup = BeautifulSoup(f, "lxml")
+            # soup = BeautifulSoup(f, "html.parser")
+            newNsfDict.update(parseNsfHtml(soup, page))
+    return newNsfDict
+
+def parseMsaSite(msaUrl):
+    newNsfDict = {}
+    # files = sorted(Path(htmlFolder).glob(MSA_FILENAME_TEMPLATE), key=lambda p: int(search(r'board=40\.(\d+)', p.name).group(1)))
+    
+    # for page, filename in enumerate(files, 1):
+    #     with open(filename, encoding="utf-8") as f:
+    #         href = f'{filename.name[:-5].replace('___', '://')}'
+    #         print(f"Page{page:02}: {href}")
+    #         soup = BeautifulSoup(f, "lxml")
+    #         # soup = BeautifulSoup(f, "html.parser")
+    #         newNsfDict.update(parseNsfHtml(soup, page))
+    return newNsfDict
+
+################################################################################################
 def main():
     locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-    sys.stdout.reconfigure(encoding='UTF-8')
-    with myNet.getFirefoxDriver() as driver:
-        try:
-            print('Create all NSF launched urls from Chinese Launchers')
-            print('https://forum.nasaspaceflight.com/index.php?board=40.0')
-            page = 'url'
-            nsfDict = getNsfUrlList(driver, page)
-            writeNsfToFile(nsfDict)
-        except:
-            myExcept.printExceptionTrace()
+    stdout.reconfigure(encoding='UTF-8')
+    newNsfDict = {}
+ 
+    try:
+        # with myNet.getFirefoxDriver() as driver:
+        #     print('Create all NSF launched urls from Chinese Launchers')
+        #     # print('https://forum.nasaspaceflight.com/index.php?board=40.0')
+        #     # page = 'url'
+        #     # nsfDict = getNsfUrlList(driver, page)
+        #     writeNsfToFile(nsfDict)
+
+        makedirs(HTML_FOLDER, exist_ok=True)
+        nsfFilenameLinks = f'{TEMP_FILE_PATH}nsfLinkList.html'
+        msaFilenameLinks = f'{TEMP_FILE_PATH}msaLinkList.html'
+
+        if len(argv) > 1:
+            if argv[1] == 'new':
+                from myModules import myDate
+                import shutil
+                filenameBackup = f'{TEMP_FILE_PATH}nsfLinkList-{myDate.getJapanTimeFilename()}.html'
+                print('Create all NSF launched urls for Chinese Launchers')
+                print(f'Copy {nsfFilenameLinks} to {filenameBackup}')
+                shutil.copy(nsfFilenameLinks, filenameBackup)
+                newNsfDict = parseNsfHtmlFiles(HTML_FOLDER)
+                print(f'Total         : {len(newNsfDict)}')
+                writeNsfToFile(newNsfDict, nsfFilenameLinks)
+            elif argv == 'msa':
+                print('Update MSA launched urls for Chinese Launchers')
+                MSA_URL = "https://www.msa.gov.cn/page/search/index.jhtml?head_search=0&keywords=%E4%BA%91%E8%88%AA%E8%AD%A6+%E7%81%AB%E7%AE%AD+"
+                oldNsfDict = parseTextFileToDict(msaFilenameLinks)
+                newNsfDict = parseMsaSite(MSA_URL)
+        else:
+            print('Update NSF launched urls for Chinese Launchers')
+            oldNsfDict = parseTextFileToDict(nsfFilenameLinks)
+            newNsfDict = parseNsfHtmlFiles(HTML_FOLDER)
+
+            newTopics = 0
+            updatedTitles = 0
+            unchanged = len(oldNsfDict)
+            # suffixes = {v.partition(":")[2] for v in oldNsfDict.values()}
+
+            for key, value in newNsfDict.items():
+                if key not in oldNsfDict:
+                    newTopics += 1
+                    oldNsfDict.update({key: value})
+                elif value not in oldNsfDict.values():
+                # elif value.split(':')[1] not in suffixes:
+                    updatedTitles += 1
+                    unchanged -= 1
+                    oldNsfDict[key] = value
+
+            print(f'\nNew Topics    : {newTopics}')
+            print(f'Updated Titles: {updatedTitles}')
+            print(f'Unchanged     : {unchanged}')
+            print(f'Total         : {len(oldNsfDict)}')
+
+            if newTopics > 0 or updatedTitles > 0:
+                writeNsfToFile(oldNsfDict, nsfFilenameLinks)
+    except:
+        myExcept.printExceptionTrace()
 
 ################################################################################################
 def showRunTime(func):

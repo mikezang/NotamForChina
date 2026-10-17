@@ -1,14 +1,11 @@
 from timeit import timeit
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from cn2an import an2cn
 from datetime import timedelta
 from sortedcontainers import SortedDict
 
 from myModules import myExcel
+from myModules import myPlotInit
 from myModules import myPlot
 from myModules import myShape
-from myModules import myDate
 from myModules import myHtml
 from myModules import myFile
 
@@ -19,16 +16,18 @@ DATA_FILE_PATH = './data/'
 def reverseLocation(loc, spot):
     if '/' in loc:
         tempLoc = loc.split('/')
+        tempLoc.reverse()
         tempSpot = spot.split('/')
-        tempLoc[0] = tempLoc[0].replace('海上', tempSpot[0][:2])
-        tempLoc[1] = tempLoc[1].replace('海上', tempSpot[1][:2])
-        return f'{tempLoc[1]}/{tempLoc[0]}'
+        tempSpot.reverse()
+        tempLocNew = [l.replace('海上', s[:2]) for l, s in zip(tempLoc, tempSpot)]
+        return '/'.join(tempLocNew)
     else:
         loc = loc.replace('海上', spot[:2])
         return loc
     
 ################################################################################################
 def plotBarGraphByDate(cn_font, ax, df, colorDict=None, fontsize=12, upperStages=None, isMaiden=False, plotPayload=False, payload=None, title=''):
+    from cn2an import an2cn
     # Extract plot data
     xDataList = list(df[myExcel.EXCEL_COLUMN_DATE])
     yDataList = list(df['发射数'])
@@ -41,7 +40,7 @@ def plotBarGraphByDate(cn_font, ax, df, colorDict=None, fontsize=12, upperStages
     spotList = list(df[myExcel.EXCEL_COLUMN_SPOT])
     xTickList = list(range(1, len(xDataList) + 1))
     xTicksLabelList = [f'{reverseLocation(l, s)}{an2cn(str(d.month))}月{an2cn(str(d.day))}日' for d, l, s in zip(xDataList, locationList, spotList)]
-    colorDict = colorDict if colorDict else getColorDict(df, False)
+    colorDict = colorDict if colorDict else getColorDict(df)
 
     # Plot bar with the same color for the same rokect
     for i in range(len(xDataList)):
@@ -80,6 +79,8 @@ def plotBarGraphByDate(cn_font, ax, df, colorDict=None, fontsize=12, upperStages
 
 ################################################################################################
 def plotTitleLegendByDate(cn_font, ax, title, df, okRate=None, page=0, isSeries=False, isMaiden=False, isLunarNewYear=False, isFirstLast=False, plotPayload=False):
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
     # get handles and labels
     handles, labels = ax.get_legend_handles_labels()
     singleRocket = myPlot.isSingleRocket(ax)
@@ -151,21 +152,21 @@ def plotTitleLegendByDate(cn_font, ax, title, df, okRate=None, page=0, isSeries=
 
     # set new handles and labels back to the bar plot
     ncols = myPlot.calcColsPerLine(newLabels)
-    ax.legend(newHandles, newLabels , loc='upper center', prop={'family': cn_font.get_name(), 'size': 14}, ncol=ncols)
+    ax.legend(newHandles, newLabels , loc='upper center', prop={'family': cn_font.get_name(), 'size': 12}, ncol=ncols)
     plt.title(title, fontproperties=cn_font, fontsize=18)
     return singleRocket
 
+# 1月年初12月年末发射日统计
 ################################################################################################
 def plotGraphForFirstLast(cn_font, df, upperStages):
-    # dfList = myPlot.parseExcelSheetToDataFrame(excelSheet, columnYear='日期', columnNotNull='结果', isFirstLast=True)
-    dfList = myPlot.parseToDataFrame(df, columnYear='日期', columnNotNull='结果', isFirstLast=True)
+    dfList = myPlot.parseToDataFrame(df, columnDate='日期', columnNotNull='结果', isFirstLast=True)
     dfList = myPlot.countDataFrameByDate(dfList)
     # series = ['全部', '长征', '其他']
     series = ['全部']
 
     for df, s in zip(dfList, series):
         if not df.iloc[0:, :].empty:
-            colorDict = getColorDict(df, False)
+            colorDict = getColorDict(df)
             okRate = getOkRate([df])
             title = f'中国{s}运载火箭年初年末发射日统计'
             # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) 
@@ -175,64 +176,71 @@ def plotGraphForFirstLast(cn_font, df, upperStages):
             myPlot.showBackend()
             myPlot.saveFig(fig, f'./images/{title}.png') # Save the plot to a file
 
+# 1月2月春节前后发射日统计
 ################################################################################################
-def plotGraphForLunarNewYear(cn_font, df, upperStages):
-    # dfList = myPlot.parseExcelSheetToDataFrame(excelSheet, columnYear='日期', columnNotNull='结果', isLunarNewYear=True)
-    dfList = myPlot.parseToDataFrame(df, columnYear='日期', columnNotNull='结果', isLunarNewYear=True)
+def plotGraphForLunarNewYear(cn_font, df, upperStages, printLast=True):
+    dfList = myPlot.parseToDataFrame(df, columnDate='日期', columnNotNull='结果', isLunarNewYear=True)
     dfList = myPlot.countDataFrameByDate(dfList)
     count = len(dfList)
-    # series = ['全部', '长征', '其他']
-    # series = ['全部']
+    colorDict = getColorDict(dfList)
 
     for no, df in enumerate(dfList, 1):
-        if not df.iloc[0:, :].empty:
-            colorDict = getColorDict(df, False)
-            okRate = getOkRate([df])
-            title = f'中国全部运载火箭春节前后发射日统计'
-            title += str(no) if count > 1 else ''
-            # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) 
-            fig, axLeft =  myShape.getFigure()
-            plotBarGraphByDate(cn_font, axLeft, df, upperStages=upperStages, colorDict=colorDict)
-            plotTitleLegendByDate(cn_font, axLeft, title, df, okRate=okRate, isLunarNewYear=True)
-            myPlot.showBackend()
-            myPlot.saveFig(fig, f'./images/{title}.png') # Save the plot to a file
+        if not printLast or no == len(dfList):
+            if not df.iloc[0:, :].empty:
+                okRate = getOkRate([df])
+                title = f'中国全部运载火箭春节前后发射日统计'
+                title += str(no) if count > 1 else ''
+                # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) 
+                fig, axLeft =  myShape.getFigure()
+                plotBarGraphByDate(cn_font, axLeft, df, upperStages=upperStages, colorDict=colorDict)
+                plotTitleLegendByDate(cn_font, axLeft, title, df, okRate=okRate, isLunarNewYear=True)
+                myPlot.showBackend()
+                myPlot.saveFig(fig, f'./images/{title}.png') # Save the plot to a file
 
 # 首飞发射日统计
 ################################################################################################
-def plotGraphForMaiden(cn_font, df, upperStages):
-    # dfList = myPlot.parseExcelSheetToDataFrame(excelSheet, columnYear='日期', columnNotNull='结果', isMaiden=True)
-    dfList = myPlot.parseToDataFrame(df, columnYear='日期', columnNotNull='结果', isMaiden=True)
+def plotGraphForMaiden(cn_font, df, upperStages, seriesChecked, printLast=True):
+    from myModules import myDataFrame
+    dfList = myPlot.parseToDataFrame(df, columnDate='日期', columnNotNull='结果', isMaiden=True)
     dfList = myPlot.countDataFrameByDate(dfList)
     series = ['全部', '长征', '其他']
 
     for df, s in zip(dfList, series):
-        if not df.iloc[0:, :].empty:
-            colorDict = getColorDict(df, True)
-            okRate = getOkRate([df])
-            title = f'中国{s}运载火箭首飞日统计'
-            # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) 
-            fig, axLeft =  myShape.getFigure()
-            plotBarGraphByDate(cn_font, axLeft, df, upperStages=upperStages, colorDict=colorDict, isMaiden=True)
-            plotTitleLegendByDate(cn_font, axLeft, title, df, okRate=okRate, isMaiden=True)
-            myPlot.showBackend()
-            myPlot.saveFig(fig, f'./images/{title}.png') # Save the plot to a file
+        if s in seriesChecked:
+            dfListPage = myDataFrame.splitToPages(df)
+            dfListPage = myPlot.countDataFrameByDate(dfListPage)
+            okRate = getOkRate(dfListPage)
+            
+            for no, dfPage in enumerate(dfListPage, 1):
+                if not dfPage.iloc[0:, :].empty and (not printLast or no == len(dfListPage)):
+                    colorDict = getColorDict(dfPage)
+                    title = f'中国{s}运载火箭首飞日统计'
+                    title += f'{no}' if len(dfListPage) > 1 else ''
+                    fig, axLeft =  myShape.getFigure()
+                    plotBarGraphByDate(cn_font, axLeft, dfPage, upperStages=upperStages, colorDict=colorDict, isMaiden=True)
+                    plotTitleLegendByDate(cn_font, axLeft, title, dfPage, okRate=okRate, isMaiden=True)
+                    myPlot.showBackend()
+                    myPlot.saveFig(fig, f'./images/{title}.png') # Save the plot to a file
 
+LAUNCH_DATES_BY_YEAR = "01.年度别发射日统计"
 ################################################################################################
-def plotGraphByDate(cn_font, df, title, startYear, endYear=None, upperStages=None, seriesDict=None):
-    df = myPlot.parseToDataFrame(df, startYear=startYear, endYear=endYear, columnYear='日期', columnNotNull='结果', seriesDict=seriesDict)
-    dfList = myPlot.split50perPage(df[0])
+def plotGraphByDate(cn_font, df, title, startYear, endYear=None, upperStages=None, seriesDict=None, printLast=True):
+    from myModules import myDataFrame
+    df = myPlot.parseToDataFrame(df, startYear=startYear, endYear=endYear, columnDate='日期', columnNotNull='结果', seriesDict=seriesDict)
+    dfList = myDataFrame.splitToPages(df[0])
     dfList = myPlot.countDataFrameByDate(dfList)
 
     for i, df in enumerate(dfList, 1):
         if not df.iloc[0:, :].empty:
-            colorDict = getColorDict(df, False)
-            fig, axLeft =  myShape.getFigure()
-            newTitle = f'{myPlot.getPlotTitle(title, startYear, endYear)}'
-            newTitle += f'{i}' if len(dfList) > 1 else ''
-            plotBarGraphByDate(cn_font, axLeft, df, upperStages=upperStages, colorDict=colorDict)
-            plotTitleLegendByDate(cn_font, axLeft, newTitle, df, page=i-1)
-            myPlot.showBackend()
-            myPlot.saveFig(fig, f'./images/年度别发射日统计/{newTitle}.png') # Save the plot to a file
+            if not printLast or (printLast and i == len(dfList)):
+                colorDict = getColorDict(df)
+                fig, axLeft =  myShape.getFigure()
+                newTitle = f'{myPlot.getPlotTitle(title, startYear, endYear)}'
+                newTitle += f'{i}' if len(dfList) > 1 else ''
+                plotBarGraphByDate(cn_font, axLeft, df, upperStages=upperStages, colorDict=colorDict)
+                plotTitleLegendByDate(cn_font, axLeft, newTitle, df, page=i-1)
+                myPlot.showBackend()
+                myPlot.saveFig(fig, f'./images/{LAUNCH_DATES_BY_YEAR}/{newTitle}.png') # Save the plot to a file
 
 ################################################################################################
 def getOkRate(dfList):
@@ -244,12 +252,14 @@ def getOkRate(dfList):
     return ok / (ok + ng) if ok + ng > 0 else 0
 
 # Plot single rocket
+LAUNCH_DYAS_BY_ROCKET = "11.火箭别发射日统计"
+LAUNCH_DYAS_BY_SERIES = "12.系列别发射日统计"
 ################################################################################################
 def plotGraphByRocketDate(cn_font, df, title, rocket, retired=False, upperStages=None, plotLast=True, seriesDict=None):
     dfList = myPlot.parseToDataFrame(df, rocket=rocket, seriesDict=seriesDict)
     dfList = myPlot.countDataFrameByDate(dfList)
     okRate = getOkRate(dfList)
-    colorDict = getColorDict(dfList, False)
+    colorDict = getColorDict(dfList)
 
     for i, df in enumerate(dfList):
         if not df.iloc[0:, :].empty and (i == len(dfList) - 1 or not plotLast):
@@ -265,11 +275,11 @@ def plotGraphByRocketDate(cn_font, df, title, rocket, retired=False, upperStages
             
             if retired:
                 if singleRocket:
-                    path = f'./images/火箭别发射日统计/退役/{newTitle}.png'
+                    path = f'./images/{LAUNCH_DYAS_BY_ROCKET}/退役/{newTitle}.png'
                 else:
-                    path = f'./images/系列别发射日统计/退役/{newTitle}.png'
+                    path = f'./images/{LAUNCH_DYAS_BY_SERIES}/退役/{newTitle}.png'
             else:
-                path = f'./images/火箭别发射日统计/{newTitle}.png'
+                path = f'./images/{LAUNCH_DYAS_BY_ROCKET}/{newTitle}.png'
 
             myPlot.saveFig(fig, path) # Save the plot to a file
 
@@ -296,17 +306,18 @@ def plotGraphByPayloadDate(cn_font, df, title, payload, upperStages=None, plotLa
                 newTitlePayload = myPlot.getPlotTitle(f'{title}{no}') + '(载荷)'
                 plotPayload(fig, axLeft, cn_font, newTitlePayload, dfCopy, i, upperStages, True, payload=payload) 
 
+LAUNCH_DYAS_BY_SATELLITE = "14.卫星别发射日统计"
 ################################################################################################
 def plotPayload(fig, ax, cn_font, title, df, i, upperStages, plotPayload=False, payload=None):
-    colorDict = getColorDict(df, False)
+    colorDict = getColorDict(df)
     plotBarGraphByDate(cn_font, ax, df, fontsize=12, upperStages=upperStages, plotPayload=plotPayload, payload=payload, colorDict=colorDict, title=title)
     plotTitleLegendByDate(cn_font, ax, title, df, page=i, plotPayload=plotPayload)
     myPlot.showBackend()
-    path = f'./images/卫星别发射日统计/{title}.png'
+    path = f'./images/{LAUNCH_DYAS_BY_SATELLITE}/{title}.png'
     myPlot.saveFig(fig, path) # Save the plot to a file
 
 ################################################################################################
-def getColorDict(dfList, isMaiden):
+def getColorDict(dfList):
     rocketList = []
     if isinstance(dfList, list):
         for df in dfList:
@@ -324,6 +335,7 @@ def getColorDict(dfList, isMaiden):
             colorDict[rocket] = 'orange'
     else:
         colorList = myPlot.getUniqueColorList(count)
+
         for i, rocket in enumerate(colorDict.keys()):
             colorDict[rocket] = colorList[i] if count > 20 else myPlot.getUnique20Colors(i)
     return colorDict
@@ -331,7 +343,6 @@ def getColorDict(dfList, isMaiden):
 # Plot multiple rockets
 ################################################################################################
 def plotGraphByRocketsDate(cn_font, df, title, rocket, onlyFailed=False, upperStages=None, plotLast=True, seriesDict=None, plotMonth=None):
-    # dfListAll = myPlot.parseExcelSheetToDataFrame(excelSheet, rocket=rocket, onlyFailed=onlyFailed, seriesDict=seriesDict, plotMonth=plotMonth)
     dfListAll = myPlot.parseToDataFrame(df, rocket=rocket, onlyFailed=onlyFailed, seriesDict=seriesDict, plotMonth=plotMonth)
     dfList = myPlot.countDataFrameByDate(dfListAll)
     isSeries = rocket.endswith('系列')
@@ -341,13 +352,12 @@ def plotGraphByRocketsDate(cn_font, df, title, rocket, onlyFailed=False, upperSt
             no = '' if len(dfList) == 1 else f'{i + 1}'
             no = f'{i + 1:02}' if rocket in ['', '长征', '其他'] and not plotMonth else no
             newTitle = myPlot.getPlotTitle(f'{title}{no}')
-            # fig, axLeft = plt.subplots(nrows=1, ncols=1, figsize=(20, 10)) 
             fig, axLeft =  myShape.getFigure()
-            plotBarGraphByDate(cn_font, axLeft, df, fontsize=12, upperStages=upperStages)
+            plotBarGraphByDate(cn_font, axLeft, df, fontsize=12, upperStages=upperStages, title=newTitle)
             plotTitleLegendByDate(cn_font, axLeft, newTitle, df, page=i, isSeries=isSeries)
             
             myPlot.showBackend()
-            path = f'./images/系列别发射日统计/失败/{newTitle}.png' if onlyFailed else f'./images/系列别发射日统计/{newTitle}.png'
+            path = f'./images/{LAUNCH_DYAS_BY_SERIES}/失败/{newTitle}.png' if onlyFailed else f'./images/{LAUNCH_DYAS_BY_SERIES}/{newTitle}.png'
             myPlot.saveFig(fig, path) # Save the plot to a file
 
 ################################################################################################
@@ -355,6 +365,7 @@ def getMonthRockets(dfList):
     dfMonthList = []
     return dfMonthList
 
+LAUNCH_DYAS_BY_SITE = "10.地点别发射日统计"
 ################################################################################################
 def plotGraphByLocationDate(cn_font, df, title, location, upperStages=None, plotLast=True, seriesDict=None):
     dfList = myPlot.parseToDataFrame(df, location=location, seriesDict=seriesDict)
@@ -371,154 +382,80 @@ def plotGraphByLocationDate(cn_font, df, title, location, upperStages=None, plot
             plotTitleLegendByDate(cn_font, axLeft, newTitle, df, page=i)
 
             myPlot.showBackend()
-            path = f'./images/地点别发射日统计/{newTitle}.png'
+            path = f'./images/{LAUNCH_DYAS_BY_SITE}/{newTitle}.png'
             myPlot.saveFig(fig, path) # Save the plot to a file
-
-################################################################################################
-def hasUpperStage(remark):
-    return 'SD' in remark or 'SM' in remark or 'SMA' in remark or '遥' in remark
 
 # Print Rocket List
 ################################################################################################
-def printRocketPayloadList(df, rocketPayload=None, startYear=None, endYear=None):
+def printRocketPayloadList(df, rocketPayload=None, startYear=None, endYear=None, onlyPrintYaoNumber=False, isLunarNewYear=False, 
+                           isFirstLast=False, isMaiden=False, plotMonth=None, onlyFailed=None, printYao=False):
     html = ''
     title = ''
-    
-    if rocketPayload:
-        dfRocketList = myPlot.parseToDataFrame(df, rocket=rocketPayload)
-        dfPayloadList = myPlot.parseToDataFrame(df, payload=rocketPayload)
-    else:
-        dfRocketList = myPlot.parseToDataFrame(df, startYear=startYear, endYear=endYear)
-        dfPayloadList = [[]]
 
-    if len(dfRocketList[0]) == 0 and len(dfPayloadList[0]) == 0:
+    if printYao:
+        dfRocketList = myPlot.parseToDataFrame(df, startYear=startYear, endYear=endYear, rocket=rocketPayload, printYao=printYao, splitCount=100)
+        dfPayloadList = [[]]
+        dfLocationList = [[]]
+    elif onlyFailed:
+        dfRocketList = myPlot.parseToDataFrame(df, startYear=startYear, endYear=endYear, rocket=rocketPayload, onlyFailed=onlyFailed, splitCount=100)
+        dfPayloadList = [[]]
+        dfLocationList = [[]]
+    elif isLunarNewYear:
+        dfRocketList = myPlot.parseToDataFrame(df, startYear=startYear, endYear=endYear, rocket=rocketPayload, isLunarNewYear=isLunarNewYear, splitCount=100)
+        dfPayloadList = [[]]
+        dfLocationList = [[]]
+    elif isFirstLast:
+        dfRocketList = myPlot.parseToDataFrame(df, startYear=startYear, endYear=endYear, rocket=rocketPayload, isFirstLast=isFirstLast, splitCount=100)
+        dfPayloadList = [[]]
+        dfLocationList = [[]]
+    elif isMaiden:
+        dfRocketList = myPlot.parseToDataFrame(df, startYear=startYear, endYear=endYear, rocket=rocketPayload, isMaiden=isMaiden, splitCount=100)
+        dfPayloadList = [[]]
+        dfLocationList = [[]]
+    elif plotMonth:
+        dfRocketList = myPlot.parseToDataFrame(df, startYear=startYear, endYear=endYear, rocket=rocketPayload, plotMonth=plotMonth, splitCount=100)
+        dfPayloadList = [[]]
+        dfLocationList = [[]]
+    elif rocketPayload:
+        dfRocketList = myPlot.parseToDataFrame(df, startYear=startYear, endYear=endYear, rocket=rocketPayload, splitCount=100)
+        dfPayloadList = myPlot.parseToDataFrame(df, startYear=startYear, endYear=endYear, payload=rocketPayload, splitCount=100)
+        dfLocationList = myPlot.parseToDataFrame(df, startYear=startYear, endYear=endYear, location=rocketPayload, splitCount=100)
+    else:
+        dfRocketList = myPlot.parseToDataFrame(df, startYear=startYear, endYear=endYear, splitCount=100)
+        dfPayloadList = [[]]
+        dfLocationList = [[]]
+
+    if len(dfRocketList[0]) == 0 and len(dfPayloadList[0]) == 0 and len(dfLocationList[0]) == 0 and not onlyPrintYaoNumber:
         print(f'{rocketPayload} not found!\n')
     else:
+        from myModules import myConfig
+        retiredRockets = myConfig.readConfigRetiredDict()
+        rocketPayload = rocketPayload.split('.')[0] + '系列' if rocketPayload and '.' in rocketPayload else rocketPayload
+        rocketPayload = rocketPayload.replace('^', '') if rocketPayload else rocketPayload
+
         if len(dfRocketList[0]) > 0:
-            printList(dfRocketList, rocketPayload, True)
-            if rocketPayload:
-                title = f'{rocketPayload}运载火箭发射历史'
-            else:
-                years = f'{startYear}~{endYear}年' if startYear != endYear else f'{startYear}年'
-                title = years + '运载火箭发射历史'
-            html = createHtmlTable(dfRocketList, title)
+            isSingleRocket = False if rocketPayload is None or '系列' in rocketPayload or '空间站' in rocketPayload or '上面级' in rocketPayload or isLunarNewYear or isFirstLast or isMaiden or plotMonth else True
+            myHtml.printList(dfRocketList, rocketPayload, isSingleRocket, onlyPrintYaoNumber)
+            if not onlyPrintYaoNumber:
+                if rocketPayload:
+                    title = f'{startYear}年{rocketPayload}运载火箭发射历史' if startYear else f'{rocketPayload}运载火箭发射历史'
+                elif onlyFailed:
+                    title = '失败运载火箭发射历史'
+                else:
+                    years = f'{startYear}~{endYear}年' if startYear != endYear else f'{startYear}年'
+                    title = years + '运载火箭发射历史'
+                html += myHtml.createHtmlTable(dfRocketList, title, retiredRockets=retiredRockets, isLunarNewYear=isLunarNewYear, isFirstLast=isFirstLast, isMaiden=isMaiden)
         if len(dfPayloadList[0]) > 0:
-            printList(dfPayloadList, rocketPayload)
-            title = f'{rocketPayload}载荷发射历史'
-            html = createHtmlTable(dfPayloadList, title)
+            myHtml.printList(dfPayloadList, rocketPayload, False, onlyPrintYaoNumber)
+            if not onlyPrintYaoNumber:
+                title = f'{startYear}年{rocketPayload}载荷发射历史' if startYear else f'{rocketPayload}载荷发射历史'
+                html += myHtml.createHtmlTable(dfPayloadList, title, retiredRockets=retiredRockets)
+        if len(dfLocationList[0]) > 0:
+            myHtml.printList(dfLocationList, rocketPayload, False, onlyPrintYaoNumber)
+            if not onlyPrintYaoNumber:
+                title = f'{startYear}年{rocketPayload}发射历史' if startYear else f'{rocketPayload}发射历史'
+                html += myHtml.createHtmlTable(dfLocationList, title, retiredRockets=retiredRockets)
     return html, title
-
-def buildColumns(row, i, j):
-    columns = []
-    index = i * 50 + j + 1
-    allNo = row['总数']
-    czNo = row['长征']
-    nczNo = row['其他']
-    dateSte = str(row['日期'])
-    date = f'{dateSte[:4]}年{dateSte[5:7]}月{dateSte[8:10]}日'
-    time = row['时间\n（UTC+8）'][:6]
-    location = row['地点']
-    spot = row['工位'].split('号')[0]
-    location = spot[:2] + '<BR>' + spot[2:] if location == '海上' else location
-    sameLocaionDays = int(row['同地相\n隔日数']) if row['同地相\n隔日数'] else ''
-    sameRocketDays = int(row['同箭相\n隔日数']) if row['同箭相\n隔日数'] else ''
-    result = row['结果']
-    result = f'{result[:2]}<BR>{result[2:]}' if len(result) > 2 else result
-    orbit = row['轨道']
-    # if (l := len(orbit)) > 6:
-    #     l //= 2
-    #     orbit = f'{orbit[:l]}<BR>{orbit[l:]}'
-    rocket = row['火箭']
-    xuhao = row['遥号']
-    remark = row['备注']
-    xuhao = f'{xuhao}<BR>{remark}' if hasUpperStage(remark) else xuhao
-    countFullWidth = myDate.lenFullWidth(rocket + xuhao)
-    xuhao = xuhao + ' ' * (17 - countFullWidth)
-    payloads = row['载荷']
-    countFullWidth = myDate.lenFullWidth(orbit)
-    orbit = orbit + ' ' * (8 - countFullWidth)
-    columns.append(f'{index:03d}')
-    columns.append(allNo)
-    columns.append(czNo if czNo else '-')
-    columns.append(nczNo if nczNo else '-')
-    columns.append(date)
-    columns.append(time)
-    columns.append(orbit)
-    columns.append(result)
-    columns.append(location)
-    columns.append(sameLocaionDays)
-    columns.append(sameRocketDays)
-    columns.append(f'{rocket}{xuhao}')
-    columns.append(payloads)
-    return columns
-
-################################################################################################
-def createHtmlTable(dfList, title):
-    dfList = [dfList[key] for key in sorted(dfList.keys())] if isinstance(dfList, dict) else dfList
-    title += f'（截止{myDate.getJapanTime("%Y年%m月%d日")}）'
-
-    html = myHtml.buildHtmlBegin(title)
-    headers = ['发射<BR>次数', '总<BR>发射<BR>次数', '长征<BR>发射<BR>次数', '其他<BR>发射<BR>次数', '日期', '北京时间', '轨道', '结果', '发射地<BR>发射船']
-    headers += ['同地<BR>相隔<BR>日数', '同箭<BR>相隔<BR>日数', '运载火箭', '载荷']
-    textAligns = ['', '', '', '', '', '', 'left', '', '', '', '', 'left', 'left']
-    widths = ['', '', '', '', '', '', '65px', '', '', '', '', '', '']
-    nowraps = ['nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap', '', 'nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap', '']
-    html += myHtml.buildTableBegin(title, headers)
-    # colorDict = myHtml.getCityColorDict()
-
-    for i, df in enumerate(dfList):
-        for j, (_, row) in enumerate(df.iterrows()):
-            columns = buildColumns(row, i, j)
-            html += myHtml.buildTableCell(columns, textAligns, widths, nowraps)
-    html += myHtml.buildTableEnd()
-    html += myHtml.buildHtmlEnd()
-    return html
-
-################################################################################################
-def printList(dfList, rocketPayload, singleRocket=False):
-    yaoMax = int(myFile.readConfig(['最大遥号'])[0])
-    yaoList = [i for i in range(1, yaoMax, 1)]
-    yaoMax = 1
-    dfList = [dfList[key] for key in sorted(dfList.keys())] if isinstance(dfList, dict) else dfList
-    print(f'\n{"*" * 50} Start of {rocketPayload} {"*" * 50}')
-    for i, df in enumerate(dfList):
-        for j, (_, row) in enumerate(df.iterrows()):
-            index = i * 50 + j + 1
-            date = str(row['日期'])[:10]
-            time = row['时间\n（UTC+8）'][:6].replace('时',':').replace('分','')
-            rocket = row['火箭']
-            xuhao = row['遥号']
-            remark = row['备注']
-            xuhao = f'{xuhao}/{remark}' if hasUpperStage(remark) else xuhao
-            countFullWidth = myDate.lenFullWidth(rocket + xuhao)
-            xuhao = xuhao + ' ' * (17 - countFullWidth)
-            location = row['地点']
-            sameLocaionDays = int(row['同地相\n隔日数']) if row['同地相\n隔日数'] else '    '
-            sameLocaionDays = str(sameLocaionDays).ljust(4)
-            sameRocketDays = int(row['同箭相\n隔日数']) if row['同箭相\n隔日数'] else '    '
-            sameRocketDays = str(sameRocketDays).ljust(4)
-            result = row['结果']
-            payloads = row['载荷']
-            orbit = row['轨道'][:4]
-            countFullWidth = myDate.lenFullWidth(orbit)
-            orbit = orbit + ' ' * (8 - countFullWidth)
-            print(f'{index:03d}: {date} {time} {result} {location} {sameLocaionDays} {sameRocketDays} {orbit} {rocket}{xuhao} {payloads}')
-
-            if singleRocket and rocketPayload and xuhao[0] == '遥':
-                yaoHao = xuhao[1:].partition('/')[0]
-                if int(yaoHao) in yaoList:
-                    yaoList.remove(int(yaoHao))
-                yaoMax = int(yaoHao) if int(yaoHao) > yaoMax else yaoMax
-    print(f'{"*" * 51} End of {rocketPayload} {"*" * 51}\n')
-
-    if singleRocket and rocketPayload:
-        if rocketPayload == '快舟一号甲':
-            yaoMax = 33 if 33 > yaoMax else yaoMax
-            yaoList.remove(33)
-        yaoList = [i for i in yaoList if not (yaoMax < i <= 200)]
-        yaoList.append(int(yaoMax + 1))
-        print(f'{rocketPayload}最大使用遥号： {yaoMax}')
-        print(f'{rocketPayload}尚未使用遥号： {yaoList}\n')
 
 ###############################################################################
 def parseYears(rocketPayload):
@@ -533,24 +470,58 @@ def parseYears(rocketPayload):
 
 # Print Rockets List
 ################################################################################################
-def printRocketsPayloadsList(df, rocketsPayloads):
+def printRocketsPayloadsList(df, years=None, rocketsPayloads=None, onlyPrintYaoNumber=False):
     html = ''
-    for rocketPayload in rocketsPayloads:
-        years = parseYears(rocketPayload)
-        if years:
-            htmlTemp, filename = printRocketPayloadList(df, startYear=years[:4], endYear=years[-4:])
-        else:
-            htmlTemp, filename = printRocketPayloadList(df, rocketPayload)
-        html += htmlTemp
+    if years and rocketsPayloads:
+        for year in years:
+            for rocketPayload in rocketsPayloads:
+                if rocketPayload != "遥感" and rocketPayload[0] == '遥':
+                    htmlTemp, filename = printRocketPayloadList(df, rocketPayload, startYear=year[:6], endYear=year[:6], onlyPrintYaoNumber=onlyPrintYaoNumber, printYao=True)
+                elif rocketPayload == '失败':
+                    htmlTemp, filename = printRocketPayloadList(df, None, startYear=year[:6], endYear=year[:6], onlyPrintYaoNumber=onlyPrintYaoNumber, onlyFailed=True)
+                elif rocketPayload == '春节':
+                    htmlTemp, filename = printRocketPayloadList(df, rocketPayload, startYear=year[:6], endYear=year[:6], onlyPrintYaoNumber=onlyPrintYaoNumber, isLunarNewYear=True)
+                elif rocketPayload == '年初年末':
+                    htmlTemp, filename = printRocketPayloadList(df, rocketPayload, startYear=year[:6], endYear=year[:6], onlyPrintYaoNumber=onlyPrintYaoNumber, isFirstLast=True)
+                elif rocketPayload == '首飞':
+                    htmlTemp, filename = printRocketPayloadList(df, rocketPayload, startYear=year[:6], endYear=year[:6], onlyPrintYaoNumber=onlyPrintYaoNumber, isMaiden=True)
+                elif rocketPayload in '1月,2月,3月,4月,5月,6月,7月,8月,9月,10月,11月,12月':
+                    plotMonth = int(rocketPayload.split('月')[0])
+                    htmlTemp, filename = printRocketPayloadList(df, rocketPayload, startYear=year[:6], endYear=year[:6], onlyPrintYaoNumber=onlyPrintYaoNumber, plotMonth=plotMonth)
+                else:
+                    htmlTemp, filename = printRocketPayloadList(df, rocketPayload, startYear=year[:6], endYear=year[:6], onlyPrintYaoNumber=onlyPrintYaoNumber)
+                html += htmlTemp
+    elif years:
+        for year in years:
+            htmlTemp, filename = printRocketPayloadList(df, startYear=year[:4], endYear=year[-4:], onlyPrintYaoNumber=onlyPrintYaoNumber)
+            html += htmlTemp
+    elif rocketsPayloads:
+        for rocketPayload in rocketsPayloads:
+            if rocketPayload != "遥感" and rocketPayload[0] == '遥':
+                htmlTemp, filename = printRocketPayloadList(df, rocketPayload, onlyPrintYaoNumber=onlyPrintYaoNumber, printYao=True)
+            elif rocketPayload == '失败':
+                htmlTemp, filename = printRocketPayloadList(df, None, onlyPrintYaoNumber=onlyPrintYaoNumber, onlyFailed=True)
+            elif rocketPayload == '春节':
+                htmlTemp, filename = printRocketPayloadList(df, rocketPayload, onlyPrintYaoNumber=onlyPrintYaoNumber, isLunarNewYear=True)
+            elif rocketPayload == '年初年末':
+                htmlTemp, filename = printRocketPayloadList(df, rocketPayload, onlyPrintYaoNumber=onlyPrintYaoNumber, isFirstLast=True)
+            elif rocketPayload == '首飞':
+                htmlTemp, filename = printRocketPayloadList(df, rocketPayload, onlyPrintYaoNumber=onlyPrintYaoNumber, isMaiden=True)
+            elif rocketPayload in '1月,2月,3月,4月,5月,6月,7月,8月,9月,10月,11月,12月':
+                plotMonth = int(rocketPayload.split('月')[0])
+                htmlTemp, filename = printRocketPayloadList(df, rocketPayload, onlyPrintYaoNumber=onlyPrintYaoNumber, plotMonth=plotMonth)
+            else:
+                htmlTemp, filename = printRocketPayloadList(df, rocketPayload, onlyPrintYaoNumber=onlyPrintYaoNumber)
+            html += htmlTemp
     if html:
         filename = f'{TEMP_FILE_PATH}{filename}.html'
         myFile.saveTextFile(filename, html, noSound=True)
 
 # 年度别发射日统计
 ################################################################################################
-def plot1(cn_font, df, startYear, endYear=None, upperStages=None, SeriesDict=None):
+def plot1(cn_font, df, startYear, endYear=None, upperStages=None, SeriesDict=None, printLast=True):
     title = '中国运载火箭发射日统计'
-    plotGraphByDate(cn_font, df, title, startYear, endYear, upperStages, SeriesDict)
+    plotGraphByDate(cn_font, df, title, startYear, endYear, upperStages, SeriesDict, printLast)
 
 # 现役系列别发射日统计
 ################################################################################################
@@ -643,10 +614,10 @@ def plot8(cn_font, df, rocketsCZ, rocketsNCZ, upperStages=None, plotLast=True):
 
 ################################################################################################
 def main():
-    cn_font = myPlot.init()
+    cn_font = myPlotInit.init()
     excelFile = f"{DATA_FILE_PATH}ChinaRocketLaunch.xlsx"
     sheetName = "发射纪录"
-    df = myPlot.readDataFromSheetNew(excelFile, sheetName)
+    df = myExcel.parseExcelSheetLaunch(excelFile, sheetName)
     dictUpperStages, _ = myPlot.readUpperStageDict(df)
 
     # 年初年末统计

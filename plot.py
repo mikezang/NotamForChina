@@ -1,30 +1,22 @@
-import calendar
 from sys import argv
 from timeit import timeit
 from datetime import datetime, timedelta
-from openpyxl import load_workbook as loadXLSX
-import FreeSimpleGUI as sg
 from re import findall 
 
 from myModules import myExcel
-from myModules import myPlot
 from myModules import myFile
-from myModules import myDate
+from myModules import myConfig
 from myModules import myGUI
+from myModules import myPlotInit
 
-import plotLaunchByDate
-import plotLaunchByRocket
-import plotLaunchByLocation
-import plotLaunchByYearMonth
-import plotLaunchBarChartRace
-
-CHROME = r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
-BUTTON1_LABEL = '统计条形图作成'
-BUTTON2_LABEL = '动态条形图作成'
+# CHROME = r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+BUTTON1_IMAGE = '统计条形图作成'
+BUTTON2_VIDEO = '发射动态条形图作成'
+BUTTON3_VIDEO = '航天员动态条形图作成'
 DATA_FILE_PATH = './data/'
-EXCEL_FILE = myFile.readConfig('ExcelFile', False)
-SHEET_LAUNCH = myFile.readConfig('SheetLuanch', False)
-SHEET_TAIKO = myFile.readConfig('SheetTaiko', False)
+EXCEL_FILE = myConfig.readConfig('ExcelFile', False)
+SHEET_LAUNCH = myConfig.readConfig('SheetLaunch', False)
+SHEET_TAIKO = myConfig.readConfig('SheetTaiko', False)
 
 ################################################################################################
 def splitStringToList(text, n=10):
@@ -51,8 +43,12 @@ def splitStringToListByText(text: str):
 
 ################################################################################################
 def getYearsFrame(years:str, lastYear):
+    import FreeSimpleGUI as sg
     subYears = splitStringToList(years, 15)
-    yearsTitle = [sg.Checkbox('选择全发射期间', key='year01', enable_events=True)]
+    yearsTitle = [
+        sg.Checkbox('选择全发射期间', key='year01', enable_events=True),
+        sg.Checkbox('仅生成最后图表', key='year02', default=True),
+    ]
     layout1 = [yearsTitle]
     for i, subYear in enumerate(subYears):
         checkbox = [sg.Checkbox(item, key=f'year-{i * 10 + j + 1}', default=True if item == lastYear else False) for j, item in enumerate(subYear)]
@@ -60,6 +56,7 @@ def getYearsFrame(years:str, lastYear):
     return [sg.Frame('发射期间（统计条形图/动态条形图）', layout1)]
 
 def getRocketsFrame(rockets, retired, lastRocket):
+    import FreeSimpleGUI as sg
     rocketsCZ = splitStringToList(rockets[0])
     rocketsNCZ = splitStringToList(rockets[1])
     retiredCZ = splitStringToList(retired[0])
@@ -68,7 +65,7 @@ def getRocketsFrame(rockets, retired, lastRocket):
         sg.Checkbox('选择全运载火箭', key='rocket01', enable_events=True),
         sg.Checkbox('仅生成最后图表', key='rocket02', default=True),
         sg.Checkbox('退役火箭', key='rocket03', enable_events=True),
-        sg.Checkbox('显示发射一览', key='rocket04', default=True),
+        sg.Checkbox('显示发射一览', key='rocket04', default=False),
     ]
     rockets = [rocketsTitle]
     row1, row2 = [], []
@@ -85,22 +82,32 @@ def getRocketsFrame(rockets, retired, lastRocket):
         checkbox = [sg.Checkbox(item, key=f'retired-NCZ{i * 10 + j + 1}', size=(12, 1)) for j, item in enumerate(subRetired)]
         row2.append(checkbox)
     rockets.append([sg.Column(row1, key='rockets'), sg.Column(row2, key='retired', visible=False)])
-    return [sg.Frame('运载火箭（统计条形图）', rockets)]  
+    return sg.Frame('运载火箭（统计条形图）', rockets)
 
-def getSeriesFrame(series, lastSeries, lastResult, lastNumber=None):
+def getSeriesFrame(series, lastSeries, lastResult, lastNumber, lastLaunchDate):
+    import FreeSimpleGUI as sg
     seriesCZ = splitStringToList(series[0])
     seriesNCZ = splitStringToList(series[1])
     seriesCZRockets = splitStringToList(series[2])
     seriesNCZRockets = splitStringToList(series[3])
     seriesAll = splitStringToList(series[4])
+    year = str(lastLaunchDate.year)
+    springFestival = myConfig.readConfigSpringFestival(year)[0]
+    before = (datetime.strptime(springFestival, '%Y-%m-%d') - lastLaunchDate).days
+    after = (lastLaunchDate - datetime.strptime(springFestival, '%Y-%m-%d')).days
+    checkSpringFestival = (before > 0 and before < 15) or (after > 0 and after < 15)
+    firstInYear = (lastLaunchDate - datetime.strptime(f'{year}0101', '%Y%m%d')).days
+    lastInYear = (datetime.strptime(f'{year}1231', '%Y%m%d') - lastLaunchDate).days
+    checkFirstLast = (firstInYear > 0 and firstInYear < 15) or (lastInYear > 0 and lastInYear < 15)
+
     seriesTitle = [
         sg.Checkbox('选择全运载火箭系列', key='series01', enable_events=True),
         sg.Checkbox('仅生成最后图表', key='series02', default=True),
         sg.Checkbox('退役火箭系列', key='series03', enable_events=True),
-        sg.Checkbox('发射失败系列', key='series04', default=not lastResult, enable_events=True),
-        sg.Checkbox('首飞发射', key='series05', default=lastNumber == '遥1', enable_events=False),
-        sg.Checkbox('春节前后发射', key='series06', enable_events=False),
-        sg.Checkbox('年初年末发射', key='series07', enable_events=False),
+        sg.Checkbox('发射失败系列', key='series04', enable_events=True, default=not lastResult),
+        sg.Checkbox('首飞发射', key='series05', enable_events=False, default=lastNumber == '遥1'),
+        sg.Checkbox('春节前后发射', key='series06', enable_events=False, default=checkSpringFestival),
+        sg.Checkbox('年初年末发射', key='series07', enable_events=False, default=checkFirstLast),
     ]
     row = [seriesTitle]
     for i, subSeries in enumerate(seriesAll):
@@ -119,9 +126,10 @@ def getSeriesFrame(series, lastSeries, lastResult, lastNumber=None):
                                 default=True if rocket in lastSeries else False, tooltip=rockets.replace('|', ',')) 
                                 for j, (rocket, rockets) in enumerate(zip(subSeries, seriesNCZRockets[i]))]
         row.append(checkbox)      
-    return [sg.Frame('运载火箭系列（统计条形图）', row)]
+    return sg.Frame('运载火箭系列（统计条形图）', row)
 
 def getLocationsFrame(locations, lastLocation):
+    import FreeSimpleGUI as sg
     subLocations = splitStringToList(locations)
     locationTitle = [
         sg.Checkbox('选择全发射位置', key='location01', enable_events=True),
@@ -132,30 +140,33 @@ def getLocationsFrame(locations, lastLocation):
         checkbox = []
         for j, item in enumerate(subLocation[:6]):
             if j < len(subLocation) - 1:
-                checkbox.append(sg.Checkbox(item, key=f'location-{i * 10 + j + 1}', 
-                        size=(10, 1), default=True if item == lastLocation else False))
+                checkbox.append(sg.Checkbox(item, key=f'location-{i * 10 + j + 1}', default=True if item == lastLocation else False))
             else:
-                checkbox.append(sg.Checkbox(item, key=f'location-{i * 10 + j + 1}', 
-                        default=True if item == lastLocation else False))
+                checkbox.append(sg.Checkbox(item, key=f'location-{i * 10 + j + 1}', default=True if item == lastLocation else False))
         layout5.append(checkbox)      
     return sg.Frame('发射位置（统计条形图）', layout5)
 
 def getCategoriesFrame(categories, lastCategory):
-    subCategories = splitStringToList(categories)
-    categoriesTitle = [
-        sg.Checkbox('选择全运载火箭分类', key='category01', enable_events=True),
-        sg.Text(f"截止日：{datetime.today().strftime('%Y/%m/%d')}", key='lastDate'),
-        sg.Radio('当日', 'LastDate', key='today', enable_events=True, default=True), 
-        sg.Radio('月末', 'LastDate', key='endOfMonth', enable_events=True)]
+    import FreeSimpleGUI as sg
+    subCategories = categories.split(',')
+    categoriesTitle = [sg.Checkbox('选择全运载火箭分类', key='category01', enable_events=True, default=True)]
     layout2 = [categoriesTitle]
-    for i, subCategory in enumerate(subCategories):
-        checkbox = [sg.Checkbox(item, key=f'category-{i * 10 + j + 1}', size=(10, 1), 
-                    default=True) for j, item in enumerate(subCategory[:-1])]
-        checkbox.append(sg.Checkbox(subCategory[-1], key='category-6', size=(10, 1), default=True))
-        layout2.append(checkbox)      
+    layout2.append([sg.Checkbox(item, key=f'category-{i + 1}', default=True) for i, item in enumerate(subCategories)])      
     return sg.Frame('运载火箭分类（动态条形图）', layout2)
 
+def getTaikonautsFrame(taikonauts):
+    import FreeSimpleGUI as sg
+    subTaikonauts = taikonauts.split(',')
+    layout2 = [[sg.Radio(subTaikonauts[0], 'taikonaut', key='taikonaut-1', enable_events=True, default=True), 
+                sg.Radio(subTaikonauts[1], 'taikonaut', key='taikonaut-2', enable_events=True)]]
+    lastLaunchDate = datetime.strptime(subTaikonauts[3].split('(')[1][:-1], '%Y年%m月%d日')
+    days = (datetime.today() - lastLaunchDate).days
+    layout2.append([sg.Radio(subTaikonauts[2], 'taikonaut', key='taikonaut-3', enable_events=True),
+                    sg.Radio(f'{subTaikonauts[3]}＝在轨{days}日', 'taikonaut', key='taikonaut-4', enable_events=True)])
+    return sg.Frame('在轨航天员分类（动态条形图）', layout2)
+
 def getPayloadsFrame(payloads, lastPayload:tuple):
+    import FreeSimpleGUI as sg
     subPayloads = splitStringToList(payloads, 11)
     payloadsTitle = [sg.Checkbox('选择全载荷系列', key='payload01', enable_events=True),
                      sg.Checkbox('仅生成最后图表', key='payload02', default=True)]
@@ -163,7 +174,7 @@ def getPayloadsFrame(payloads, lastPayload:tuple):
 
     css = ''
     for payload in lastPayload:
-        if payload in myFile.readConfig(['空间站']):
+        if payload in myConfig.readConfig(['空间站']):
             css = '空间站' 
             break
             
@@ -173,20 +184,22 @@ def getPayloadsFrame(payloads, lastPayload:tuple):
                     default=True if item == css or item in lastPayload or item[1:] in lastPayload else False,
                     key=f'payload-{i * 11 + j + 1}', size=(10, 1)) for j, item in enumerate(subPayload)]
         layout.append(checkbox)
-    return [sg.Frame('载荷系列（统计条形图，无色=载荷名含有文字，桔色=载荷名开头文字）', layout)]
+    return sg.Frame('载荷系列（统计条形图，无色=载荷名含有文字，桔色=载荷名开头文字）', layout)
 
 ################################################################################################
 def getButton():
+    import FreeSimpleGUI as sg
     button = [
-        sg.Button(BUTTON1_LABEL, font=("Helvetica", 14)), 
-        sg.Button(BUTTON2_LABEL, font=("Helvetica", 14)), 
+        sg.Button(BUTTON1_IMAGE, font=("Helvetica", 14)), 
+        sg.Button(BUTTON2_VIDEO, font=("Helvetica", 14)), 
+        sg.Button(BUTTON3_VIDEO, font=("Helvetica", 14)), 
         sg.Push(), 
         sg.Button('Exit', font=("Helvetica", 14))
     ]
     return button
 
 ################################################################################################
-def getWindow(years, rockets, series, retired, privates, locations, categories, payloads, lastLaunch):
+def getWindow(years, rockets, series, retired, privates, locations, categories, taikonauts, payloads, lastLaunch):
     lastYear = lastLaunch[0]
     lastRocket = lastLaunch[1]
     lastNumber = lastLaunch[2]
@@ -197,15 +210,17 @@ def getWindow(years, rockets, series, retired, privates, locations, categories, 
     lastLocation = lastLaunch[5]
     lastResult = lastLaunch[6]
     lastPayload = lastLaunch[7]
+    lastLaunchDate = lastLaunch[8]
 
     layout = []
-    layout.append(getYearsFrame(years, lastYear))  
-    layout.append(getRocketsFrame(rockets, retired, lastRocket))  
-    layout.append(getSeriesFrame(series, lastSeries, lastResult, lastNumber))  
-    layout.append([getLocationsFrame(locations, lastLocation), getCategoriesFrame(categories, lastCategory)])  
-    layout.append(getPayloadsFrame(payloads, lastPayload))
+    layout.append([getYearsFrame(years, lastYear)])  
+    layout.append([getRocketsFrame(rockets, retired, lastRocket)])  
+    layout.append([getSeriesFrame(series, lastSeries, lastResult, lastNumber, lastLaunchDate)])  
+    layout.append([getLocationsFrame(locations, lastLocation), getCategoriesFrame(categories, lastCategory), getTaikonautsFrame(taikonauts)])  
+    # layout.append([getPayloadsFrame(payloads, lastPayload)])
     layout.append(getButton())  
 
+    import FreeSimpleGUI as sg
     window = sg.Window('中国运载火箭发射统计图表作成', layout, finalize=True, font=("Helvetica", 12))      
     return window
 
@@ -266,7 +281,7 @@ def getSelectedItems(values, items, prefix) -> list:
 
 ################################################################################################
 def getLastLaunch(dfLastLaunch, series, privates, dictUpperStages, payloads):
-    lastYear = myDate.getJapanDate()[:4]
+    lastYear = str(datetime.today().year)
     lastRocket = dfLastLaunch[myExcel.EXCEL_COLUMN_ROCKET]
     lastNumber = dfLastLaunch[myExcel.EXCEL_COLUMN_NUMBER]
     lastRemarks = dfLastLaunch[myExcel.EXCEL_COLUMN_REMARKS]
@@ -275,7 +290,8 @@ def getLastLaunch(dfLastLaunch, series, privates, dictUpperStages, payloads):
     lastSeries = getLastSeries(lastRocket, series, privates, lastUpperStage)
     lastLocation = dfLastLaunch[myExcel.EXCEL_COLUMN_LOCATION]
     lastPayload = getLastPayload(payloads, dfLastLaunch[myExcel.EXCEL_COLUMN_PAYLOAD])
-    lastLaunch = [lastYear, lastRocket, lastNumber, lastUpperStage, lastSeries, lastLocation, lastResult, lastPayload]
+    lastLaunchDate = dfLastLaunch[myExcel.EXCEL_COLUMN_DATE]
+    lastLaunch = [lastYear, lastRocket, lastNumber, lastUpperStage, lastSeries, lastLocation, lastResult, lastPayload, lastLaunchDate]
     return lastLaunch
 
 ################################################################################################
@@ -320,6 +336,7 @@ def showRetiredRockets(window, values):
 
 ################################################################################################
 def showFirstLastLunarNewYearSeries(window, values):
+    import FreeSimpleGUI as sg
     isChecked = values['series06'] | values['series07']
     for key, value in values.items():
         if 'series-' in key:
@@ -337,6 +354,7 @@ def showFirstLastLunarNewYearSeries(window, values):
 
 ################################################################################################
 def showRetiredMaidenSeries(window, values):
+    import FreeSimpleGUI as sg
     isChecked = values['series03'] | values['series04'] | values['series05']
     for key, value in values.items():
         if 'series-' in key:
@@ -363,14 +381,14 @@ def splitRetiredRockets(retiredChecked):
     return cz, ncz
     
 ################################################################################################
-def handleEvents(window, event, values, df, years, rockets, retired, series, locations, categories, payloads, dictUpperStages, dfLastLaunch):
-    if event == 'today':
-        window['lastDate'].update(f"截止日：{datetime.today().strftime('%Y-%m-%d')}")
-    elif event == 'endOfMonth':
-        today = datetime.today()
-        endOfMonth = f"{today.year}-{today.month:02d}-{calendar.monthrange(today.year, today.month)[1]}"
-        window['lastDate'].update(f"截止日：{endOfMonth}")
-    elif event == 'year01':
+def handleEvents(window, event, values, df, years, rockets, retired, series, locations, categories, taikonauts, payloads, dictUpperStages, dfLastLaunch):
+    # if event == 'taikonaut-1':
+    #     window['taikonaut-1'].update(value=True)
+    #     window['taikonaut-2'].update(value=False)
+    # elif event == 'taikonaut-2':
+    #     window['taikonaut-2'].update(value=True)
+    #     window['taikonaut-1'].update(value=False)
+    if event == 'year01':
         toogleAllCheckbox(window, values, 'year-')
     elif event == 'rocket01':
         toogleAllCheckbox(window, values, 'rocket-')
@@ -387,11 +405,16 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
         toogleAllCheckbox(window, values, 'location-')
     elif event == 'category01':
         toogleAllCheckbox(window, values, 'category-')
-    elif event == 'payload01':
-        toogleAllCheckbox(window, values, 'payload-')
-    elif event == BUTTON1_LABEL:
+    # elif event == 'payload01':
+    #     toogleAllCheckbox(window, values, 'payload-')
+    elif event == BUTTON1_IMAGE:
         window.minimize()
-        df = myPlot.readDataFromSheetNew(EXCEL_FILE, SHEET_LAUNCH)
+        import plotLaunchByDate
+        import plotLaunchByRocket
+        import plotLaunchByLocation
+        import plotLaunchByYearMonth
+
+        df = myExcel.parseExcelSheetLaunch(EXCEL_FILE, SHEET_LAUNCH)
         rocketList = values['rocket04'] # print list
         if rocketList:
             yearsChecked = getSelectedItems(values, years, 'year')
@@ -407,9 +430,9 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
                 rocketsChecked = getSelectedItems(values, rockets, 'rocket')
             plotLaunchByDate.printRocketsPayloadsList(df, rocketsChecked)
 
-            payloadsChecked = getSelectedItems(values, payloads, 'payload')
-            if payloadsChecked:
-                plotLaunchByDate.printRocketsPayloadsList(df, payloadsChecked)
+            # payloadsChecked = getSelectedItems(values, payloads, 'payload')
+            # if payloadsChecked:
+            #     plotLaunchByDate.printRocketsPayloadsList(df, payloadsChecked)
                                                           
             myFile.playSound()
             return
@@ -419,7 +442,8 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
         retiredChecked = getSelectedItems(values, retired, 'retired')
         seriesChecked = getSelectedItems(values, series, 'series')
         locationsChecked = getSelectedItems(values, locations, 'location')
-        payloadsChecked = getSelectedItems(values, payloads, 'payload')
+        # payloadsChecked = getSelectedItems(values, payloads, 'payload')
+        yearPrintLast = values['year02']
         rocketPrintLast = values['rocket02']
         rocketRetired = values['rocket03']
         seriesPrintLast = values['series02']
@@ -429,8 +453,8 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
         seriesLunarNewYear = values['series06']
         seriesFirstLast = values['series07']
         locationPrintLast = values['location02']
-        payloadPrintLast = values['payload02']
-        cn_font = myPlot.init()
+        # payloadPrintLast = values['payload02']
+        cn_font = myPlotInit.init()
 
         if yearsChecked:
             print(f'\nYear Checked: {yearsChecked}', end='', flush=True)
@@ -442,15 +466,19 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
                 print()
             for years in yearsChecked:
                 for year in years:
-                    plotLaunchByRocket.plot1(cn_font, df, year, seriesChecked)
-                    plotLaunchByLocation.plot2(cn_font, df, year)
+                    if int(year) <= df.iloc[-1]['日期'].year:
+                        plotLaunchByRocket.plot1(cn_font, df, year, seriesChecked)
+                        plotLaunchByLocation.plot2(cn_font, df, year)
+                    else:
+                        print(f'No data in year {year}!')
 
-                if len(years) == 2:
-                    plotLaunchByDate.plot1(cn_font, df, years[0], years[1], dictUpperStages)
-                else:
-                    plotLaunchByDate.plot1(cn_font, df, years[0], upperStages=dictUpperStages)
+                if int(years[0]) <= df.iloc[-1]['日期'].year:
+                    if len(years) == 2:
+                        plotLaunchByDate.plot1(cn_font, df, years[0], years[1], dictUpperStages, printLast=yearPrintLast)
+                    else:
+                        plotLaunchByDate.plot1(cn_font, df, years[0], upperStages=dictUpperStages, printLast=yearPrintLast)
 
-                plotLaunchByYearMonth.plot1(cn_font, df, years, seriesList=seriesChecked)
+                    plotLaunchByYearMonth.plot1(cn_font, df, years, seriesChecked, seriesPrintLast)
 
         if rocketsChecked or retiredChecked:
             if rocketsChecked:
@@ -463,13 +491,13 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
 
         if seriesChecked:
             print(f'\nSeries Checked: {seriesChecked}')
-            plotLaunchByYearMonth.plot1(cn_font, df, seriesList=seriesChecked)
+            plotLaunchByYearMonth.plot1(cn_font, df, seriesList=seriesChecked, printLast=seriesPrintLast)
             plotLaunchByLocation.plot2(cn_font, df, seriesList=seriesChecked)
 
             if seriesMaiden:
-                plotLaunchByDate.plotGraphForMaiden(cn_font, df, dictUpperStages)
+                plotLaunchByDate.plotGraphForMaiden(cn_font, df, dictUpperStages, seriesChecked, seriesPrintLast)
             if seriesLunarNewYear:
-                plotLaunchByDate.plotGraphForLunarNewYear(cn_font, df, dictUpperStages)
+                plotLaunchByDate.plotGraphForLunarNewYear(cn_font, df, dictUpperStages, seriesPrintLast)
             if seriesFirstLast:
                 plotLaunchByDate.plotGraphForFirstLast(cn_font, df, dictUpperStages)
             if seriesFailed or seriesRetired:
@@ -485,44 +513,76 @@ def handleEvents(window, event, values, df, years, rockets, retired, series, loc
             print(f'\nLocation Checked: {locationsChecked}')
             plotLaunchByDate.plot4(cn_font, df, locationsChecked, dictUpperStages, locationPrintLast)
 
-        if payloadsChecked:
-            print(f'\nPayload Checked: {payloadsChecked}')
-            plotLaunchByDate.plot5(cn_font, df, payloadsChecked, dictUpperStages, payloadPrintLast)
+        # if payloadsChecked:
+        #     print(f'\nPayload Checked: {payloadsChecked}')
+        #     plotLaunchByDate.plot5(cn_font, df, payloadsChecked, dictUpperStages, payloadPrintLast)
         print('Plot finished!')
         myFile.playSound()
         window.Normal()
 
-    elif event == BUTTON2_LABEL:
+    elif event == BUTTON2_VIDEO:
         window.minimize()
-        cn_font = myPlot.init(True)
-        yearsChecked = getSelectedItems(values, years, 'year')
-        if yearsChecked:
-            print(f'\nYear Checked: {yearsChecked}')
-            for years in yearsChecked:
-                yearList = years.split('～')
-                plotLaunchBarChartRace.plot1(df, yearList)
+        import plotLaunchBarChartRace
+        cn_font = myPlotInit.init(True)
+        categoriesChecked = getSelectedItems(values, categories, 'category-')
 
-        categoriesChecked = getSelectedItems(values, categories, 'category')
         if categoriesChecked:
             print(f'\nCategory Checked: {categoriesChecked}')
-
+            df = myExcel.parseExcelSheetLaunch(EXCEL_FILE, SHEET_LAUNCH)
+            startYear = categoriesChecked[0]
             for category in categoriesChecked:
-                if category == '在轨航天员':
-                    for year in yearsChecked:
-                        plotLaunchBarChartRace.plot3(EXCEL_FILE, SHEET_TAIKO, year)
-                    else:
-                        if not yearsChecked:
-                            plotLaunchBarChartRace.plot3(EXCEL_FILE, SHEET_TAIKO)
+                if category.isdigit():
+                    plotLaunchBarChartRace.plot1(df, [category])
                 else:
-                    df = myPlot.readDataFromSheetNew(EXCEL_FILE, SHEET_LAUNCH)
-                    for year in yearsChecked:
-                        plotLaunchBarChartRace.plot2(df, category, year)
+                    if startYear.isdigit():
+                        plotLaunchBarChartRace.plot2(df, category, startYear)
                     else:
-                        if not yearsChecked:
-                            plotLaunchBarChartRace.plot2(df, category)
+                        plotLaunchBarChartRace.plot2(df, category)
         print('Plot finished!')
         myFile.playSound()
         window.Normal()
+
+    elif event == BUTTON3_VIDEO:
+        window.minimize()
+        import plotLaunchBarChartRace
+        cn_font = myPlotInit.init(True)
+        taikonautChecked = getSelectedItems(values, taikonauts, 'taikonaut-')
+
+        if taikonautChecked:
+            print(f'\nTaikonaut Checked: {taikonautChecked}')
+            if '最初' in taikonautChecked[0]:
+                plotLaunchBarChartRace.plot3(EXCEL_FILE, SHEET_TAIKO, plotLastFrames=False)
+            else:
+                dateLastLaunch = taikonautChecked[0].split('(')[1][:-1]
+                yearTaikonaut = dateLastLaunch[:4]
+                dateLatsLaunchDatetime = datetime.strptime(dateLastLaunch, '%Y年%m月%d日')
+                today = datetime.today()
+                days = (today - dateLatsLaunchDatetime).days + 1
+                plotLaunchBarChartRace.plot3(EXCEL_FILE, SHEET_TAIKO, yearTaikonaut, days)
+        print('Plot finished!')
+        myFile.playSound()
+        window.Normal()
+
+################################################################################################
+def printUsage():
+    print('\nUsage:')
+    print(f'  {"plot".ljust(26)} :显示画面')
+    print(f'  {"plot yao".ljust(26)} :显示现役火箭未使用遥号')
+    print(f'  {"plot 年".ljust(26 - 1)} :生成年全部发射')
+    print(f'  {"plot 年月".ljust(26 - 2)} :生成年月全部发射')
+    print(f'  {"plot 年/年月 下记其他选项".ljust(26 - 9)} :生成年其他选项发射')
+    print(f'  {"plot 火箭名".ljust(26 - 3)} :生成火箭发射')
+    print(f'  {"plot 载荷名".ljust(26 - 3)} :生成包含载荷名发射')
+    print(f'  {"plot 发射地".ljust(26 - 3)} :生成发射地发射')
+    print(f'  {"plot regexp".ljust(26 - 0)} :生成符合正则表达式发射')
+    print(f'  {"plot 遥?".ljust(26 - 1)} :生成火箭发射遥?')
+    print(f'  {"plot \"^载荷名\"".ljust(26 - 3)} :生成载荷名开始的发射')
+    print(f'  {"plot \"?月\"".ljust(26 - 1)} :生成?月发射')
+    print(f'  {"plot 春节".ljust(26 - 2)} :生成春节前后发射')
+    print(f'  {"plot 年初年末".ljust(26 - 4)} :生成年初年末发射')
+    print(f'  {"plot 首飞".ljust(26 - 2)} :生成首飞发射')
+    print(f'  {"plot 空间站".ljust(26 - 3)} :生成空间站相关发射')
+    print(f'  {"plot 上面级".ljust(26 - 3)} :生成上面级发射')
 
 ################################################################################################
 def main():
@@ -531,47 +591,67 @@ def main():
     locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
     sys.stdout.reconfigure(encoding='UTF-8')
 
-    EXCEL_FILE, years, rockets, retired, series, privates, locations, categories, payloads = myFile.readConfig()
-    df = myPlot.readDataFromSheetNew(EXCEL_FILE, SHEET_LAUNCH)
+    EXCEL_FILE, years, rockets, retired, series, privates, locations, categories, taikonauts, payloads = myConfig.readConfig()
 
     if len(argv) > 1:
         if argv[1].lower() == 'allvideos':
-            cn_font = myPlot.init(True)
-            year = myDate.getThisYear()
-            categoriesChecked = ['民营']#, '其他', '长征', '系列', '全部', '在轨航天员']
+            import plotLaunchBarChartRace
+            # cn_font = myPlotInit.init(True)
+            year = str(datetime.today().year)
+            categoriesChecked = ['民营', '其他', '长征', '系列', '全部', '在轨航天员']
             for category in categoriesChecked:
                 if category == '在轨航天员':
                     plotLaunchBarChartRace.plot3(EXCEL_FILE, SHEET_TAIKO, year)
                 else:
-                    df = myPlot.readDataFromSheetNew(EXCEL_FILE, SHEET_LAUNCH)
+                    df = myExcel.parseExcelSheetLaunch(EXCEL_FILE, SHEET_LAUNCH)
                     plotLaunchBarChartRace.plot2(df, category, year)
             myFile.playSound()
             return
-        elif argv[1].lower() != 'run':
-            rocketsPayloads = argv[1].split('/')
-            plotLaunchByDate.printRocketsPayloadsList(df, rocketsPayloads)
+        elif argv[1].lower() == 'yao':
+            import plotLaunchByDate
+            df = myExcel.parseExcelSheetLaunch(EXCEL_FILE, SHEET_LAUNCH)
+            rockets = myConfig.readConfigRockets()
+            print('\n未使用遥号')
+            plotLaunchByDate.printRocketsPayloadsList(df, rocketsPayloads=rockets, onlyPrintYaoNumber=True)
+            return
+        else:
+            import plotLaunchByDate
+            df = myExcel.parseExcelSheetLaunch(EXCEL_FILE, SHEET_LAUNCH)
+            if argv[1].isdigit():
+                years = argv[1].split('/')
+                rocketsPayloads = argv[2].split('/') if len(argv) > 2 and argv[2].lower() != 'run' else None
+            else:
+                years = None                
+                rocketsPayloads = argv[1].split('/')
+
+            plotLaunchByDate.printRocketsPayloadsList(df, years=years, rocketsPayloads=rocketsPayloads)
             myFile.playSound()
             return
     
+    printUsage()
+
     myGUI.setScreenDpiAware()
 
+    from myModules import myPlot
+    df = myExcel.parseExcelSheetLaunch(EXCEL_FILE, SHEET_LAUNCH)
     dictUpperStages, dfLastLaunch = myPlot.readUpperStageDict(df)
     lastLaunch = getLastLaunch(dfLastLaunch, series, privates, dictUpperStages, payloads)
-
-    window = getWindow(years, rockets, series, retired, privates, locations, categories, payloads, lastLaunch)
+    window = getWindow(years, rockets, series, retired, privates, locations, categories, taikonauts, payloads, lastLaunch)
     myGUI.moveWindow(window, y=0)
+    import FreeSimpleGUI as sg
 
     while True:
         event, values = window.read(timeout=0)
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
-        handleEvents(window, event, values, df, years, rockets, retired, series, locations, categories, payloads, dictUpperStages, dfLastLaunch)
+        handleEvents(window, event, values, df, years, rockets, retired, series, locations, categories, taikonauts, payloads, dictUpperStages, dfLastLaunch)
     window.close()
+    print()
 
 ################################################################################################
 def showRunTime(func):
     result = timeit(func, number=1, globals=globals())
-    print(f'\nFinished in {timedelta(seconds=result)}')
+    print(f'\nFinished in {timedelta(seconds=result)}\n')
     
 if __name__ == "__main__":
     showRunTime("main()")
