@@ -1,8 +1,10 @@
 This repository include all Python scripts and windows batches to parse and predict China Launch Vehicles from NOTAM and MSA notices.
 
 # 1. NOTAM
+
  Parse NOTAM for China Launch Vehicles and create KML and text files in folder [./temp](./temp)
- ```
+
+```
 2026/10/16  17:52             4,954 2026年10月21日11时36分黄海日照+近地轨道.kml
 2026/10/16  17:52               228 2026年10月21日11时36分黄海日照+近地轨道.txt
 2026/10/16  18:15             3,927 2026年10月22日10时58分文昌_海南_西昌+近地轨道.kml
@@ -12,9 +14,10 @@ This repository include all Python scripts and windows batches to parse and pred
 2026/10/16  18:15             2,724 2026年10月24日03时00分东海上海_酒泉_黄海日照+近地轨道.kml
 2026/10/16  18:15               228 2026年10月24日03时00分东海上海_酒泉_黄海日照+近地轨道.txt
 2026/10/17  10:47               692 notam20261017-104734.txt
- ```
+```
 
 The notam20261017-104734.txt file looks like:
+
 ```
 NOTAM发射预测
 ================================
@@ -27,34 +30,76 @@ NOTAM发射预测
 03A: RJJJ,P5065/26,2026/10/23 18:00,2026/10/28 21:00;N30°43',E125°49'|N30°15',E126°36'|N29°48',E126°15'|N30°14',E125°33'
 ```
 
-
 - Prase from [notams.aim.faa.gov/notamSearch](https://notams.aim.faa.gov/notamSearch/)
-`python notam.py`
-
+  `python notam.py`
 - Parse NOTAM from local file [./data/notam.txt](./data/notam.txt)
-`python notam.py local`
-
+  `python notam.py local`
 - Parse MSA from local file [./data/msa.txt](./data/msa.txt)
-`python notam.py local`
+  `python notam.py local`
 
-# 2. KML file 
+# 2. KML file
+
 - Compare KML file with historical files
-`python compare.py new_kml_filename`
+  `python compare.py new_kml_filename`
+
 ```
+Comapre to history KML files...
+2026年10月21日??时??分黄海日照东方航天港号谷神星一号海.kml IoU 2024年05月29日16时12分黄海日照东方航天港号谷神星一号海.kml
+         2 = Max DZ Count
+    36.58% = Overall IoU
+    73.15% = ZSHA/A5223/26 IoU ZSHA/A1309/24
+
+2026年10月21日??时??分黄海日照东方航天港号谷神星一号海.kml IoU 2025年08月09日00时31分黄海日照东方航天港号捷龙三号.kml
+         2 = Max DZ Count
+    23.28% = Overall IoU
+    46.56% = ZSHA/A5223/26 IoU ZSHA/A2555/25
+
+2026年10月21日??时??分黄海日照东方航天港号谷神星一号海.kml IoU 2024年12月19日18时18分黄海日照东方航天港号谷神星一号海.kml
+         2 = Max DZ Count
+    36.58% = Overall IoU
+    73.15% = ZSHA/A5223/26 IoU ZSHA/A4260/24
+
+2026年10月21日??时??分黄海日照东方航天港号谷神星一号海.kml IoU 2025年09月09日03时48分黄海日照东方航天港号捷龙三号.kml
+         2 = Max DZ Count
+    25.37% = Overall IoU
+    50.74% = ZSHA/A5223/26 IoU ZSHA/A2928/25
+
+2026年10月21日??时??分黄海日照东方航天港号谷神星一号海.kml IoU 2025年05月19日15时38分黄海日照东方航天港号谷神星一号海.kml
+         2 = Max DZ Count
+    36.58% = Overall IoU
+    73.15% = ZSHA/A5223/26 IoU ZSHA/A1274/25
+
+2026年10月21日??时??分黄海日照东方航天港号谷神星一号海.kml IoU 2026年01月16日04时10分黄海日照德浮15001号谷神星一号海.kml
+         2 = Max DZ Count
+    36.58% = Overall IoU
+    73.15% = ZSHA/A5223/26 IoU ZSHA/A0116/26
+
+2026年10月21日??时??分黄海日照东方航天港号谷神星一号海.kml IoU 2025年09月24日15时56分黄海日照东方航天港号捷龙三号.kml
+         2 = Max DZ Count
+    26.66% = Overall IoU
+    53.31% = ZSHA/A5223/26 IoU ZSHA/A3354/25
 ```
+
+The matched files saved to [./temp/match](./temp/match)
+![](./images/2026年10月21日黄海日照东方航天港号谷神星一号海重叠轨道落区发射历史（截止2026年10月18日）.png)
+
+Other files saved to [./temp/unmatch](./temp/unmatch)
+![](./images/2026年10月21日黄海日照东方航天港号谷神星一号海同发射地相同轨道落区发射历史（截止2026年10月18日）.png)
+![](./images/2026年10月21日黄海日照东方航天港号谷神星一号海同发射地不同轨道落区发射历史（截止2026年10月18日）.png)
 
 - Show KML files on map
-`python showkml.py`
-![](./images/showkmlScreen.png)
-
+  `python showkml.py`
+  ![](./images/showkmlScreen.png)
 - Create Luanch Calendar
   The 202610.png will be saved to [./calendar](./calendar)
   `python cal.py 202610`
   ![](./calendar/202610.png)
 
 # 3. Machine Learning
+
  There are 4 models of RF(RandomForest), ET(ExtraTrees), GB(GradientBossting) and HGB(HistGradientBossting) in folder [./historical](./historical).
- ```
+
+```
 2026/10/16  17:48         4,419,563 feature-GEO_database.csv
 2026/10/16  17:48        64,644,086 feature-GEO_target-BINARY_model-ET.pkl
 2026/10/16  17:48         2,284,854 feature-GEO_target-BINARY_model-GB.pkl
@@ -71,14 +116,15 @@ NOTAM发射预测
 2026/10/16  17:48        14,427,323 feature-IoU_target-BINARY_model-RF.pkl
 2026/10/16  17:48            50,816 kml_names-GEO.csv
 2026/10/16  17:48            50,816 kml_names-IoU.csv
- ```
-- Create Models
-`python ml.py build`
+```
 
+- Create Models
+  `python ml.py build`
 - Predict new launch kml file
-`python ml.py predict new_kml_filename`
+  `python ml.py predict new_kml_filename`
 
 # 4 Create varivarious kinds of picture and video
+
 ```
 Usage:
   plot                       :显示画面
@@ -98,13 +144,14 @@ Usage:
   plot 首飞                  :生成首飞发射
   plot 空间站                :生成空间站相关发射
   plot 上面级                :生成上面级发射
-  ```
+```
+
 ![](./images/plotScreen.png)
 
-- 
-
 # 5. Others
+
 - Parse html files saved in folder [./temp/nsf](./temp/nsf]) from [https://forum.nasaspaceflight.com/index.php?board=40.0](https://forum.nasaspaceflight.com/index.php?board=40.0)
+
 ```
 2026/10/16  20:53            82,161 https___forum.nasaspaceflight.com_index.php_board=40.0.html
 2026/10/16  20:53            84,954 https___forum.nasaspaceflight.com_index.php_board=40.50.html
@@ -131,9 +178,47 @@ Usage:
 2026/09/04  10:13            73,077 https___forum.nasaspaceflight.com_index.php_board=40.1100.html
 2026/09/04  10:13            64,273 https___forum.nasaspaceflight.com_index.php_board=40.1150.html
 ```
+
 `python nsf.py`
 The [nsfLinkList.html](./temp/nsfLinkList.html) file created in folder [./temp/](./temp)
 
 - Show Launch candidate Date and time of Shenzhou and Tianzhou spaceship.
-`python css.py "酒泉:20261117,20261125"`
-![](./images/酒泉.png)
+  `python css.py "酒泉:20261117,20261125"`
+  ![](./images/酒泉.png)
+- Create Statistics on Chinese Carrier Rocket Launches Video with music
+  `mergenew.bat`
+
+```
+====================================================================
+Run plot to Create All Chart Bar Race Videos in other command window
+Check merge list for new page
+Keep file ./mergeList/ListImageThisYear.txt!
+Keep file ./mergeList/ListImageMonth.txt!
+Keep file ./mergeList/ListImageLocation.txt!
+Keep file ./mergeList/ListImageRocket.txt!
+Keep file ./mergeList/ListImageAll.txt!
+Keep file ./mergeList/ListVideoBarChartRace.txt!
+Keep file ./mergeList/ListVideoAll.txt!
+Finished in 0:00:00.031338
+
+0  - Create cover.mp4
+1  - Create 中国运载火箭发射统计（今年）.mp4 by mergelist\ListImageThisYear.txt
+2  - Create 中国运载火箭发射统计（月别）.mp4 by mergelist\ListImageMonth.txt
+3  - Create 中国运载火箭发射统计（地别）.mp4 by mergelist\ListImageLocation.txt
+4  - Create 中国运载火箭发射统计（箭别）.mp4 by mergelist\ListImageRocket.txt
+5  - Create 中国运载火箭发射统计（全部）.mp4 by mergelist\ListImageAll.txt
+6  - Create 中国运载火箭发射动态图.mp4 by mergelist\ListVideoBarChartRace.txt
+7  - Create 中国运载火箭发射统计.mp4 by mergelist\ListVideoAll.txt
+81 - Create 中国运载火箭发射统计-祝福祖国.mp4 with 祝福祖国.mp3
+82 - Create 中国运载火箭发射统计-歌唱祖国音乐.mp4 with 歌唱祖国音乐.mp3
+83 - Create 中国运载火箭发射统计-山口百惠.mp4 with 山口百惠歌曲
+91 - Create 中国航天员在轨历史动态条形图-歌唱祖国音乐.mp4 with 歌唱祖国音乐.mp3
+92 - Create 中国航天员在轨历史动态条形图-山口百惠.mp4 with 山口百惠歌曲
+A0 - Create calendar Videos by mergelist\ListImageCalendar.txt
+A1 - Create calendarLastMonth Videos by mergelist\ListImageCalendarLastMonth.txt
+A2 - Create calendar.mp4 by mergelist\ListVideoCalendar.txt
+A3 - Create calendar-歌唱祖国音乐.mp4 with 歌唱祖国音乐.mp3
+A4 - Create calendar-山口百惠.mp4 with 山口百惠歌曲
+X  - Exit
+Select :
+```
