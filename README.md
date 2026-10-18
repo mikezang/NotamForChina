@@ -1,3 +1,5 @@
+This repository include all Python scripts and windows batches to parse and predict China Launch Vehicles from NOTAM and MSA notices.
+
 # 1. NOTAM
  Parse NOTAM for China Launch Vehicles and create KML and text files in folder [./temp](./temp)
  ```
