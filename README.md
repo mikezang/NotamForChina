@@ -43,7 +43,7 @@ NOTAM发射预测
 
 - Show KML files on map
 `python showkml.py`
-![](./images/plotScreen.png)
+![](./images/showkmlScreen.png)
 
 - Create Luanch Calendar
   The 202610.png will be saved to [./calendar](./calendar)
@@ -76,7 +76,32 @@ NOTAM发射预测
 - Predict new launch kml file
 `python ml.py predict new_kml_filename`
 
-# 4. Others
+# 4 Create varivarious kinds of picture and video
+```
+Usage:
+  plot                       :显示画面
+  plot yao                   :显示现役火箭未使用遥号
+  plot 年                    :生成年全部发射
+  plot 年月                  :生成年月全部发射
+  plot 年/年月 下记其他选项  :生成年其他选项发射
+  plot 火箭名                :生成火箭发射
+  plot 载荷名                :生成包含载荷名发射
+  plot 发射地                :生成发射地发射
+  plot regexp                :生成符合正则表达式发射
+  plot 遥?                   :生成火箭发射遥?
+  plot "^载荷名"             :生成载荷名开始的发射
+  plot "?月"                 :生成?月发射
+  plot 春节                  :生成春节前后发射
+  plot 年初年末              :生成年初年末发射
+  plot 首飞                  :生成首飞发射
+  plot 空间站                :生成空间站相关发射
+  plot 上面级                :生成上面级发射
+  ```
+![](./images/plotScreen.png)
+
+- 
+
+# 5. Others
 - Parse html files saved in folder [./temp/nsf](./temp/nsf]) from [https://forum.nasaspaceflight.com/index.php?board=40.0](https://forum.nasaspaceflight.com/index.php?board=40.0)
 ```
 2026/10/16  20:53            82,161 https___forum.nasaspaceflight.com_index.php_board=40.0.html
