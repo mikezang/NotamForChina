@@ -1,4 +1,6 @@
-This repository include all Python scripts and windows batches to parse and predict China Launch Vehicles from NOTAM and MSA notices.
+This repository includes all Python scripts and windows batches to parse and predict China Launch Vehicles from NOTAM and MSA notices.
+
+The historical launch data is saved in [./data/ChinaRocketLaunch.xlsx](./data/ChinaRocketLaunch.xlsx), it has to be updated when new launch issued!
 
 # 1. NOTAM
 
@@ -190,7 +192,7 @@ The html files saved in folder [./temp/nsf](./temp/nsf])
 `mergenew.bat`
 ```
 ====================================================================
-Run plot to Create All Chart Bar Race Videos in other command window
+Run plot.py to Create All Chart Bar Race Videos in other command window
 Check merge list for new page
 Keep file ./mergeList/ListImageThisYear.txt!
 Keep file ./mergeList/ListImageMonth.txt!
@@ -199,8 +201,6 @@ Keep file ./mergeList/ListImageRocket.txt!
 Keep file ./mergeList/ListImageAll.txt!
 Keep file ./mergeList/ListVideoBarChartRace.txt!
 Keep file ./mergeList/ListVideoAll.txt!
-  Old file not in folder:
-    videos/至2026年中国航天员在轨动态条形图.mp4
 Finished in 0:00:00.031338
 
 0  - Create cover.mp4
@@ -223,4 +223,31 @@ A3 - Create calendar-歌唱祖国音乐.mp4 with 歌唱祖国音乐.mp3
 A4 - Create calendar-山口百惠.mp4 with 山口百惠歌曲
 X  - Exit
 Select :
+```
+
+- Parse [m.ctrip.com/webapp/vacations/tour](http:s//m.ctrip.com/webapp/vacations/tour)
+`python trip.py`
+```
+Searching 捷程旅行...
+
+Saved to ./temp/捷程旅行.html!
+
+Title01: 科学探索·海南文昌半日火箭发射观礼亲子营丨【未来之旅】文昌发射观礼亲子团
+ Link01: https://m.ctrip.com/webapp/vacations/tour/detail?productid=33466809
+
+Title02: 科学探索·海南4天3晚文昌火箭观礼亲子游丨【未来之旅】航天科普+日月湾冲浪+浆板体验半自助游
+ Link02: https://m.ctrip.com/webapp/vacations/tour/detail?productid=34152808
+
+Title03: 科学探索·海南4天3晚文昌火箭发射观礼亲子游丨【未来之旅】航天科普+帆船营体验+海龟保育
+ Link03: https://m.ctrip.com/webapp/vacations/tour/detail?productid=34905924
+
+Title04: 科学探索·文昌3天2晚航天亲子夏令营丨【未来之旅】海南文昌火箭发射观礼+卫星基地参观+航天超算中心+陨石馆+科普馆+航天育种基地+航天讲座+手工活动亲子夏令营
+ Link04: https://m.ctrip.com/webapp/vacations/tour/detail?productid=62577387
+
+
+各旅行社发射预测2026/10/18 16:38:44
+===================================
+01 2026/10/22: 文昌(捷程)
+02 2026/10/27: 文昌(捷程)
+03 2026/11/03: 文昌(捷程)
 ```
