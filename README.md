@@ -79,7 +79,6 @@ Comapre to history KML files...
     26.66% = Overall IoU
     53.31% = ZSHA/A5223/26 IoU ZSHA/A3354/25
 ```
-
 The matched files saved to [./temp/match](./temp/match)
 ![](./images/2026年10月21日黄海日照东方航天港号谷神星一号海重叠轨道落区发射历史（截止2026年10月18日）.png)
 
@@ -123,8 +122,8 @@ Other files saved to [./temp/unmatch](./temp/unmatch)
 - Predict new launch kml file
   `python ml.py predict new_kml_filename`
 
-# 4 Create varivarious kinds of picture and video
-
+# 4 Others
+- Create varivarious kinds of picture and video
 ```
 Usage:
   plot                       :显示画面
@@ -145,13 +144,15 @@ Usage:
   plot 空间站                :生成空间站相关发射
   plot 上面级                :生成上面级发射
 ```
-
 ![](./images/plotScreen.png)
 
-# 5. Others
 
-- Parse html files saved in folder [./temp/nsf](./temp/nsf]) from [https://forum.nasaspaceflight.com/index.php?board=40.0](https://forum.nasaspaceflight.com/index.php?board=40.0)
+- Parse Chtml files from hinese Launchers of [https://forum.nasaspaceflight.com/index.php?board=40.0](https://forum.nasaspaceflight.com/index.php?board=40.0)
+`python nsf.py`
+The [nsfLinkList.html](./temp/nsfLinkList.html) file created in folder [./temp/](./temp)
+![](./images/nsfLinkList.png)
 
+The html files saved in folder [./temp/nsf](./temp/nsf])
 ```
 2026/10/16  20:53            82,161 https___forum.nasaspaceflight.com_index.php_board=40.0.html
 2026/10/16  20:53            84,954 https___forum.nasaspaceflight.com_index.php_board=40.50.html
@@ -179,15 +180,14 @@ Usage:
 2026/09/04  10:13            64,273 https___forum.nasaspaceflight.com_index.php_board=40.1150.html
 ```
 
-`python nsf.py`
-The [nsfLinkList.html](./temp/nsfLinkList.html) file created in folder [./temp/](./temp)
 
 - Show Launch candidate Date and time of Shenzhou and Tianzhou spaceship.
   `python css.py "酒泉:20261117,20261125"`
   ![](./images/酒泉.png)
-- Create Statistics on Chinese Carrier Rocket Launches Video with music
-  `mergenew.bat`
 
+
+- Create Statistics on Chinese Carrier Rocket Launches Video with music
+`mergenew.bat`
 ```
 ====================================================================
 Run plot to Create All Chart Bar Race Videos in other command window
@@ -199,6 +199,8 @@ Keep file ./mergeList/ListImageRocket.txt!
 Keep file ./mergeList/ListImageAll.txt!
 Keep file ./mergeList/ListVideoBarChartRace.txt!
 Keep file ./mergeList/ListVideoAll.txt!
+  Old file not in folder:
+    videos/至2026年中国航天员在轨动态条形图.mp4
 Finished in 0:00:00.031338
 
 0  - Create cover.mp4
